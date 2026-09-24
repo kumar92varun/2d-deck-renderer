@@ -40,6 +40,10 @@ gsap.to(world, {
 3. Replace the `topics` metadata array and let the `.forEach` generate the dive/return steps. Only hand-write extra steps for things that don't fit the loop (like the screenshot zoom sequence in the tokenmaxxing example).
 4. Test in an actual browser (open the file directly, or serve the repo root) before considering it done. Click through every step, not just the first few.
 
+## Live preview while building
+
+When creating or editing a deck, open it in a Chrome tab via the `claude-in-chrome` tools so the person can watch changes land without asking each time. After every edit to a deck's `index.html`, reload that tab so the browser reflects the change immediately — this is a hot-reload workflow, not a "click through when you're done" one. If no preview tab is open yet for the deck you're working on, open one before making further edits. A project hook fires a reminder after deck file edits in case this gets missed mid-session, but treat opening + reloading the tab as a normal part of the edit loop, not something to wait to be told.
+
 ## Reference example
 
 `/decks/tokenmaxxing/index.html` is the canonical example — a mindmap hub with three subtopics (dive in, optionally zoom into a detail, return), plus a screenshot with a highlighted region you can zoom into and back out of. Match its structure for new decks unless asked to do something structurally different.
