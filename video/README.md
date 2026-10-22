@@ -58,6 +58,16 @@ out/stills/           PNG stills from --stills
 
 The renderer creates these folders and sorts every file itself.
 
+## Finding the cue times automatically
+
+```bash
+node tools/cue-times.mjs --beat 3 --audio ~/recordings/beat03.m4a
+```
+
+Runs offline speech recognition on one beat's recording and prints when each sentence starts and when each bold cue
+word is spoken, flagging any word it was unsure of so you can check it by ear. Needs `brew install whisper-cpp ffmpeg`
+and the model file in `~/.cache/deckrenderer-whisper/models/` (see the `neon-explainer` skill).
+
 ## Syncing to your Hindi voiceover
 
 Each scene has a `CUES` block at the top: seconds from the start of that beat.

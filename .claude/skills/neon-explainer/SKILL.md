@@ -147,7 +147,29 @@ in that one scene, then go through these steps in order, stopping as soon as the
 
 ## Syncing to the recording
 
-When Varun gives cue timestamps (per beat, or absolute times in the full recording), convert them to seconds
+Varun records the voiceover per beat (one audio file per beat, each starting at 0:00). **Get the times from the audio
+yourself instead of asking him to read a clock:**
+
+```bash
+cd video && node tools/cue-times.mjs --beat 3 --audio /path/to/beat03.m4a      # add --json FILE to keep the result
+```
+
+It runs offline speech recognition (`whisper.cpp`) and lines the heard words up with that beat's script in the
+storyboard by position, so a misheard word still gets a time. It prints each sentence's start time and the time of every
+bold cue word, and flags words it was unsure of (`[heard as "...": check]`). Rules for using it:
+
+- Treat times as accurate to roughly ±0.2 s. On clean synthetic audio they were within 0.15 s; a real, slower,
+  mixed Hindi-English recording may be worse. Always tell Varun which cues were flagged and ask him to confirm those by ear.
+- The tool only knows the bold words. The scene's other cues (the ones the skill's scenes added for pacing) must be
+  placed by judgment from the sentence starts it prints, and said out loud to Varun.
+- Setup (already done on Varun's Mac): `brew install whisper-cpp ffmpeg`, and the model
+  `ggml-large-v3-turbo-q5_0.bin` (about 550 MB) in `~/.cache/deckrenderer-whisper/models/`, downloaded from
+  `https://huggingface.co/ggerganov/whisper.cpp`. It lives outside the repo. Set `WHISPER_MODEL` or pass `--model` to use another.
+- Varun is a slow speaker, so real beats will run much longer than the placeholder `DURATION`s (the script averages
+  about 174 words/min against the placeholders). After retiming, check that scenes still have motion between cues: anything
+  on a fixed cadence (blinks, nods, coin loops) must be re-spread across the longer span, and idle life added in the gaps.
+
+If Varun instead gives timestamps by hand, or absolute times in a full recording, convert them to seconds
 from the start of each beat, update each scene's `CUES` and `DURATION`, update the storyboard's build-status
 table, and re-render. If he gives absolute times, the beat start is the time of its first cue word's line;
 confirm the mapping with him if it's ambiguous.
