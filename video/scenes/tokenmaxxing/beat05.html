@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<title>Beat 5 · Tokenmaxxing</title>
+<link rel="stylesheet" href="../../theme/neon.css">
+<style>
+  .caption { position: absolute; text-align: center; line-height: 1.15; }
+  .caption .l1 { display: block; font-weight: 800; letter-spacing: .01em; white-space: nowrap; }
+  .caption .l2 { display: block; font-weight: 600; margin-top: .25em; white-space: nowrap; }
+  .slide .label { position: absolute; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; white-space: nowrap; }
+  .slide .counter { position: absolute; left: 0; right: 0; text-align: center; white-space: nowrap; }
+  .slide .counter .num { display: block; font-weight: 800; line-height: 1.1; }
+  .slide .counter .sub { display: block; font-weight: 600; letter-spacing: .08em; }
+  .slide .card { position: absolute; display: flex; flex-direction: column; justify-content: center; border-radius: 1.2em;
+                 background: rgba(255,255,255,.05); border: 1px solid rgba(180,247,255,.35); white-space: nowrap; }
+  .slide .card .t { font-weight: 600; color: #B4F7FF; }
+  .slide .card .bar { height: .45em; border-radius: 9px; background: linear-gradient(90deg, #36D6E7, rgba(54,214,231,.15)); margin-top: .55em; }
+  .exec .head, .exec .body { position: absolute; background: #0A0518; }
+  .exec .head { border-radius: 50%; transform-origin: 50% 100%; }
+  .exec .body { border-radius: 50% 50% 0 0 / 70% 70% 0 0; }
+</style>
+</head>
+<body>
+<div class="stage"></div>
+
+<script src="../../../engine/gsap.min.js"></script>
+<script src="../../lib/scene-runtime.js"></script>
+<script src="../../lib/backdrop.js"></script>
+<script src="../../lib/components.js"></script>
+<script>
+/* Beat 5 (0:40–0:50): "और कुछ समय तक companies को ये बहुत पसंद आया। Leaders को चाहिए था एक number, जिससे साबित हो कि
+   teams सच में AI अपना रही हैं। और token usage गिनना आसान था।"
+   CUES are seconds from the start of this beat. Placeholder times until the Hindi recording exists. */
+const CUES = {
+  slide: 0.3,        // "companies को ये बहुत पसंद आया" — boardroom slide and executives appear, counter starts climbing
+  oneNumber: 4.6,    // "एक number" — other metrics fade, the counter grows, the caption lands
+  easy: 8.2,         // "गिनना आसान" — the counter pops once more
+};
+const DURATION = 10;
+
+registerScene({
+  duration: DURATION, fps: 30, seed: 5, cues: CUES,
+  build(tl, ctx) {
+    const { W, H, u, format, stage } = ctx;
+    buildBackdrop(ctx, { duration: DURATION, panels: format === "short"
+      ? [{ x: 0.04, y: 0.075, w: 8, color: "m" }, { x: 0.78, y: 0.085, w: 8, color: "c" }, { x: 0.70, y: 0.84, w: 9, color: "c" }]
+      : [{ x: 0.04, y: 0.07, w: 8, color: "m" }, { x: 0.87, y: 0.08, w: 7, color: "c" }, { x: 0.90, y: 0.88, w: 6, color: "c" }] });
+
+    // ---------- Layout per format (everything centred on the screen) ----------
+    const L = format === "short"
+      ? { slide: { x: 0.12 * W, y: 0.21 * H, w: 0.76 * W, h: 36 * u }, head: 5.6 * u, body: { w: 12.5 * u, h: 6.5 * u },
+          cap: { cx: 0.5 * W, y: 0.56 * H, w: 0.76 * W, s1: 8.4 * u, s2: 5.4 * u } }
+      : { slide: { x: 0.25 * W, y: 0.10 * H, w: 0.5 * W, h: 38 * u }, head: 6.2 * u, body: { w: 13.5 * u, h: 7 * u },
+          cap: { cx: 0.5 * W, y: 0.735 * H, w: 0.6 * W, s1: 8.4 * u, s2: 4.8 * u } };
+    const sl = L.slide, pad = 2.2 * u, scx = sl.x + sl.w / 2;
+    const giant = (sl.w * 0.8) / 6.9, base = giant * 0.66;       // counter font sizes (px)
+
+    // ---------- Flare behind the slide (created first so it sits behind) ----------
+    const flare = createFlare(ctx, { x: scx, y: sl.y + sl.h * 0.5, size: 62 * u, color: "magenta" });
+
+    // ---------- The boardroom slide ----------
+    const slide = document.createElement("div");
+    slide.className = "slide";
+    slide.style.cssText = `position:absolute;left:${sl.x}px;top:${sl.y}px;width:${sl.w}px;height:${sl.h}px;border-radius:${1.6 * u}px;
+      border:${0.4 * u}px solid #fff;background:linear-gradient(160deg, rgba(34,20,70,.92), rgba(14,8,32,.94));
+      box-shadow:0 0 ${0.8 * u}px #fff, 0 0 ${2.4 * u}px #B6B2FF, 0 0 ${6 * u}px #6E6BD6, inset 0 0 ${3 * u}px rgba(110,107,214,.45);
+      will-change:transform,opacity`;
+    const cTop = sl.h * 0.17, cardH = 6.4 * u, cardW = (sl.w - 2 * pad - 2 * 1.4 * u) / 3;
+    const cardsHtml = ["Code shipped", "Bugs fixed", "Hours saved"].map((t, i) =>
+      `<div class="card" style="left:${pad + i * (cardW + 1.4 * u)}px;top:${sl.h - pad - cardH}px;width:${cardW}px;height:${cardH}px;
+         padding:0 ${1.2 * u}px;font-size:${2 * u}px"><span class="t">${t}</span><i class="bar" style="width:${[70, 55, 40][i]}%"></i></div>`).join("");
+    slide.innerHTML = `
+      <div class="label soft-text" style="left:${pad}px;top:${1.6 * u}px;font-size:${2.1 * u}px">AI Usage</div>
+      <div class="counter" style="top:${cTop}px">
+        <span class="num neon-text-m" style="font-size:${base}px">0</span>
+        <span class="sub soft-text" style="font-size:${giant * 0.2}px">tokens this quarter</span>
+      </div>${cardsHtml}`;
+    stage.appendChild(slide);
+    flickerOn(ctx, slide, CUES.slide);
+
+    const num = slide.querySelector(".num"), counter = slide.querySelector(".counter"), cards = slide.querySelectorAll(".card");
+
+    // The counter climbs in uneven jumps (seeded) and always ends on the same total
+    const state = { v: 0 };
+    const target = 48200000, steps = 26, t0 = CUES.slide + 0.6, t1 = DURATION - 0.4;
+    const w = Array.from({ length: steps }, () => 0.4 + ctx.rng()), sum = w.reduce((a, b) => a + b, 0);
+    let acc = 0;
+    w.forEach((v, k) => {
+      acc += (v / sum) * target;
+      tl.to(state, { v: acc, duration: (t1 - t0) / steps * 0.8, ease: "power1.out" }, t0 + k * (t1 - t0) / steps);
+    });
+    ctx.onFrame(() => { num.textContent = Math.round(state.v).toLocaleString("en-IN"); });
+
+    // "Just one number": the other metrics fade away and the counter takes the whole slide
+    const shift = (sl.h - giant * 1.45) / 2 - cTop;
+    tl.to(cards, { opacity: 0, y: 2 * u, duration: 0.4, ease: "power2.in", stagger: 0.08 }, CUES.oneNumber - 0.1)
+      .to(num, { fontSize: giant, duration: 0.5, ease: "power3.out" }, CUES.oneNumber)
+      .to(counter, { y: shift, duration: 0.5, ease: "power3.out" }, CUES.oneNumber);
+    flare.burst(CUES.oneNumber, 1);
+    tl.to(num, { scale: 1.06, duration: 0.1, ease: "power2.out" }, CUES.easy)
+      .to(num, { scale: 1, duration: 0.35, ease: "elastic.out(1,0.5)" }, CUES.easy + 0.1);
+    flare.burst(CUES.easy, 0.6);
+
+    // ---------- Executives (silhouettes seen from behind) who nod along ----------
+    const headTop = sl.y + sl.h + 1.5 * u;
+    const execs = [];
+    [0.1, 0.3, 0.5, 0.7, 0.9].forEach((f, i) => {
+      const hd = L.head * (0.92 + ctx.rng() * 0.16), bw = L.body.w * (0.94 + ctx.rng() * 0.12), cx = sl.x + sl.w * f;
+      const rim = `0 -${0.3 * u}px ${0.5 * u}px rgba(190,184,255,.7), 0 -${1.2 * u}px ${3 * u}px rgba(110,107,214,.5)`;
+      const el = document.createElement("div");
+      el.className = "exec";
+      el.style.cssText = `position:absolute;left:${cx - bw / 2}px;top:${headTop}px;width:${bw}px;height:${hd * 0.8 + L.body.h}px;will-change:transform,opacity`;
+      el.innerHTML = `
+        <div class="body" style="left:0;top:${hd * 0.8}px;width:${bw}px;height:${L.body.h}px;box-shadow:${rim}"></div>
+        <div class="head" style="left:${(bw - hd) / 2}px;top:0;width:${hd}px;height:${hd}px;box-shadow:${rim}"></div>`;
+      stage.appendChild(el);
+      execs.push({ el, head: el.querySelector(".head") });
+      tl.fromTo(el, { opacity: 0, y: 2 * u }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, CUES.slide + 0.15 * i);
+    });
+    // A glowing table edge under them
+    const table = document.createElement("div");
+    const tableY = headTop + L.head * 0.8 + L.body.h;
+    table.style.cssText = `position:absolute;left:${sl.x}px;width:${sl.w}px;top:${tableY}px;height:${0.5 * u}px;border-radius:9px;background:#fff;
+      box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${2 * u}px #B6B2FF, 0 0 ${5 * u}px #6E6BD6;opacity:.9`;
+    stage.appendChild(table);
+    flickerOn(ctx, table, CUES.slide + 0.3);
+
+    // Nods: a couple while the numbers climb, a big synchronised wave on "एक number"
+    const nod = (head, at, depth = 1) => {
+      tl.to(head, { y: 0.9 * u * depth, scaleY: 1 - 0.07 * depth, duration: 0.12, ease: "power2.out" }, at)
+        .to(head, { y: 0, scaleY: 1, duration: 0.28, ease: "power2.inOut" }, at + 0.12);
+    };
+    execs.forEach(({ head }, i) => {
+      nod(head, 1.6 + ctx.rng() * 0.7, 0.7);
+      nod(head, 3.2 + ctx.rng() * 0.7, 0.7);
+      nod(head, CUES.oneNumber + 0.2 + i * 0.1, 1.2);
+      nod(head, CUES.oneNumber + 1.1 + i * 0.08, 1);
+      nod(head, 7.0 + ctx.rng() * 0.8, 0.8);
+      nod(head, CUES.easy + 0.2 + i * 0.07, 1.1);
+    });
+
+    // ---------- Caption (separate layer, toggle with ?captions=0) ----------
+    const cap = document.createElement("div");
+    cap.className = "layer captions";
+    cap.innerHTML = `
+      <div class="caption" style="left:${L.cap.cx - L.cap.w / 2}px;top:${L.cap.y}px;width:${L.cap.w}px">
+        <span class="l1 neon-text-m" style="font-size:${L.cap.s1}px">AI Adoption</span>
+        <span class="l2 soft-text" style="font-size:${L.cap.s2}px">= Just <span class="neon-text-m">1</span> Number</span>
+      </div>`;
+    stage.appendChild(cap);
+    const l1 = cap.querySelector(".l1"), l2 = cap.querySelector(".l2");
+    const capFlare = createFlare(ctx, { x: L.cap.cx, y: L.cap.y + L.cap.s1 * 0.6, size: 46 * u, color: "magenta" });
+    cap.appendChild(capFlare.el); capFlare.el.style.zIndex = -1;
+    tl.fromTo(l1, { opacity: 0, scale: 1.45 }, { opacity: 1, scale: 1, duration: 0.18, ease: "power4.out" }, CUES.oneNumber);
+    capFlare.burst(CUES.oneNumber, 0.8);
+    tl.fromTo(l2, { opacity: 0, y: 3 * u }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, CUES.oneNumber + 0.35);
+  },
+});
+</script>
+</body>
+</html>
