@@ -45,12 +45,12 @@ registerScene({
 
     // ---------- Layout per format (board matches beat 1 so the cut is seamless) ----------
     const L = format === "short"
-      ? { board: { x: 0.05 * W, y: 0.235 * H, w: 0.82 * W, rowH: 10 * u },
+      ? { board: { x: 0.12 * W, y: 0.235 * H, w: 0.76 * W, rowH: 10 * u },
           badge: { h: 6.2 * u, s: 3.2 * u },
-          w1: { cx: 0.46 * W, y: 0.31 * H, w: 0.86 * W, s: 9.6 * u },
-          w2: { cx: 0.46 * W, y: 0.50 * H, w: 0.86 * W, s: 9.6 * u },
-          arrow: { cx: 0.46 * W, cy: 0.445 * H, size: 9 * u, rot: 90 } }
-      : { board: { x: 0.36 * W, y: 0.17 * H, w: 0.58 * W, rowH: 8 * u },
+          w1: { cx: 0.5 * W, y: 0.31 * H, w: 0.76 * W, s: 9 * u },
+          w2: { cx: 0.5 * W, y: 0.50 * H, w: 0.76 * W, s: 9 * u },
+          arrow: { cx: 0.5 * W, cy: 0.445 * H, size: 9 * u, rot: 90 } }
+      : { board: { x: 0.2 * W, y: 0.22 * H, w: 0.6 * W, rowH: 8 * u },
           badge: { h: 6.2 * u, s: 3.4 * u },
           w1: { cx: 0.25 * W, y: 0.40 * H, w: 0.46 * W, s: 8.4 * u },
           w2: { cx: 0.75 * W, y: 0.40 * H, w: 0.46 * W, s: 8.4 * u },

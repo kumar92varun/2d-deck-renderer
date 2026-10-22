@@ -40,18 +40,25 @@ registerScene({
 
     // ---------- Layout per format ----------
     const L = format === "short"
-      ? { tok: { x: 0.31 * W, base: 0.64 * H, size: 19 * u },
-          box: { x: 0.60 * W, w: 28 * u, h: 22 * u },
+      ? { tok: { base: 0.64 * H, size: 16 * u },
+          box: { w: 24 * u, h: 22 * u },
           meter: { w: 21 * u, h: 48 * u, x: 0.88 * W - 21 * u, y: 0.11 * H },
-          cap: { cx: 0.46 * W, y: 0.685 * H, w: 0.84 * W, s1: 9.6 * u, s2: 5.6 * u },
+          cap: { cx: 0.5 * W, y: 0.685 * H, w: 0.76 * W, s1: 9 * u, s2: 5.6 * u },
           badge: { x: 0.07 * W, y: 0.115 * H, s: 4.2 * u },
           pile: { x: 0.03 * W } }
-      : { tok: { x: 0.21 * W, base: 0.72 * H, size: 19 * u },
-          box: { x: 0.52 * W, w: 31 * u, h: 24 * u },
+      : { tok: { base: 0.72 * H, size: 19 * u },
+          box: { w: 31 * u, h: 24 * u },
           meter: { w: 21 * u, h: 52 * u, x: 0.94 * W - 21 * u, y: 0.12 * H },
-          cap: { cx: 0.42 * W, y: 0.79 * H, w: 0.7 * W, s1: 8.4 * u, s2: 4.8 * u },
+          cap: { cx: 0.5 * W, y: 0.79 * H, w: 0.7 * W, s1: 8.4 * u, s2: 4.8 * u },
           badge: { x: 0.05 * W, y: 0.09 * H, s: 4 * u },
           pile: { x: 0.04 * W } };
+    // Tile heap + Tok + box are one cluster centred on the screen (the meter is a corner HUD and stays top-right).
+    // In the Short the cluster is capped at 76% of the width to stay out of the right 12% safe zone.
+    const ts = 6.4 * u, tw = ts * 1.32, step = tw + 0.8 * u;
+    const heapSpan = 3 * step + 1.5 * u;
+    const gapTB = format === "short" ? 0.76 * W - (heapSpan + L.tok.size + L.box.w) : 12 * u;
+    L.tok.x = (W - (heapSpan + L.tok.size + gapTB + L.box.w)) / 2 + heapSpan;
+    L.box.x = L.tok.x + L.tok.size + gapTB;
     L.box.y = L.tok.base - L.box.h;
 
     // ---------- Actors ----------
@@ -59,9 +66,8 @@ registerScene({
     gsap.set(box, { left: L.box.x, top: L.box.y, opacity: 0 });
 
     // A neat pyramid of tiles to the left of Tok (fixed-width tiles so nothing overlaps)
-    const heapTexts = ["the", "AI", "ing", "का", "doc", "?"];
+    const heapTexts = ["the", "AI", "ing", "of", "doc", "?"];
     const heap = [];
-    const ts = 6.4 * u, tw = ts * 1.32, step = tw + 0.8 * u;
     const slots = [[0, 0], [1, 0], [2, 0], [0.5, 1], [1.5, 1], [1, 2]];
     const heapX = L.tok.x - 3 * step - 1.5 * u;
     heapTexts.forEach((t, i) => {
@@ -88,7 +94,7 @@ registerScene({
     tl.set(m.valueGlow, { opacity: 0.12 }, 0);
 
     // ---------- The throwing loop: accelerating, non-stop ----------
-    const tileTexts = ["Hi", "to", "ken", "▁the", "नि", "यम", "act", "ion", "s", "PR", "doc", "ref", "का", "?", "ing", "max", "xx", "AI", "हाँ", "ok", "fix", "बग", "run", "re", "try", "▁AI", "json", "</>", "lo", "gs"];
+    const tileTexts = ["Hi", "to", "ken", "the", "pro", "mpt", "act", "ion", "s", "PR", "doc", "ref", "of", "?", "ing", "max", "xx", "AI", "yes", "ok", "fix", "bug", "run", "re", "try", "was", "json", "</>", "lo", "gs"];
     const throws = [];
     let t = CUES.meter + 0.45, gap = 0.85;
     while (t < DURATION - 1.2) { throws.push(t); t += gap; gap = Math.max(0.2, gap * 0.88); }
@@ -162,7 +168,7 @@ registerScene({
     cap.innerHTML = `
       <div class="caption" style="left:${L.cap.cx - L.cap.w / 2}px;top:${L.cap.y}px;width:${L.cap.w}px">
         <span class="l1 neon-text-m" style="font-size:${L.cap.s1}px">Tokenmaxxing</span>
-        <span class="l2 soft-text" style="font-size:${L.cap.s2}px">= <span class="neon-text-m">Usage</span> को <span class="neon-text-m">Score</span> मानना</span>
+        <span class="l2 soft-text" style="font-size:${L.cap.s2}px">= <span class="neon-text-m">Usage</span> as <span class="neon-text-m">Score</span></span>
       </div>`;
     stage.appendChild(cap);
     const l1 = cap.querySelector(".l1"), l2 = cap.querySelector(".l2");

@@ -36,8 +36,12 @@ click-to-advance, no npm) apply to `/decks` only. Videos are timeline-driven, da
 6. **Shorts safe zones:** in `short`, keep text and key action out of the bottom 20% and the right 12% below
    45% height (`?guides=1` shows them). The YouTube header covers roughly the top 8%.
 7. **Captions/on-screen text live in a `.layer.captions` element** so `?captions=0` / `--no-captions` gives a clean plate.
-8. **Text:** mixed Hindi-English exactly as in the storyboard's on-screen text column. Font is Poppins
-   (vendored, Latin + Devanagari) — never another font for Devanagari. No company logos; company names as plain text.
+8. **Text: English only on screen.** Every word that appears in a frame is English (Latin script). No Hindi or
+   Devanagari on screen, even when the voiceover says those words. Hindi lives only in the voiceover: the storyboard's
+   Hindi script and cue-word columns, and the `CUES` comments that quote the spoken words. If a storyboard on-screen-text
+   cell still contains Hindi, put the plain English equivalent in the scene and update that cell to match; don't ask.
+   Font is Poppins (the vendored Devanagari files stay in `video/fonts/` but are unused). No company logos; company
+   names as plain text.
 9. **Vendored only:** GSAP comes from `../../../engine/gsap.min.js` (shared with the decks), fonts from `video/fonts/`.
    No CDN, no network at render time.
 
@@ -95,7 +99,7 @@ in that one scene, then go through these steps in order, stopping as soon as the
 ### Still checklist
 
 - Text inside safe zones, nothing clipped at frame edges, no overlapping labels.
-- Devanagari renders correctly (matras attached, no tofu boxes), Hindi-English mix matches the storyboard.
+- All on-screen text is English: no Devanagari anywhere in the frame (and no tofu boxes from stray symbols).
 - Glows have no hard edges or clipped bands; no leftover flare smudges.
 - Magenta/cyan meaning is right; the meter readouts are legible.
 - The frame reads at a glance on a phone: one focal point, the cue word's animation is the brightest thing.

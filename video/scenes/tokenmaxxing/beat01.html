@@ -43,12 +43,12 @@ registerScene({
 
     // ---------- Layout per format ----------
     const L = format === "short"
-      ? { chips: { x: 0.05 * W, y: 0.165 * H, w: 0.82 * W, h: 6.4 * u, gap: 2 * u, dir: "row", justify: "center" },
-          board: { x: 0.05 * W, y: 0.235 * H, w: 0.82 * W, rowH: 10 * u },
-          cap: { cx: 0.46 * W, y: 0.665 * H, w: 0.86 * W, s1: 9 * u } }
-      : { chips: { x: 0.05 * W, y: 0.30 * H, w: 0.26 * W, h: 7 * u, gap: 3 * u, dir: "column", justify: "flex-start" },
-          board: { x: 0.36 * W, y: 0.17 * H, w: 0.58 * W, rowH: 8 * u },
-          cap: { cx: 0.65 * W, y: 0.77 * H, w: 0.58 * W, s1: 8.4 * u } };
+      ? { chips: { x: 0.12 * W, y: 0.165 * H, w: 0.76 * W, h: 6.4 * u, gap: 2 * u, dir: "row", justify: "center" },
+          board: { x: 0.12 * W, y: 0.235 * H, w: 0.76 * W, rowH: 10 * u },
+          cap: { cx: 0.5 * W, y: 0.665 * H, w: 0.76 * W, s1: 8.2 * u } }
+      : { chips: { x: 0.2 * W, y: 0.085 * H, w: 0.6 * W, h: 7 * u, gap: 3 * u, dir: "row", justify: "center" },
+          board: { x: 0.2 * W, y: 0.22 * H, w: 0.6 * W, rowH: 8 * u },
+          cap: { cx: 0.5 * W, y: 0.79 * H, w: 0.6 * W, s1: 8.4 * u } };
 
     // ---------- Panel flare (created first so it sits behind the board) ----------
     const boardFlare = createFlare(ctx, { x: L.board.x + L.board.w / 2, y: L.board.y + 22 * u, size: 70 * u, color: "magenta" });

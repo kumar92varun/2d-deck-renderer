@@ -28,29 +28,29 @@ If the script or storyboard changes there, update this file too. This file is wh
 
 ## Storyboard
 
-Times are targets; each scene is re-timed to the recorded Hindi audio through its `CUES` block. Cue words are as spoken in the Hindi VO.
+Times are targets; each scene is re-timed to the recorded Hindi audio through its `CUES` block. Cue words are as spoken in the Hindi VO. The on-screen text column is English only; Hindi appears only in the voiceover.
 
 | Beat | Time | Cue word (Hindi VO) | Visual | On-screen text |
 | --- | --- | --- | --- | --- |
 | 1 | 0:00–0:08 | Tokens जलाने | A glowing leaderboard slides in; names and big magenta numbers tick upward. Rows for "code shipped" and "bugs fixed" get struck through. | TOKENS BURNED |
 | 2 | 0:08–0:16 | "Token Legend" / valuemaxxing | A gold badge stamps onto the top row with a glow flare. Title card: "tokenmaxxing" crosses out to "valuemaxxing" in neon cyan. | Tokenmaxxing → Valuemaxxing |
 | 3 | 0:16–0:28 | tokens / अंदर / बाहर | A sentence shatters into coloured tiles; one becomes Tok (squash on landing). Tiles stream into an AI box (in) and back out (out), each dropping a coin. | 1 token ≈ ¾ word · Input + Output = Cost |
-| 4 | 0:28–0:40 | Tokenmaxxing / 2026 | Tok shovels tiles into the box non-stop. The meter appears: magenta Tokens bar blazes up, cyan Value bar barely glows. | Tokenmaxxing = Usage को Score मानना |
-| 5 | 0:40–0:50 | एक number | A boardroom slide with a single giant counter; executives (simple silhouettes) nod. | AI Adoption = सिर्फ़ 1 Number |
+| 4 | 0:28–0:40 | Tokenmaxxing / 2026 | Tok shovels tiles into the box non-stop. The meter appears: magenta Tokens bar blazes up, cyan Value bar barely glows. | Tokenmaxxing = Usage as Score |
+| 5 | 0:40–0:50 | एक number | A boardroom slide with a single giant counter; executives (simple silhouettes) nod. | AI Adoption = Just 1 Number |
 | 6 | 0:50–1:00 | ढाई लाख डॉलर के tokens | Quote card with speaker name. Two stacked bars: $500K salary vs $250K tokens. | $500K Salary vs $250K Tokens · Jensen Huang, Nvidia |
-| 7 | 1:00–1:12 | Claudeonomics / Amazon / OpenAI | A generic leaderboard window titled "Claudeonomics"; more leaderboards pop up beside it, labelled with company names in plain text (no logos). | हर जगह Leaderboards |
-| 8 | 1:12–1:22 | bills आने लगे / 1 जून | An invoice unrolls from the top of the screen and keeps going. A calendar flips to June 1. | Usage-based Billing · 1 जून |
-| 9 | 1:22–1:32 | 10 करोड़ डॉलर / चार महीनों | Big counter slams to $100M with a glow flare and screen shake. A 12-month budget bar drains empty by month 4. | $100M एक महीने में* · साल का Budget 4 महीने में* |
+| 7 | 1:00–1:12 | Claudeonomics / Amazon / OpenAI | A generic leaderboard window titled "Claudeonomics"; more leaderboards pop up beside it, labelled with company names in plain text (no logos). | Leaderboards Everywhere |
+| 8 | 1:12–1:22 | bills आने लगे / 1 जून | An invoice unrolls from the top of the screen and keeps going. A calendar flips to June 1. | Usage-based Billing · June 1 |
+| 9 | 1:22–1:32 | 10 करोड़ डॉलर / चार महीनों | Big counter slams to $100M with a glow flare and screen shake. A 12-month budget bar drains empty by month 4. | $100M in One Month* · Full-Year Budget Gone in 4 Months* |
 | 10 | 1:32–1:46 | ऊपर / नहीं | Tok runs in circles on a treadmill; paper docs pile up unread. Meter: magenta hits the ceiling and flares, cyan stays flat and dim. | Usage ↑ Value → |
-| 11 | 1:46–2:02 | lines of code / budgets और caps | A retro code printout as a parallel. Leaderboards fall like dominoes; a cap line drops onto the magenta bar. | वही पुरानी गलती: "Lines of Code" |
+| 11 | 1:46–2:02 | lines of code / budgets और caps | A retro code printout as a parallel. Leaderboards fall like dominoes; a cap line drops onto the magenta bar. | The Same Old Mistake: "Lines of Code" |
 | 12 | 2:02–2:18 | valuemaxxing / हर token | Swing the other way: Tok starves on a near-empty bar ("tokenminning"), then a balanced scale. Formula card: Value ÷ Tokens. | Valuemaxxing = Value per Token |
-| 13 | 2:18–2:30 | outcome से शुरुआत करो | Tok holds a checklist: merged PR, fixed bug, decision made. Each ticks. | नियम 1: पहले Outcome |
-| 14 | 2:30–2:44 | सही काम, सही model / छोटे, सस्ते models | A router splits tasks: an email card goes to a small Tok, a gnarly bug goes to a big Tok. Coin cost labels on each lane. | नियम 2: सही काम, सही Model |
-| 15 | 2:44–2:56 | volume नहीं, context / दस अधूरे retries | Left: ten vague prompts loop and burn coins. Right: one prompt with attached file icons hits first time. | नियम 3: Volume नहीं, Context |
-| 16 | 2:56–3:22 | जहाँ फ़ायदा हो / हर usage number | Spotlights on three heavy tasks (code review, tests, research). Then the meter returns, now with an outcome readout beside each bar; cyan rises and brightens with magenta. | नियम 4: जहाँ फ़ायदा, वहाँ खर्च · नियम 5: Usage + Outcome साथ |
-| 17 | 3:22–3:40 | खर्च / score / मुझे इससे मिला क्या? | "Score" crumbles; "Cost" stays. Tok waves; end card with the five rules and a follow prompt. | Score नहीं, Cost · मुझे मिला क्या? |
+| 13 | 2:18–2:30 | outcome से शुरुआत करो | Tok holds a checklist: merged PR, fixed bug, decision made. Each ticks. | Rule 1: Outcome First |
+| 14 | 2:30–2:44 | सही काम, सही model / छोटे, सस्ते models | A router splits tasks: an email card goes to a small Tok, a gnarly bug goes to a big Tok. Coin cost labels on each lane. | Rule 2: Right Task, Right Model |
+| 15 | 2:44–2:56 | volume नहीं, context / दस अधूरे retries | Left: ten vague prompts loop and burn coins. Right: one prompt with attached file icons hits first time. | Rule 3: Context, Not Volume |
+| 16 | 2:56–3:22 | जहाँ फ़ायदा हो / हर usage number | Spotlights on three heavy tasks (code review, tests, research). Then the meter returns, now with an outcome readout beside each bar; cyan rises and brightens with magenta. | Rule 4: Spend Where It Pays · Rule 5: Pair Usage with Outcome |
+| 17 | 3:22–3:40 | खर्च / score / मुझे इससे मिला क्या? | "Score" crumbles; "Cost" stays. Tok waves; end card with the five rules and a follow prompt. | Cost, Not Score · What Did I Get? |
 
-\*Show "Reports के मुताबिक" in small type on beat 9; both figures come from press reports, not company filings. No company logos anywhere; company names as plain text only.
+\*Show "According to reports" in small type on beat 9; both figures come from press reports, not company filings. No company logos anywhere; company names as plain text only.
 
 ## Hindi voiceover script
 
