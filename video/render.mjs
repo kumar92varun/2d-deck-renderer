@@ -22,7 +22,10 @@
      --from S --to S            render only part of the scene (seconds)
      --stills a,b,c             write PNG stills at these times instead of a video
      --no-captions              hide the captions layer
-     --out DIR                  default ./out
+     --out DIR                  output root, default ./out. Files are sorted into subfolders automatically:
+                                  <out>/videos/desktop/   long (1920x1080) videos
+                                  <out>/videos/short/     Shorts (1080x1920) videos
+                                  <out>/stills/           PNG stills from --stills
 */
 import puppeteer from "puppeteer";
 import { spawn } from "node:child_process";
@@ -40,13 +43,16 @@ const formats = opt("format", "short") === "both" ? ["short", "long"] : [opt("fo
 const draft = flag("draft");
 const workers = Math.max(1, Number(opt("workers", 1)));
 const outDir = path.resolve(opt("out", "out"));
+// Videos are split by format (long = the desktop/YouTube video, short = the Short), stills go in their own folder.
+const videoDir = (format) => path.join(outDir, "videos", format === "long" ? "desktop" : "short");
+const stillsDir = path.join(outDir, "stills");
 const stills = opt("stills", null)?.split(",").map(Number);
 const captions = !flag("no-captions");
 const scale = Math.max(1, Number(opt("scale", 1)));
 const bg = opt("bg", "navy");
 // -violet / -2x suffixes keep variants from overwriting each other (navy at 1x has no suffix)
 const suffix = (bg !== "navy" ? `-${bg}` : "") + (scale !== 1 ? `-${scale}x` : "");
-// out/<video>-<beat>-<format>.mp4, e.g. out/tokenmaxxing-beat04-short.mp4
+// out/videos/short/<video>-<beat>-<format>.mp4, e.g. out/videos/short/tokenmaxxing-beat04-short.mp4
 const name = `${path.basename(path.dirname(path.resolve(scene)))}-${path.basename(scene, ".html")}`;
 
 // ---------- browser ----------
@@ -112,7 +118,8 @@ async function renderRange({ format, fps, startFrame, endFrame, file, label }) {
 }
 
 // ---------- main ----------
-await mkdir(outDir, { recursive: true });
+await mkdir(stillsDir, { recursive: true });
+for (const f of formats) await mkdir(videoDir(f), { recursive: true });
 for (const format of formats) {
   // probe duration/fps from the scene
   const probe = await launch();
@@ -121,7 +128,7 @@ for (const format of formats) {
 
   if (stills) {
     for (const t of stills) {
-      const file = path.join(outDir, `${name}-${format}-t${t}${suffix}.png`);
+      const file = path.join(stillsDir, `${name}-${format}-t${t}${suffix}.png`);
       await writeFile(file, await grab(page, t, "png"));
       console.log("still:", file);
     }
@@ -132,7 +139,7 @@ for (const format of formats) {
 
   const from = Number(opt("from", 0)), to = Math.min(Number(opt("to", info.duration)), info.duration);
   const first = Math.round(from * fps), last = Math.round(to * fps);
-  const file = path.join(outDir, `${name}-${format}${suffix}${draft ? "-draft" : ""}.mp4`);
+  const file = path.join(videoDir(format), `${name}-${format}${suffix}${draft ? "-draft" : ""}.mp4`);
   console.log(`${name} · ${format} ${info.width * scale}x${info.height * scale} · ${fps} fps · ${last - first} frames · ${draft ? "draft" : "final"} · ${workers} worker(s)`);
   const t0 = Date.now();
 
@@ -143,10 +150,10 @@ for (const format of formats) {
     const chunk = Math.ceil((last - first) / workers), parts = [];
     for (let i = 0; i < workers; i++) {
       const s = first + i * chunk, e = Math.min(last, s + chunk);
-      if (s < e) parts.push({ s, e, file: path.join(outDir, `.${name}-${format}${suffix}-part${i}.mp4`) });
+      if (s < e) parts.push({ s, e, file: path.join(videoDir(format), `.${name}-${format}${suffix}-part${i}.mp4`) });
     }
     await Promise.all(parts.map((p, i) => renderRange({ format, fps, startFrame: p.s, endFrame: p.e, file: p.file, label: `worker ${i + 1}` })));
-    const list = path.join(outDir, `.${name}-${format}${suffix}-parts.txt`);
+    const list = path.join(videoDir(format), `.${name}-${format}${suffix}-parts.txt`);
     await writeFile(list, parts.map((p) => `file '${p.file}'`).join("\n"));
     await new Promise((res, rej) => spawn("ffmpeg", ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", list, "-c", "copy", "-movflags", "+faststart", file], { stdio: "inherit" })
       .on("close", (c) => (c === 0 ? res() : rej(new Error("concat failed")))));

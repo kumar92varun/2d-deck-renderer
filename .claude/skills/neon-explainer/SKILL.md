@@ -96,6 +96,31 @@ click-to-advance, no npm) apply to `/decks` only. Videos are timeline-driven, da
   a higher-bitrate encode. `--bg violet` selects the older violet haze (`ctx.bg`); the default is the navy-black backdrop.
 - Keep light panels at the frame edges, never behind or beside the action: now that they are crisp they compete with content.
 
+## Output folders (videos and screenshots are kept apart)
+
+`render.mjs` sorts everything it writes into subfolders of `video/out/` (gitignored), so Varun can find the right file
+without hunting through a flat pile:
+
+```
+video/out/
+  videos/
+    desktop/   long, 1920×1080 (or 3840×2160 at --scale 2): the main YouTube video
+    short/     Shorts, 1080×1920 (or 2160×3840 at --scale 2)
+  stills/      every PNG from --stills
+```
+
+- File names stay `<video>-beatNN-<format>[-2x][-violet][-draft].(mp4|png)`, so a file still says what it is if it is
+  copied out of its folder. The `desktop` folder holds the `--format long` renders; the flag name did not change.
+- Never write loose files into `video/out/`, and never put a still in `videos/` or a video in `stills/`. The renderer
+  creates the folders itself; do not create files by hand in the wrong place.
+- Contact sheets, before/after comparisons and other scratch images belong in the session scratchpad directory, not in
+  `video/out/`. Delete throwaway test renders (for example a one-second `--draft` check) when done.
+- A new video (a new `video/scenes/<name>/` folder) uses the same two format folders. The video name is part of the file
+  name, so different videos share `desktop/` and `short/`. If that ever becomes crowded, ask Varun before adding a
+  per-video level.
+- When telling Varun where a file is, give the full path including the subfolder, for example
+  `video/out/videos/short/tokenmaxxing-beat05-short-2x.mp4`.
+
 ## The iteration loop (fast first, slow last)
 
 Varun gives feedback like "make Tok bigger in beat 7" or "the badge lands late". Change only what was asked,
@@ -104,11 +129,11 @@ in that one scene, then go through these steps in order, stopping as soon as the
 1. **Live preview:** open `video/scenes/<video>/beatNN.html?format=short` in Chrome via the `claude-in-chrome`
    tools and reload after every edit. Scrub with the bar, Space to play, ←/→ to step a frame. Use `?t=5.2` to open at a moment.
 2. **Stills (seconds):** `node render.mjs scenes/<video>/beatNN.html --format both --stills a,b,c` at the moments
-   that changed, from inside `video/`. **Read the PNGs yourself and critique them before showing Varun** against the
+   that changed, from inside `video/` (they land in `video/out/stills/`). **Read the PNGs yourself and critique them before showing Varun** against the
    checklist below. Fix what you find, re-check, then show him.
 3. **Partial draft:** `--draft --from 4 --to 7` to check motion only where it changed.
 4. **Final:** `node render.mjs scenes/<video>/beatNN.html --format both --workers <≈ half the CPU cores>`.
-   Final renders go to `video/out/<video>-beatNN-<format>.mp4`. Verify with
+   Final renders go to `video/out/videos/desktop/` (long) and `video/out/videos/short/` (short). Verify with
    `ffprobe` (frame count = duration × fps, 1080×1920 / 1920×1080, yuv420p).
 
 ### Still checklist
@@ -132,8 +157,9 @@ confirm the mapping with him if it's ambiguous.
 Varun edits audio and the final cut himself. If he wants the beats joined silently in order:
 
 ```bash
-cd video/out && for f in tokenmaxxing-beat*-long.mp4; do echo "file '$f'"; done > list.txt \
-  && ffmpeg -f concat -safe 0 -i list.txt -c copy tokenmaxxing-long-silent.mp4
+# run from video/out/videos/desktop (or .../short); match the suffix you rendered with, e.g. -2x
+cd video/out/videos/desktop && for f in tokenmaxxing-beat*-long-2x.mp4; do echo "file '$f'"; done > .list.txt \
+  && ffmpeg -f concat -safe 0 -i .list.txt -c copy tokenmaxxing-full-long-2x-silent.mp4 && rm .list.txt
 ```
 
 ## Adding a new beat

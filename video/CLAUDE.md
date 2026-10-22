@@ -13,4 +13,5 @@ makes the visuals only, timed to his recording.
 - The deck rules (`deck-builder`: white background, no design tokens, click-to-advance, no npm) do NOT apply in
   this folder. Here the look is the dark neon theme in `theme/neon.css`, and npm is used for Puppeteer.
 - Setup: `cd video && npm install` (Puppeteer downloads its own headless Chrome). ffmpeg must be on PATH.
-- Renders go to `video/out/` (gitignored). Never commit rendered video.
+- Renders go to `video/out/` (gitignored), already sorted: `videos/desktop/` (long), `videos/short/` (Shorts) and
+  `stills/` (PNGs). Keep it that way; no loose files in `out/`. Never commit rendered video.

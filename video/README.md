@@ -34,7 +34,7 @@ Space = play/pause, ←/→ = step one frame, drag the bar to scrub.
 ## Render
 
 ```bash
-node render.mjs scenes/tokenmaxxing/beat04.html                          # Short, final quality → out/tokenmaxxing-beat04-short.mp4
+node render.mjs scenes/tokenmaxxing/beat04.html                          # Short, final quality → out/videos/short/tokenmaxxing-beat04-short.mp4
 node render.mjs scenes/tokenmaxxing/beat04.html --format long            # 1920×1080
 node render.mjs scenes/tokenmaxxing/beat04.html --format both --draft    # fast check of both sizes
 node render.mjs scenes/tokenmaxxing/beat04.html --workers 4              # split across 4 browsers (≈ half your CPU cores)
@@ -47,6 +47,16 @@ node render.mjs scenes/tokenmaxxing/beat04.html --no-captions            # clean
 Final = PNG frames, x264 CRF 14, fully BT.709-tagged (matrix, primaries, transfer), yuv420p (YouTube-safe).
 `--scale 2` and `--bg violet` add `-2x` / `-violet` to the file name, so variants never overwrite each other. Draft = JPEG frames + fast encode.
 Memory: each worker is one Chrome tab, roughly 300–500 MB. Frames stream straight to ffmpeg; nothing is written to disk.
+
+## Where the output goes
+
+```
+out/videos/desktop/   long 1920x1080 videos (3840x2160 with --scale 2)
+out/videos/short/     Shorts 1080x1920 (2160x3840 with --scale 2)
+out/stills/           PNG stills from --stills
+```
+
+The renderer creates these folders and sorts every file itself.
 
 ## Syncing to your Hindi voiceover
 
