@@ -21,7 +21,7 @@ If the script or storyboard changes there, update this file too. This file is wh
 | Beat | Scene file | Status |
 | --- | --- | --- |
 | 1 | `scenes/tokenmaxxing/beat01.html` | built, placeholder cues (waiting for recording) |
-| 2 | — | not started |
+| 2 | `scenes/tokenmaxxing/beat02.html` | built, placeholder cues (waiting for recording) |
 | 3 | — | not started |
 | 4 | `scenes/tokenmaxxing/beat04.html` | built, placeholder cues (waiting for recording) |
 | 5–17 | — | not started |

@@ -9,6 +9,7 @@
   const COLORS = {
     magenta: { main: "#B23BE8", hi: "#E39BFF" },
     cyan: { main: "#36D6E7", hi: "#B4F7FF" },
+    gold: { main: "#F5B82E", hi: "#FFE7A3" },   // accent for titles/badges only, never for tokens or value
   };
 
   /* ---------- Tok, the mascot ---------- */

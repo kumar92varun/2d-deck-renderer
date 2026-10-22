@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<title>Beat 2 · Tokenmaxxing</title>
+<link rel="stylesheet" href="../../theme/neon.css">
+<style>
+  .neon-text-g { color: #fff;
+    text-shadow: 0 0 calc(var(--u)*.3) #fff, 0 0 calc(var(--u)*1.2) #FFE7A3, 0 0 calc(var(--u)*3) #F5B82E, 0 0 calc(var(--u)*6) #F5B82E; }
+  .word { position: absolute; text-align: center; line-height: 1.15; font-weight: 800; letter-spacing: .01em; white-space: nowrap; }
+  .word .wrap { position: relative; display: inline-block; }
+  .word .strike { position: absolute; left: -3%; right: -3%; top: 56%; border-radius: 9px; background: #fff;
+                  transform: scaleX(0); transform-origin: 0 50%; }
+  .badge { position: absolute; display: flex; align-items: center; justify-content: center; white-space: nowrap; font-weight: 800;
+           letter-spacing: .08em; border-radius: 999px; border: 3px solid #fff; background: rgba(40,25,5,.88); }
+  .arrow { position: absolute; overflow: visible; }
+</style>
+</head>
+<body>
+<div class="stage"></div>
+
+<script src="../../../engine/gsap.min.js"></script>
+<script src="../../lib/scene-runtime.js"></script>
+<script src="../../lib/backdrop.js"></script>
+<script src="../../lib/components.js"></script>
+<script>
+/* Beat 2 (0:08–0:16): "...जो सबसे ऊपर होते, उन्हें मिलते थे titles, जैसे "Token Legend"। आज की कहानी है
+   tokenmaxxing की, और उसे कुछ बेहतर में बदलने की: valuemaxxing।"
+   CUES are seconds from the start of this beat. Placeholder times until the Hindi recording exists. */
+const CUES = {
+  tokenLegend: 2.4,    // "Token Legend" — gold badge stamps onto the top row
+  tokenmaxxing: 4.6,   // "tokenmaxxing" — board leaves, the old word flickers on
+  cross: 5.9,          // "बदलने की" — the old word is struck out, arrow draws
+  valuemaxxing: 6.3,   // "valuemaxxing" — new word slams in, cyan
+};
+const DURATION = 8;
+
+registerScene({
+  duration: DURATION, fps: 30, seed: 2, cues: CUES,
+  build(tl, ctx) {
+    const { W, H, u, format, stage } = ctx;
+    buildBackdrop(ctx, { duration: DURATION, panels: format === "short"
+      ? [{ x: 0.04, y: 0.075, w: 8, color: "m" }, { x: 0.78, y: 0.085, w: 8, color: "c" }, { x: 0.70, y: 0.84, w: 9, color: "c" }]
+      : [{ x: 0.04, y: 0.10, w: 8, color: "m" }, { x: 0.80, y: 0.05, w: 7, color: "c" }, { x: 0.92, y: 0.90, w: 6, color: "c" }] });
+
+    // ---------- Layout per format (board matches beat 1 so the cut is seamless) ----------
+    const L = format === "short"
+      ? { board: { x: 0.05 * W, y: 0.235 * H, w: 0.82 * W, rowH: 10 * u },
+          badge: { h: 6.2 * u, s: 3.2 * u },
+          w1: { cx: 0.46 * W, y: 0.31 * H, w: 0.86 * W, s: 9.6 * u },
+          w2: { cx: 0.46 * W, y: 0.50 * H, w: 0.86 * W, s: 9.6 * u },
+          arrow: { cx: 0.46 * W, cy: 0.445 * H, size: 9 * u, rot: 90 } }
+      : { board: { x: 0.36 * W, y: 0.17 * H, w: 0.58 * W, rowH: 8 * u },
+          badge: { h: 6.2 * u, s: 3.4 * u },
+          w1: { cx: 0.25 * W, y: 0.40 * H, w: 0.46 * W, s: 8.4 * u },
+          w2: { cx: 0.75 * W, y: 0.40 * H, w: 0.46 * W, s: 8.4 * u },
+          arrow: { cx: 0.5 * W, cy: 0.455 * H, size: 9 * u, rot: 0 } };
+
+    // ---------- The board from beat 1, already full (numbers carry on from where beat 1 ended) ----------
+    const names = ["Dev_07", "Dev_21", "Dev_03", "Dev_14", "Dev_09"];
+    const start = [18400000, 15700000, 12900000, 10300000, 7600000];
+    const board = createLeaderboard(ctx, { ...L.board, title: "Tokens", names, color: "magenta" });
+    const state = {};
+    names.forEach((_, i) => {
+      state["r" + i] = start[i];
+      const steps = 8, span = CUES.tokenmaxxing - 0.6;
+      let acc = start[i];
+      for (let k = 0; k < steps; k++) {
+        acc += Math.round(start[i] * 0.012 * (0.5 + ctx.rng()));
+        tl.to(state, { ["r" + i]: acc, duration: span / steps * 0.8, ease: "power1.out" }, k * span / steps);
+      }
+    });
+    ctx.onFrame(() => board.nums.forEach((el, i) => { el.textContent = Math.round(state["r" + i]).toLocaleString("en-IN"); }));
+
+    // ---------- Gold "Token Legend" badge, stamped onto the top row ----------
+    // Stamped in the empty header strip (top-right of the board) so no name or number is hidden
+    const bx = L.board.x + L.board.w - 2 * u - L.badge.s * 5.6, rowCy = L.board.y + L.board.rowH * 0.85 * 0.55;
+    const stampFlare = createFlare(ctx, { x: bx, y: rowCy, size: 34 * u, color: "gold" });
+    const badge = document.createElement("div");
+    badge.className = "badge";
+    badge.style.cssText += `left:${bx}px;top:${rowCy}px;height:${L.badge.h}px;padding:0 ${L.badge.h * 0.5}px;font-size:${L.badge.s}px;opacity:0;
+      box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${2 * u}px #FFE7A3, 0 0 ${4.5 * u}px #F5B82E`;
+    badge.innerHTML = `<span class="neon-text-g">TOKEN LEGEND</span>`;
+    stage.appendChild(badge);
+    gsap.set(badge, { xPercent: -50, yPercent: -50 });
+    tl.fromTo(badge, { opacity: 0, scale: 3, rotation: -16 },
+                     { opacity: 1, scale: 1, rotation: -6, duration: 0.16, ease: "power4.in" }, CUES.tokenLegend)
+      .to(badge, { scale: 1.08, duration: 0.07, ease: "power2.out" }, CUES.tokenLegend + 0.16)
+      .to(badge, { scale: 1, duration: 0.3, ease: "elastic.out(1,0.4)" }, CUES.tokenLegend + 0.23);
+    stampFlare.burst(CUES.tokenLegend + 0.16, 1);
+    tl.to(board.el, { keyframes: { y: [0, 1.1 * u, -0.7 * u, 0.4 * u, 0] }, duration: 0.32, ease: "none" }, CUES.tokenLegend + 0.16);
+
+    // The board and badge leave as the title card begins
+    tl.to([board.el, badge, stampFlare.el], { opacity: 0, duration: 0.4, ease: "power2.in" }, CUES.tokenmaxxing - 0.5);
+
+    // ---------- Title card (separate layer, toggle with ?captions=0) ----------
+    const cap = document.createElement("div");
+    cap.className = "layer captions";
+    const word = (cls, text, p) =>
+      `<div class="word ${cls}" style="left:${p.cx - p.w / 2}px;top:${p.y}px;width:${p.w}px;font-size:${p.s}px">
+         <span class="wrap neon-text-${cls === "old" ? "m" : "c"}">${text}<i class="strike" style="height:${0.55 * u}px;margin-top:${-0.27 * u}px;
+           box-shadow:0 0 ${0.4 * u}px #fff, 0 0 ${1 * u}px #E39BFF"></i></span></div>`;
+    cap.innerHTML = word("old", "Tokenmaxxing", L.w1) + word("new", "Valuemaxxing", L.w2);
+    const a = L.arrow;
+    cap.insertAdjacentHTML("beforeend", `
+      <svg class="arrow" viewBox="0 0 100 100" style="left:${a.cx - a.size / 2}px;top:${a.cy - a.size / 2}px;width:${a.size}px;height:${a.size}px;transform:rotate(${a.rot}deg)">
+        <path d="M12 50 H84 M60 26 L86 50 L60 74" pathLength="1" fill="none" stroke="#36D6E7" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" opacity=".45" class="ag"/>
+        <path d="M12 50 H84 M60 26 L86 50 L60 74" pathLength="1" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" class="ag"/>
+      </svg>`);
+    stage.appendChild(cap);
+
+    const oldW = cap.querySelector(".old .wrap"), newW = cap.querySelector(".new .wrap");
+    const strike = cap.querySelector(".old .strike"), arrows = cap.querySelectorAll(".ag");
+    gsap.set(arrows, { strokeDasharray: 1, strokeDashoffset: 1 });
+    gsap.set(newW, { opacity: 0 });
+
+    const oldFlare = createFlare(ctx, { x: L.w1.cx, y: L.w1.y + L.w1.s * 0.6, size: 42 * u, color: "magenta" });
+    const newFlare = createFlare(ctx, { x: L.w2.cx, y: L.w2.y + L.w2.s * 0.6, size: 50 * u, color: "cyan" });
+    [oldFlare, newFlare].forEach((f) => { cap.insertBefore(f.el, cap.firstChild); });
+
+    flickerOn(ctx, oldW, CUES.tokenmaxxing);
+    oldFlare.burst(CUES.tokenmaxxing, 0.7);
+
+    tl.to(strike, { scaleX: 1, duration: 0.22, ease: "power3.out" }, CUES.cross)
+      .to(oldW, { opacity: 0.55, duration: 0.3, ease: "power1.out" }, CUES.cross + 0.15)
+      .to(arrows, { strokeDashoffset: 0, duration: 0.3, ease: "power2.out" }, CUES.cross + 0.15);
+
+    tl.fromTo(newW, { opacity: 0, scale: 1.45 }, { opacity: 1, scale: 1, duration: 0.18, ease: "power4.out" }, CUES.valuemaxxing);
+    newFlare.burst(CUES.valuemaxxing, 1);
+  },
+});
+</script>
+</body>
+</html>
