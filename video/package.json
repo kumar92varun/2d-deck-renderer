@@ -1,0 +1,14 @@
+{
+  "name": "neon-explainer-video",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Frame-stepping Puppeteer + GSAP renderer for neon explainer videos (Shorts + main videos)",
+  "type": "module",
+  "scripts": {
+    "render": "node render.mjs",
+    "render:draft": "node render.mjs --draft"
+  },
+  "dependencies": {
+    "puppeteer": "^25.15.0"
+  }
+}

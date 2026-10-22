@@ -1,6 +1,6 @@
 ---
 name: deck-builder
-description: Use whenever the user asks to create, extend, or edit a video explainer deck in this repo (mindmaps, subtopic dives, tables, screenshot zoom-highlights). Covers the camera engine, the step format, and the conventions this project follows.
+description: Use whenever the user asks to create, extend, or edit a click-to-advance presentation deck under /decks (mindmaps, subtopic dives, tables, screenshot zoom-highlights). Covers the camera engine, the step format, and the conventions this project follows. Not for the rendered video clips in /video — those use the neon-explainer skill.
 ---
 
 # Deck Builder

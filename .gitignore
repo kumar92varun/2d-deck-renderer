@@ -1,1 +1,6 @@
 .claude/settings.local.json
+
+# Video pipeline
+video/node_modules/
+video/out/
+.DS_Store

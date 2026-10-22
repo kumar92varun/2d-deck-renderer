@@ -34,6 +34,8 @@ engine/
 decks/
   tokenmaxxing/   reference example: mindmap + subtopic dives + screenshot zoom
 .claude/skills/deck-builder/SKILL.md   conventions for building new decks
+video/            rendered animated clips (Shorts + main videos) — see video/README.md
+.claude/skills/neon-explainer/SKILL.md conventions + iteration loop for video scenes
 CLAUDE.md         project memory for Claude Code
 ```
 

@@ -1,5 +1,14 @@
 # Deck Project
 
+This repo has two separate parts with different rules:
+
+- **`/decks` + `/engine`** — click-to-advance presentation decks (rules below, `deck-builder` skill).
+- **`/video`** — rendered animated clips for Shorts and main videos (dark neon style, timeline-driven,
+  Puppeteer + ffmpeg). See `video/CLAUDE.md` and the `neon-explainer` skill. The deck rules below
+  do not apply there.
+
+## Decks
+
 Click-to-advance, infinite-canvas presentation decks for recorded YouTube
 explainer videos. Plain HTML/CSS/vanilla JS, GSAP vendored locally under
 `/engine/`. No build step, no framework, no npm required to open or run a deck.
