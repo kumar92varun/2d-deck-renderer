@@ -1,0 +1,83 @@
+/* Neon haze theme — colours approximated from the reference images.
+   Change values here and every scene follows. */
+
+@font-face { font-family: "Poppins"; font-weight: 400; font-display: block;
+  src: url("../fonts/poppins-latin-400-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Poppins"; font-weight: 400; font-display: block;
+  src: url("../fonts/poppins-devanagari-400-normal.woff2") format("woff2");
+  unicode-range: U+0900-097F,U+1CD0-1CF9,U+200C-200D,U+20A8,U+20B9,U+20F0,U+25CC,U+A830-A839,U+A8E0-A8FF; }
+@font-face { font-family: "Poppins"; font-weight: 600; font-display: block;
+  src: url("../fonts/poppins-latin-600-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Poppins"; font-weight: 600; font-display: block;
+  src: url("../fonts/poppins-devanagari-600-normal.woff2") format("woff2");
+  unicode-range: U+0900-097F,U+1CD0-1CF9,U+200C-200D,U+20A8,U+20B9,U+20F0,U+25CC,U+A830-A839,U+A8E0-A8FF; }
+@font-face { font-family: "Poppins"; font-weight: 800; font-display: block;
+  src: url("../fonts/poppins-latin-800-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Poppins"; font-weight: 800; font-display: block;
+  src: url("../fonts/poppins-devanagari-800-normal.woff2") format("woff2");
+  unicode-range: U+0900-097F,U+1CD0-1CF9,U+200C-200D,U+20A8,U+20B9,U+20F0,U+25CC,U+A830-A839,U+A8E0-A8FF; }
+
+:root {
+  --magenta: #B23BE8;        /* Primary 1: tokens, cost */
+  --magenta-hi: #E39BFF;     /* Primary 1 glow highlight */
+  --cyan: #36D6E7;           /* Primary 2: value, outcome */
+  --cyan-hi: #B4F7FF;        /* Primary 2 glow highlight */
+  --bg: #120A26;             /* Background base */
+  --fog: #6E6BD6;            /* Fog midtone where the two blend */
+  --text: #F4F1FF;           /* Soft white */
+  --core: #FFFFFF;           /* White-hot neon core */
+
+  /* Layout unit: 1u = 1% of the shorter screen side, so one scene
+     reads the same in 1080x1920 and 1920x1080. */
+  --u: calc(min(100vw, 100vh) / 100);
+  --font: "Poppins", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); }
+body { font-family: var(--font); color: var(--text); -webkit-font-smoothing: antialiased; }
+
+.stage { position: absolute; inset: 0; overflow: hidden; isolation: isolate; }
+.layer { position: absolute; inset: 0; pointer-events: none; }
+
+/* ---------- Haze background ---------- */
+.haze-blob { position: absolute; border-radius: 50%; will-change: transform; }
+.haze-magenta { background: radial-gradient(closest-side, rgba(178,59,232,.85), rgba(178,59,232,.32) 55%, rgba(178,59,232,0)); }
+.haze-cyan    { background: radial-gradient(closest-side, rgba(54,214,231,.80), rgba(54,214,231,.30) 55%, rgba(54,214,231,0)); }
+.haze-fog     { background: radial-gradient(closest-side, rgba(150,140,230,.50), rgba(110,107,214,.18) 60%, rgba(110,107,214,0)); }
+.grain { opacity: .07; mix-blend-mode: overlay; }
+
+/* Floating light panels (the light boxes from the reference) */
+.light-panel {
+  position: absolute; border-radius: calc(var(--u) * .6);
+  will-change: transform, opacity;
+}
+.light-panel.m { background: #FCF2FF; box-shadow: 0 0 calc(var(--u)*1.5) #fff, 0 0 calc(var(--u)*5) var(--magenta-hi), 0 0 calc(var(--u)*12) var(--magenta), 0 0 calc(var(--u)*22) rgba(178,59,232,.6); }
+.light-panel.c { background: #F0FEFF; box-shadow: 0 0 calc(var(--u)*1.5) #fff, 0 0 calc(var(--u)*5) var(--cyan-hi), 0 0 calc(var(--u)*12) var(--cyan), 0 0 calc(var(--u)*22) rgba(54,214,231,.6); }
+
+/* ---------- Neon utilities ---------- */
+.neon-text-m {
+  color: var(--core);
+  text-shadow: 0 0 calc(var(--u)*.3) #fff, 0 0 calc(var(--u)*1.2) var(--magenta-hi),
+               0 0 calc(var(--u)*3) var(--magenta), 0 0 calc(var(--u)*6) var(--magenta);
+}
+.neon-text-c {
+  color: var(--core);
+  text-shadow: 0 0 calc(var(--u)*.3) #fff, 0 0 calc(var(--u)*1.2) var(--cyan-hi),
+               0 0 calc(var(--u)*3) var(--cyan), 0 0 calc(var(--u)*6) var(--cyan);
+}
+.soft-text { color: var(--text); text-shadow: 0 0 calc(var(--u)*1.5) rgba(110,107,214,.9); }
+
+/* ---------- Captions layer (toggle with ?captions=0) ---------- */
+.captions { z-index: 50; }
+/* Static glowing text gets its own cached layer (big speed-up in software rendering) */
+.caption, .badge, .meter .readout, .meter > div:not(.track):not(.glow) { will-change: transform; }
+body.no-captions .captions { display: none; }
+
+/* ---------- Shorts safe-zone guide (toggle with ?guides=1) ---------- */
+.guides { z-index: 100; display: none; }
+body.show-guides .guides { display: block; }
+.guides .zone { position: absolute; background: rgba(255,0,0,.18); border: 2px dashed rgba(255,80,80,.8); }
