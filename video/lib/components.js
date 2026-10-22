@@ -119,6 +119,31 @@
     };
   };
 
+  /* ---------- Leaderboard: title strip + ranked rows with a number to tick ---------- */
+  window.createLeaderboard = function (ctx, { x, y, w, rowH, title, names, color = "magenta" }) {
+    const c = COLORS[color], u = ctx.u, headH = rowH * 0.85, n = names.length;
+    const cls = color === "cyan" ? "c" : "m";
+    const el = document.createElement("div");
+    el.className = "leaderboard";
+    el.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${headH + rowH * n + 1.2 * u}px;
+      border-radius:${2 * u}px;border:${0.4 * u}px solid #fff;background:rgba(18,10,38,.62);
+      box-shadow:0 0 ${0.8 * u}px #fff, 0 0 ${2.4 * u}px ${c.hi}, 0 0 ${6 * u}px ${c.main}, inset 0 0 ${2.5 * u}px ${c.main}66;
+      will-change:transform,opacity`;
+    const row = (name, i) => `
+      <div class="lb-row" style="position:absolute;left:${2 * u}px;right:${2 * u}px;top:${headH + i * rowH}px;height:${rowH}px;
+           display:flex;align-items:center;border-top:${i ? 1 : 0}px solid ${c.hi}40;will-change:transform,opacity">
+        <span style="width:${rowH * 0.8}px;font-weight:600;font-size:${rowH * 0.34}px;color:${c.hi}">#${i + 1}</span>
+        <span class="soft-text" style="flex:1;font-weight:600;font-size:${rowH * 0.4}px">${name}</span>
+        <span class="num neon-text-${cls}" style="font-weight:800;font-size:${rowH * 0.46}px">0</span>
+      </div>`;
+    el.innerHTML = `
+      <div class="soft-text" style="position:absolute;left:${2 * u}px;top:0;height:${headH}px;display:flex;align-items:center;
+           font-weight:600;font-size:${rowH * 0.3}px;letter-spacing:.18em;text-transform:uppercase">${title}</div>
+      ${names.map(row).join("")}`;
+    ctx.stage.appendChild(el);
+    return { el, rows: Array.from(el.querySelectorAll(".lb-row")), nums: Array.from(el.querySelectorAll(".num")) };
+  };
+
   /* ---------- Tokens / Value meter ---------- */
   window.createMeter = function (ctx, { x, y, w, h }) {
     const u = ctx.u, el = document.createElement("div");
