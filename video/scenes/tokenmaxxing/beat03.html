@@ -27,10 +27,10 @@ const CUES = {
   sentence: 0.4,        // "AI से बात करते हैं" — the prompt appears
   tokens: 3.4,          // "tokens" — the sentence shatters into tiles
   tok: 4.6,             // (after "tokens") — one tile turns into Tok and hops home
-  threeQuarters: 6.2,   // "पौने शब्द" — "1 token ≈ ¾ शब्द" caption
+  threeQuarters: 6.2,   // "पौने शब्द" — "1 token ≈ ¾ word" caption
   in: 8.2,              // "अंदर" — tiles stream into the AI box, a coin drops for each
   out: 10.0,            // "बाहर" — new tiles stream out, a coin drops for each
-  cost: 11.0,           // end of the line — "= खर्च" lands, the coins pulse
+  cost: 11.0,           // end of the line — "= Cost" lands, the coins pulse
 };
 const DURATION = 12;
 
@@ -182,12 +182,12 @@ registerScene({
     cap.className = "layer captions";
     cap.innerHTML = `
       <div class="caption cap1" style="left:${L.cap1.cx - W / 2}px;width:${W}px;top:${L.cap1.y}px;font-size:${L.cap1.s}px;opacity:0">
-        <span class="neon-text-m">1 token</span> <span class="soft-text">≈ ¾ शब्द</span>
+        <span class="neon-text-m">1 token</span> <span class="soft-text">≈ ¾ word</span>
       </div>
       <div class="caption cap2" style="left:${L.cap2.cx - W / 2}px;width:${W}px;top:${L.cap2.y}px;font-size:${L.cap2.s}px">
         <span class="part p1 neon-text-m">Input</span>
         <span class="part p2 soft-text">+</span> <span class="part p2 neon-text-m">Output</span>
-        <span class="part p3 soft-text">=</span> <span class="part p3 neon-text-m">खर्च</span>
+        <span class="part p3 soft-text">=</span> <span class="part p3 neon-text-m">Cost</span>
       </div>`;
     stage.appendChild(cap);
     const cap1 = cap.querySelector(".cap1");

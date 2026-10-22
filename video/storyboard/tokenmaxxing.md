@@ -34,7 +34,7 @@ Times are targets; each scene is re-timed to the recorded Hindi audio through it
 | --- | --- | --- | --- | --- |
 | 1 | 0:00–0:08 | Tokens जलाने | A glowing leaderboard slides in; names and big magenta numbers tick upward. Rows for "code shipped" and "bugs fixed" get struck through. | TOKENS BURNED |
 | 2 | 0:08–0:16 | "Token Legend" / valuemaxxing | A gold badge stamps onto the top row with a glow flare. Title card: "tokenmaxxing" crosses out to "valuemaxxing" in neon cyan. | Tokenmaxxing → Valuemaxxing |
-| 3 | 0:16–0:28 | tokens / अंदर / बाहर | A sentence shatters into coloured tiles; one becomes Tok (squash on landing). Tiles stream into an AI box (in) and back out (out), each dropping a coin. | 1 token ≈ ¾ शब्द · Input + Output = खर्च |
+| 3 | 0:16–0:28 | tokens / अंदर / बाहर | A sentence shatters into coloured tiles; one becomes Tok (squash on landing). Tiles stream into an AI box (in) and back out (out), each dropping a coin. | 1 token ≈ ¾ word · Input + Output = Cost |
 | 4 | 0:28–0:40 | Tokenmaxxing / 2026 | Tok shovels tiles into the box non-stop. The meter appears: magenta Tokens bar blazes up, cyan Value bar barely glows. | Tokenmaxxing = Usage को Score मानना |
 | 5 | 0:40–0:50 | एक number | A boardroom slide with a single giant counter; executives (simple silhouettes) nod. | AI Adoption = सिर्फ़ 1 Number |
 | 6 | 0:50–1:00 | ढाई लाख डॉलर के tokens | Quote card with speaker name. Two stacked bars: $500K salary vs $250K tokens. | $500K Salary vs $250K Tokens · Jensen Huang, Nvidia |
