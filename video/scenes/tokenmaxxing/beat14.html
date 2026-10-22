@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<title>Beat 14 · Tokenmaxxing</title>
+<link rel="stylesheet" href="../../theme/neon.css">
+<style>
+  .task { position: absolute; display: flex; align-items: center; justify-content: center; font-weight: 600; white-space: nowrap; opacity: 0;
+          border-radius: 999px; border: 3px solid #fff; background: rgba(18,10,38,.85); will-change: transform, opacity; }
+  .router { position: absolute; display: flex; align-items: center; justify-content: center; border: 3px solid #fff; background: rgba(34,20,70,.9); opacity: 0; will-change: transform, opacity; }
+  .lbl { position: absolute; text-align: center; font-weight: 600; white-space: nowrap; opacity: 0; }
+  .coin { position: absolute; left: 0; top: 0; border-radius: 50%; opacity: 0; will-change: transform, opacity;
+          background: radial-gradient(circle at 35% 35%, #fff, #E39BFF 45%, #B23BE8); }
+  svg.lanes { position: absolute; left: 0; top: 0; overflow: visible; }
+</style>
+</head>
+<body>
+<div class="stage"></div>
+
+<script src="../../../engine/gsap.min.js"></script>
+<script src="../../lib/scene-runtime.js"></script>
+<script src="../../lib/backdrop.js"></script>
+<script src="../../lib/components.js"></script>
+<script>
+/* Beat 14 (2:30–2:44): "दूसरा नियम: सही काम, सही model। दो लाइन का email लिखने के लिए सबसे बड़ा frontier model मत भेजो। आसान काम छोटे, सस्ते models
+   को दो, और बड़े models बचाकर रखो मुश्किल problems के लिए."
+   CUES are seconds from the start of this beat. Placeholder times until the Hindi recording exists. */
+const CUES = {
+  rule: 0.4,      // "दूसरा नियम" — "Rule 2:" slams in
+  model: 2.0,     // "सही काम, सही model" — "Right Task, Right Model"; the router and its two lanes light up
+  tasks: 2.8,     // the two tasks arrive: a 2-line email and a gnarly bug
+  email: 5.0,     // "दो लाइन का email" — the email is routed to the SMALL model: one cheap coin
+  small: 7.2,     // "छोटे, सस्ते models को दो" — the small lane is highlighted
+  bug: 9.0,       // "मुश्किल problems के लिए" — the gnarly bug goes to the BIG model: six coins
+};
+const DURATION = 14;
+
+registerScene({
+  duration: DURATION, fps: 30, seed: 14, cues: CUES,
+  build(tl, ctx) {
+    const { W, H, u, format, stage } = ctx;
+    const isShort = format === "short";
+    buildBackdrop(ctx, { duration: DURATION, panels: isShort
+      ? [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.78, y: 0.07, w: 8, color: "c" }, { x: 0.72, y: 0.86, w: 9, color: "c" }]
+      : [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.86, y: 0.07, w: 7, color: "c" }, { x: 0.90, y: 0.88, w: 6, color: "c" }] });
+
+    // ---------- Layout per format (a symmetric / centred flow: tasks -> router -> two lanes) ----------
+    const L = isShort
+      ? { cw: 32 * u, ch: 9 * u, cardE: [0.29 * W, 0.14 * H], cardB: [0.71 * W, 0.14 * H], router: [0.5 * W, 0.245 * H], rr: 4.4 * u,
+          small: { cx: 0.29 * W, base: 0.45 * H, size: 9 * u }, big: { cx: 0.71 * W, base: 0.45 * H, size: 18 * u },
+          cap: { y: 0.64 * H, s1: 5 * u, s2: 6.8 * u }, coinsBelow: true }
+      : { cw: 24 * u, ch: 8 * u, cardE: [0.2 * W, 0.26 * H], cardB: [0.2 * W, 0.58 * H], router: [0.42 * W, 0.42 * H], rr: 4.4 * u,
+          small: { cx: 0.66 * W, base: 0.31 * H, size: 10 * u }, big: { cx: 0.68 * W, base: 0.69 * H, size: 21 * u },
+          cap: { y: 0.77 * H, s1: 5.4 * u, s2: 7.2 * u }, coinsBelow: false };
+    const smallTop = L.small.base - L.small.size, bigTop = L.big.base - L.big.size;
+    // where a routed card ends up: just in front of its Tok
+    const endE = isShort ? [L.small.cx, smallTop - 1.5 * u] : [L.small.cx - L.small.size / 2 - 3 * u, L.small.base - L.small.size / 2];
+    const endB = isShort ? [L.big.cx, bigTop - 1.5 * u] : [L.big.cx - L.big.size / 2 - 3 * u, L.big.base - L.big.size / 2];
+
+    // ---------- Router and the two lanes ----------
+    const svg = `<svg class="lanes" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+      <path id="laneE" d="M${L.router[0]} ${L.router[1]} L${endE[0]} ${endE[1]}" pathLength="1" fill="none" stroke="#B4F7FF" stroke-width="${0.45 * u}" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="1" opacity=".9"/>
+      <path id="laneB" d="M${L.router[0]} ${L.router[1]} L${endB[0]} ${endB[1]}" pathLength="1" fill="none" stroke="#E39BFF" stroke-width="${0.45 * u}" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="1" opacity=".9"/>
+    </svg>`;
+    stage.insertAdjacentHTML("beforeend", svg);
+    const laneE = stage.querySelector("#laneE"), laneB = stage.querySelector("#laneB");
+    tl.to(laneE, { strokeDashoffset: 0, duration: 0.7, ease: "power2.out" }, CUES.model)
+      .to(laneB, { strokeDashoffset: 0, duration: 0.7, ease: "power2.out" }, CUES.model + 0.15);
+    const router = document.createElement("div");
+    router.className = "router soft-text";
+    const rs = L.router[0] - L.rr;
+    router.style.cssText = `left:${rs}px;top:${L.router[1] - L.rr}px;width:${2 * L.rr}px;height:${2 * L.rr}px;border-radius:30%;font-size:${1.45 * u}px;font-weight:800;letter-spacing:.02em;
+      box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px #B6B2FF, 0 0 ${3.5 * u}px #6E6BD6`;
+    router.textContent = "ROUTER";
+    stage.appendChild(router);
+    flickerOn(ctx, router, CUES.model);
+    const pulseRouter = (at) => tl.to(router, { scale: 1.18, duration: 0.1, ease: "power2.out" }, at).to(router, { scale: 1, duration: 0.3, ease: "elastic.out(1,0.5)" }, at + 0.1);
+
+    // ---------- The two Toks: small and cheap, big and expensive ----------
+    const tokS = createTok(ctx, { size: L.small.size, color: "magenta" }), tokB = createTok(ctx, { size: L.big.size, color: "magenta" });
+    gsap.set(tokS.el, { left: L.small.cx - L.small.size / 2, top: smallTop, opacity: 0 });
+    gsap.set(tokB.el, { left: L.big.cx - L.big.size / 2, top: bigTop, opacity: 0 });
+    flickerOn(ctx, tokS.el, CUES.model + 0.4); flickerOn(ctx, tokB.el, CUES.model + 0.55);
+    [3.4, 6.6, 10.8].forEach((t) => tokS.blink(t)); [4.2, 12.4].forEach((t) => tokB.blink(t));
+    const mkLabel = (text, cx, y, s) => {
+      const el = document.createElement("div");
+      el.className = "lbl soft-text";
+      el.style.cssText = `left:${cx - 12 * u}px;width:${24 * u}px;top:${y}px;font-size:${s}px`;
+      el.textContent = text; stage.appendChild(el); return el;
+    };
+    const labS = mkLabel("Small model", isShort ? L.small.cx : L.small.cx, isShort ? L.small.base + 1.4 * u : L.small.base + 1.4 * u, 2.9 * u);
+    const labB = mkLabel("Big model", L.big.cx, L.big.base + 1.4 * u, 2.9 * u);
+    tl.to(labS, { opacity: 0.9, duration: 0.4 }, CUES.model + 0.6).to(labB, { opacity: 0.9, duration: 0.4 }, CUES.model + 0.7);
+
+    // ---------- The tasks ----------
+    const mkTask = (text, [cx, cy], color) => {
+      const el = document.createElement("div");
+      el.className = "task soft-text";
+      el.style.cssText = `left:${cx - L.cw / 2}px;top:${cy - L.ch / 2}px;width:${L.cw}px;height:${L.ch}px;font-size:${3.5 * u}px;
+        border-color:#fff;box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.5 * u}px ${color.hi}, 0 0 ${3 * u}px ${color.main}`;
+      el.textContent = text; stage.appendChild(el); return el;
+    };
+    const taskE = mkTask("2-line email", L.cardE, { hi: "#B4F7FF", main: "#36D6E7" });
+    const taskB = mkTask("Gnarly bug", L.cardB, { hi: "#E39BFF", main: "#B23BE8" });
+    flickerOn(ctx, taskE, CUES.tasks); flickerOn(ctx, taskB, CUES.tasks + 0.2);
+    // route a task: card -> router -> in front of its Tok, then it is consumed
+    const route = (card, from, end, at) => {
+      tl.to(card, { x: L.router[0] - from[0], y: L.router[1] - from[1], duration: 0.5, ease: "power2.inOut" }, at);
+      pulseRouter(at + 0.45);
+      tl.to(card, { x: end[0] - from[0], y: end[1] - from[1], duration: 0.55, ease: "power2.inOut" }, at + 0.55)
+        .to(card, { scale: 0.3, opacity: 0, duration: 0.18, ease: "power2.in" }, at + 1.05);
+    };
+    route(taskE, L.cardE, endE, CUES.email);
+    route(taskB, L.cardB, endB, CUES.bug);
+
+    // ---------- Cost: one coin for the small model, six for the big one ----------
+    const cs = 3.2 * u, cstep = 4 * u;
+    const coinSlots = (cx, top, n, cols) => Array.from({ length: n }, (_, k) => {
+      const row = Math.floor(k / cols), inRow = Math.min(cols, n - row * cols), col = k % cols;
+      return [cx - (inRow * cstep) / 2 + col * cstep + (cstep - cs) / 2, top + row * cstep];
+    });
+    const dropCoins = (slots, at, from, gapT) => slots.forEach(([x, y], k) => {
+      const c = document.createElement("div");
+      c.className = "coin";
+      c.style.cssText = `width:${cs}px;height:${cs}px;box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.5 * u}px #E39BFF, 0 0 ${3 * u}px #B23BE8`;
+      stage.appendChild(c);
+      gsap.set(c, { x: from[0] - cs / 2, y: from[1] - cs / 2, scale: 0.4 });
+      tl.to(c, { opacity: 1, duration: 0.05 }, at + k * gapT)
+        .to(c, { x, duration: 0.4, ease: "power1.out" }, at + k * gapT)
+        .to(c, { y, duration: 0.4, ease: "bounce.out" }, at + k * gapT)
+        .to(c, { scale: 1, duration: 0.2 }, at + k * gapT);
+    });
+    let slotsS, slotsB, fromS, fromB;
+    if (isShort) {
+      slotsS = coinSlots(L.small.cx, L.small.base + 5.4 * u, 1, 3); slotsB = coinSlots(L.big.cx, L.big.base + 5.4 * u, 6, 3);
+    } else {
+      slotsS = coinSlots(L.small.cx + L.small.size / 2 + 9 * u, L.small.base - L.small.size / 2 - cs / 2, 1, 3);
+      slotsB = coinSlots(L.big.cx + L.big.size / 2 + 9 * u, L.big.base - L.big.size / 2 - cstep, 6, 3);
+    }
+    fromS = [L.small.cx, L.small.base - L.small.size / 2]; fromB = [L.big.cx, L.big.base - L.big.size / 2];
+    const arriveE = CUES.email + 1.05, arriveB = CUES.bug + 1.05;
+    tokS.squash(arriveE, 0.7); tokB.squash(arriveB, 1.1);
+    dropCoins(slotsS, arriveE + 0.15, fromS, 0.1);
+    dropCoins(slotsB, arriveB + 0.15, fromB, 0.16);
+    // the cheap lane is called out on "छोटे, सस्ते"
+    const fS = createFlare(ctx, { x: L.small.cx, y: L.small.base - L.small.size / 2, size: 20 * u, color: "cyan" });
+    fS.burst(CUES.small, 0.8);
+    tl.to(labS, { scale: 1.15, duration: 0.15, ease: "power2.out" }, CUES.small).to(labS, { scale: 1, duration: 0.3 }, CUES.small + 0.15);
+    const fB = createFlare(ctx, { x: L.big.cx, y: L.big.base - L.big.size / 2, size: 30 * u, color: "magenta" });
+    fB.burst(arriveB, 0.8);
+
+    // ---------- Caption (separate layer, toggle with ?captions=0) ----------
+    const lines = isShort
+      ? [{ html: "Rule 2:", size: L.cap.s1, cls: "soft-text", weight: 800 }, { html: "Right Task,", size: L.cap.s2, cls: "neon-text-m" }, { html: "Right Model", size: L.cap.s2, cls: "neon-text-m" }]
+      : [{ html: "Rule 2:", size: L.cap.s1, cls: "soft-text", weight: 800 }, { html: "Right Task, Right Model", size: L.cap.s2, cls: "neon-text-m" }];
+    const cap = createCaption(ctx, { cx: W / 2, y: L.cap.y, w: 0.76 * W, lines });
+    cap.reveal(0, CUES.rule);
+    cap.reveal(1, CUES.model);
+    if (lines.length > 2) cap.reveal(2, CUES.model + 0.2);
+  },
+});
+</script>
+</body>
+</html>

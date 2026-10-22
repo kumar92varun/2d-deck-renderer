@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<title>Beat 8 · Tokenmaxxing</title>
+<link rel="stylesheet" href="../../theme/neon.css">
+<style>
+  .invoice { position: absolute; overflow: hidden; background: linear-gradient(170deg, rgba(34,20,70,.92), rgba(14,8,32,.94)); }
+  .invoice .head { position: absolute; left: 0; right: 0; top: 0; display: flex; align-items: center; justify-content: space-between; font-weight: 600; }
+  .invoice .view { position: absolute; left: 0; right: 0; overflow: hidden; }
+  .invoice .row { position: absolute; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; }
+  .invoice .fade { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(to top, #040914, rgba(4,9,20,0)); pointer-events: none; }
+  .cal { position: absolute; border-radius: 1.6em; overflow: hidden; background: #0B0720; }
+  .cal .band { position: absolute; left: 0; right: 0; top: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; letter-spacing: .2em; }
+  .cal .day { position: absolute; left: 0; right: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; }
+  .cal .face { position: absolute; inset: 0; background: #0B0720; transform-origin: 50% 0; }
+</style>
+</head>
+<body>
+<div class="stage"></div>
+
+<script src="../../../engine/gsap.min.js"></script>
+<script src="../../lib/scene-runtime.js"></script>
+<script src="../../lib/backdrop.js"></script>
+<script src="../../lib/components.js"></script>
+<script>
+/* Beat 8 (1:12–1:22): "फिर bills आने लगे। जब GitHub Copilot ने 1 जून को usage-based billing शुरू की, तो ये खर्च नज़रअंदाज़
+   करना नामुमकिन हो गया।"
+   CUES are seconds from the start of this beat. Placeholder times until the Hindi recording exists. */
+const CUES = {
+  bills: 0.5,      // "bills आने लगे" — an invoice unrolls from the top and keeps feeding
+  billing: 3.4,    // "usage-based billing" — first caption line
+  june: 5.0,       // "1 जून" — the calendar flips from May 31 to June 1, second caption line
+};
+const DURATION = 10;
+
+registerScene({
+  duration: DURATION, fps: 30, seed: 8, cues: CUES,
+  build(tl, ctx) {
+    const { W, H, u, format, stage } = ctx;
+    const isShort = format === "short";
+    buildBackdrop(ctx, { duration: DURATION, panels: isShort
+      ? [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.78, y: 0.07, w: 8, color: "c" }, { x: 0.72, y: 0.86, w: 9, color: "c" }]
+      : [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.86, y: 0.07, w: 7, color: "c" }, { x: 0.90, y: 0.88, w: 6, color: "c" }] });
+
+    // ---------- Layout per format (centred) ----------
+    const L = isShort
+      ? { inv: { x: 0.15 * W, y: 0.14 * H, w: 0.7 * W, h: 0.34 * H }, cal: { cx: 0.5 * W, y: 0.52 * H, s: 19 * u },
+          cap: { cx: 0.5 * W, y: 0.685 * H, s1: 6.2 * u } }
+      : { inv: { x: 0.22 * W, y: 0.08 * H, w: 0.3 * W, h: 0.62 * H }, cal: { cx: 0.67 * W, y: 0.17 * H, s: 26 * u },
+          cap: { cx: 0.5 * W, y: 0.76 * H, s1: 6.4 * u } };
+
+    // ---------- The invoice: unrolls from the top, then the paper keeps feeding upward ----------
+    const iv = L.inv, headH = 6 * u, rowH = 5.6 * u, pad = 2 * u, N = 44;
+    const labels = ["Input tokens", "Output tokens", "Agent runs", "Code review", "Test runs", "Retries", "Context reload", "Overage"];
+    const rows = Array.from({ length: N }, (_, k) => {
+      const amt = Math.round(40 * Math.pow(1.13, k) + ctx.rng() * 30);
+      return `<div class="row" style="top:${k * rowH}px;height:${rowH}px;padding:0 ${pad}px;font-size:${rowH * 0.44}px;
+        border-top:1px solid rgba(227,155,255,.18)"><span class="soft-text" style="font-weight:600">${labels[k % labels.length]}</span>
+        <span class="neon-text-m" style="font-weight:800">$${amt.toLocaleString("en-US")}</span></div>`;
+    }).join("");
+    const inv = document.createElement("div");
+    inv.className = "invoice";
+    inv.style.cssText = `left:${iv.x}px;top:${iv.y}px;width:${iv.w}px;height:0;border-radius:${1.6 * u}px;border:${0.4 * u}px solid #fff;
+      box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px #B6B2FF, 0 0 ${4 * u}px #6E6BD6;will-change:height`;
+    inv.innerHTML = `
+      <div class="head" style="height:${headH}px;padding:0 ${pad}px;font-size:${2.7 * u}px;border-bottom:2px solid rgba(255,255,255,.35)">
+        <span class="soft-text" style="letter-spacing:.18em;text-transform:uppercase">Invoice</span><span class="neon-text-m" style="font-weight:800">Usage-based</span></div>
+      <div class="view" style="top:${headH}px;height:${iv.h - headH}px"><div class="inner" style="position:absolute;left:0;right:0;top:0;height:${N * rowH}px">${rows}</div></div>
+      <div class="fade" style="height:${8 * u}px"></div>`;
+    stage.appendChild(inv);
+    const inner = inv.querySelector(".inner");
+    tl.to(inv, { height: iv.h, duration: 1.0, ease: "power3.out" }, CUES.bills);
+    // the paper feeds faster and faster, so the bill never seems to end
+    tl.to(inner, { y: -(N * rowH - (iv.h - headH)) , duration: DURATION - CUES.bills - 1.2, ease: "power2.in" }, CUES.bills + 1.2);
+
+    // ---------- Calendar: May 31 flips to June 1 ----------
+    const cs = L.cal.s, cl = L.cal.cx - cs / 2;
+    const flare = createFlare(ctx, { x: L.cal.cx, y: L.cal.y + cs / 2, size: cs * 1.9, color: "magenta" });
+    const cal = document.createElement("div");
+    cal.className = "cal";
+    cal.style.cssText = `left:${cl}px;top:${L.cal.y}px;width:${cs}px;height:${cs}px;border:${0.4 * u}px solid #fff;
+      box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px #B6B2FF, 0 0 ${4 * u}px #6E6BD6;will-change:transform,opacity`;
+    const bandH = cs * 0.26;
+    const face = (mon, day) => `
+      <div class="band" style="height:${bandH}px;font-size:${bandH * 0.42}px;background:linear-gradient(90deg,#8E2BC4,#B23BE8);color:#fff">${mon}</div>
+      <div class="day neon-text-m" style="top:${bandH}px;height:${cs - bandH}px;font-size:${cs * 0.46}px">${day}</div>`;
+    cal.innerHTML = face("JUN", "1") + `<div class="face">${face("MAY", "31")}</div>`;
+    stage.appendChild(cal);
+    const oldFace = cal.querySelector(".face");
+    flickerOn(ctx, cal, CUES.billing - 0.6);
+    tl.to(oldFace, { scaleY: 0, duration: 0.22, ease: "power2.in" }, CUES.june)
+      .to(cal, { scale: 1.06, duration: 0.1, ease: "power2.out" }, CUES.june + 0.22)
+      .to(cal, { scale: 1, duration: 0.35, ease: "elastic.out(1,0.45)" }, CUES.june + 0.32);
+    tl.to(inv, { keyframes: { x: [0, -0.7 * u, 0.6 * u, -0.3 * u, 0] }, duration: 0.3, ease: "none" }, CUES.june + 0.22);
+    flare.burst(CUES.june + 0.22, 1);
+
+    // ---------- Caption (separate layer, toggle with ?captions=0) ----------
+    const cap = createCaption(ctx, { cx: L.cap.cx, y: L.cap.y, w: 0.76 * W, lines: [
+      { html: "Usage-based Billing", size: L.cap.s1, cls: "neon-text-m" },
+      { html: "June 1", size: L.cap.s1 * 1.25, cls: "neon-text-m" } ] });
+    cap.reveal(0, CUES.billing);
+    cap.reveal(1, CUES.june + 0.3);
+  },
+});
+</script>
+</body>
+</html>

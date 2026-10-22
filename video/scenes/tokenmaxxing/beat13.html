@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<title>Beat 13 · Tokenmaxxing</title>
+<link rel="stylesheet" href="../../theme/neon.css">
+<style>
+  .board { position: absolute; background: linear-gradient(160deg, rgba(34,20,70,.94), rgba(14,8,32,.96)); }
+  .board .hd { position: absolute; font-weight: 600; letter-spacing: .06em; white-space: nowrap; opacity: 0; }
+  .item { position: absolute; display: flex; align-items: center; opacity: 0; }
+  .item .box { position: relative; flex: none; border-radius: 28%; border: 3px solid rgba(180,247,255,.75); background: rgba(54,214,231,.08); }
+  .item .box svg { position: absolute; inset: -22%; width: 144%; height: 144%; overflow: visible; }
+  .item .txt { font-weight: 600; white-space: nowrap; opacity: .65; }
+  .hand { position: absolute; border-radius: 50%; border: 3px solid #E39BFF; background: linear-gradient(#4B1F70, #1A0D35); }
+</style>
+</head>
+<body>
+<div class="stage"></div>
+
+<script src="../../../engine/gsap.min.js"></script>
+<script src="../../lib/scene-runtime.js"></script>
+<script src="../../lib/backdrop.js"></script>
+<script src="../../lib/components.js"></script>
+<script>
+/* Beat 13 (2:18–2:30): "पहला नियम: outcome से शुरुआत करो। Prompt लिखने से पहले जान लो कि "done" कैसा दिखेगा: एक merged PR, एक fixed bug, या कोई फ़ैसला।"
+   CUES are seconds from the start of this beat. Placeholder times until the Hindi recording exists. */
+const CUES = {
+  rule: 0.4,       // "पहला नियम" — "Rule 1:" slams in
+  outcome: 2.0,    // "outcome से शुरुआत करो" — Tok brings the checklist, "Outcome First"
+  pr: 5.8,         // "एक merged PR" — first item ticks
+  bug: 7.4,        // "एक fixed bug" — second item ticks
+  decision: 9.0,   // "कोई फ़ैसला" — third item ticks
+  done: 10.4,      // all ticked: the board glows, Tok celebrates
+};
+const DURATION = 12;
+
+registerScene({
+  duration: DURATION, fps: 30, seed: 13, cues: CUES,
+  build(tl, ctx) {
+    const { W, H, u, format, stage } = ctx;
+    const isShort = format === "short";
+    buildBackdrop(ctx, { duration: DURATION, panels: isShort
+      ? [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.78, y: 0.07, w: 8, color: "c" }, { x: 0.72, y: 0.86, w: 9, color: "c" }]
+      : [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.86, y: 0.07, w: 7, color: "c" }, { x: 0.90, y: 0.88, w: 6, color: "c" }] });
+
+    // ---------- Layout per format: Tok + checklist board are one centred group ----------
+    const tokS = (isShort ? 15 : 17) * u, gap = (isShort ? 1.2 : 3) * u;
+    const bw = isShort ? 0.58 * W : 0.36 * W, bh = (isShort ? 31 : 34) * u;
+    const groupW = tokS + gap + bw, gx = isShort ? 0.12 * W : (W - groupW) / 2;
+    const L = isShort
+      ? { bx: gx + tokS + gap, by: 0.2 * H, cap: { y: 0.5 * H, s1: 5.6 * u, s2: 8.6 * u } }
+      : { bx: gx + tokS + gap, by: 0.13 * H, cap: { y: 0.65 * H, s1: 6 * u, s2: 8.4 * u } };
+    const itemH = 8 * u, hdH = 6.4 * u, padX = 2.4 * u;
+
+    // ---------- The checklist board ----------
+    const board = document.createElement("div");
+    board.className = "board";
+    board.style.cssText = `left:${L.bx}px;top:${L.by}px;width:${bw}px;height:${bh}px;border-radius:${1.8 * u}px;border:${0.4 * u}px solid #fff;opacity:0;
+      box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px #B6B2FF, 0 0 ${4 * u}px #6E6BD6;will-change:transform,opacity`;
+    const labels = ["Merged PR", "Fixed bug", "Decision made"];
+    const tickSvg = `<svg viewBox="0 0 100 100"><path d="M18 54 L42 76 L84 24" pathLength="1" fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"
+        style="filter:drop-shadow(0 0 ${0.6 * u}px #36D6E7) drop-shadow(0 0 ${1.6 * u}px #36D6E7)" stroke-dasharray="1" stroke-dashoffset="1" class="tick"/></svg>`;
+    board.innerHTML = `<div class="hd soft-text" style="left:${padX}px;top:${hdH * 0.28}px;font-size:${3.1 * u}px">"Done" looks like:</div>` +
+      labels.map((t, i) => `<div class="item" style="left:${padX}px;right:${padX}px;top:${hdH + 0.6 * u + i * itemH}px;height:${itemH}px">
+        <span class="box" style="width:${4.4 * u}px;height:${4.4 * u}px">${tickSvg}</span>
+        <span class="txt soft-text" style="margin-left:${1.8 * u}px;font-size:${3.6 * u}px">${t}</span></div>`).join("");
+    stage.appendChild(board);
+    const hd = board.querySelector(".hd"), items = Array.from(board.querySelectorAll(".item"));
+    flickerOn(ctx, board, CUES.outcome);
+    tl.fromTo(board, { x: 5 * u }, { x: 0, duration: 0.5, ease: "power3.out" }, CUES.outcome)
+      .to(hd, { opacity: 1, duration: 0.3 }, CUES.outcome + 0.4)
+      .to(items, { opacity: 1, duration: 0.3, stagger: 0.15 }, CUES.outcome + 0.6);
+
+    // ---------- Tok holds the board (a little hand on its edge) ----------
+    const tokBase = L.by + bh - 1.2 * u, tokX = gx;
+    const tok = createTok(ctx, { size: tokS, color: "magenta" });
+    gsap.set(tok.el, { left: tokX, top: tokBase - tokS, opacity: 0, y: -0.4 * H });
+    tl.to(tok.el, { opacity: 1, duration: 0.05 }, CUES.outcome - 0.4)
+      .to(tok.el, { y: 0, duration: 0.45, ease: "power3.in" }, CUES.outcome - 0.4);
+    tok.squash(CUES.outcome + 0.05, 1.1);
+    const hand = document.createElement("div");
+    hand.className = "hand";
+    const hs = 3 * u;
+    hand.style.cssText = `left:${L.bx - hs * 0.55}px;top:${L.by + bh - 12 * u}px;width:${hs}px;height:${hs}px;opacity:0;box-shadow:0 0 ${1.2 * u}px #B23BE8`;
+    stage.appendChild(hand);
+    tl.to(hand, { opacity: 1, duration: 0.2 }, CUES.outcome + 0.35);
+    [4.0, 8.2, 11.2].forEach((t) => tok.blink(t));
+
+    // ---------- Ticks (cyan: outcomes) ----------
+    const tickAt = [CUES.pr, CUES.bug, CUES.decision];
+    items.forEach((it, i) => {
+      const box = it.querySelector(".box"), tick = it.querySelector(".tick"), txt = it.querySelector(".txt");
+      const at = tickAt[i];
+      tl.to(tick, { strokeDashoffset: 0, duration: 0.3, ease: "power2.out" }, at)
+        .to(box, { backgroundColor: "rgba(54,214,231,.35)", borderColor: "#B4F7FF", duration: 0.2 }, at)
+        .to(txt, { opacity: 1, duration: 0.25 }, at + 0.1)
+        .to(box, { scale: 1.18, duration: 0.1, ease: "power2.out" }, at)
+        .to(box, { scale: 1, duration: 0.3, ease: "elastic.out(1,0.5)" }, at + 0.1);
+      tok.squash(at + 0.05, 0.6);
+      const f = createFlare(ctx, { x: L.bx + padX + 2.2 * u, y: L.by + hdH + 0.6 * u + i * itemH + itemH / 2, size: 12 * u, color: "cyan" });
+      f.burst(at + 0.1, 0.8);
+    });
+    // everything ticked: the board lights up cyan and Tok celebrates
+    const doneFlare = createFlare(ctx, { x: L.bx + bw / 2, y: L.by + bh / 2, size: bw * 0.9, color: "cyan" });
+    doneFlare.burst(CUES.done, 0.7);
+    tl.to(board, { boxShadow: `0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px #B4F7FF, 0 0 ${4 * u}px #36D6E7`, duration: 0.4 }, CUES.done);
+    tok.squash(CUES.done, 1.2);
+
+    // ---------- Caption (separate layer, toggle with ?captions=0) ----------
+    const cap = createCaption(ctx, { cx: W / 2, y: L.cap.y, w: 0.76 * W, lines: [
+      { html: "Rule 1:", size: L.cap.s1, cls: "soft-text", weight: 800 },
+      { html: "Outcome First", size: L.cap.s2, cls: "neon-text-c" } ], flare: "cyan" });
+    cap.reveal(0, CUES.rule);
+    cap.reveal(1, CUES.outcome + 0.2);
+  },
+});
+</script>
+</body>
+</html>

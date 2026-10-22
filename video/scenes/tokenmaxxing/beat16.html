@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<title>Beat 16 · Tokenmaxxing</title>
+<link rel="stylesheet" href="../../theme/neon.css">
+<style>
+  .heavy { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; white-space: nowrap;
+           border-radius: 1.2em; border: 3px solid rgba(255,255,255,.35); background: rgba(18,10,38,.7); will-change: transform, opacity; }
+  .heavy .nm { font-weight: 600; }
+  .heavy .sub { font-weight: 400; opacity: .7; }
+  .spot { position: absolute; border-radius: 50%; opacity: 0; mix-blend-mode: screen; pointer-events: none;
+          background: radial-gradient(closest-side, rgba(180,247,255,.55), rgba(54,214,231,.22) 55%, rgba(54,214,231,0)); }
+  .out { position: absolute; display: flex; align-items: center; justify-content: space-between; white-space: nowrap; opacity: 0; font-weight: 600;
+         border-radius: 999px; border: 2px solid #B4F7FF; background: rgba(8,28,40,.85); }
+  .lbl { position: absolute; text-align: center; font-weight: 600; white-space: nowrap; opacity: 0; }
+</style>
+</head>
+<body>
+<div class="stage"></div>
+
+<script src="../../../engine/gsap.min.js"></script>
+<script src="../../lib/scene-runtime.js"></script>
+<script src="../../lib/backdrop.js"></script>
+<script src="../../lib/components.js"></script>
+<script>
+/* Beat 16 (2:56–3:22): "चौथा नियम: जहाँ फ़ायदा हो, वहाँ खुलकर खर्च करो। लंबे code reviews, tests लिखकर चलाने वाले agents, गहरी research: वहाँ tokens जलाओ, सोच-समझकर।
+   पाँचवाँ नियम: हर usage number के साथ एक outcome रखो। खर्च हुए tokens के बग़ल में: कितने bugs बंद हुए, कितने features ship हुए, कितने घंटे बचे।
+   अगर value वाला bar नहीं बढ़ रहा, तो token वाला bar भी नहीं बढ़ना चाहिए."
+   Two rules in one beat: spotlights on three heavy tasks, then the meter returns with an outcome readout beside each bar.
+   CUES are seconds from the start of this beat. Placeholder times until the Hindi recording exists. */
+const CUES = {
+  rule4: 0.4,       // "चौथा नियम" — "Rule 4:" slams in
+  spend: 2.0,       // "जहाँ फ़ायदा हो, वहाँ खुलकर खर्च करो" — "Spend Where It Pays"; three heavy-task cards appear
+  review: 4.2,      // "लंबे code reviews" — spotlight on card 1
+  tests: 6.0,       // "tests लिखकर चलाने वाले agents" — spotlight on card 2
+  research: 8.0,    // "गहरी research" — spotlight on card 3
+  rule5: 11.6,      // "पाँचवाँ नियम" — the cards leave, "Rule 5:" slams in, the meter returns
+  readouts: 14.0,   // "कितने bugs बंद हुए..." — an outcome readout appears beside each bar
+  rise: 16.4,       // "value वाला bar नहीं बढ़ रहा..." — cyan rises and brightens together with magenta
+};
+const DURATION = 20;
+
+registerScene({
+  duration: DURATION, fps: 30, seed: 16, cues: CUES,
+  build(tl, ctx) {
+    const { W, H, u, format, stage } = ctx;
+    const isShort = format === "short";
+    buildBackdrop(ctx, { duration: DURATION, panels: isShort
+      ? [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.78, y: 0.07, w: 8, color: "c" }, { x: 0.72, y: 0.86, w: 9, color: "c" }]
+      : [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.86, y: 0.07, w: 7, color: "c" }, { x: 0.90, y: 0.88, w: 6, color: "c" }] });
+
+    // ---------- Layout per format (centred) ----------
+    const L = isShort
+      ? { cards: { x: 0.14 * W, w: 0.72 * W, y: 0.15 * H, h: 9.5 * u, gap: 1.6 * u, col: true },
+          meter: { w: 18 * u, h: 38 * u, cx: 0.43 * W, y: 0.13 * H },
+          cap: { y: 0.53 * H, s1: 5 * u, s2: 7 * u } }
+      : { cards: { x: 0.1 * W, w: 0.8 * W, y: 0.17 * H, h: 22 * u, gap: 3 * u, col: false },
+          meter: { w: 24 * u, h: 50 * u, cx: 0.39 * W, y: 0.09 * H },
+          cap: { y: 0.77 * H, s1: 5.6 * u, s2: 7.4 * u } };
+
+    // ===== Rule 4: three heavy tasks, spotlighted one by one =====
+    const C = L.cards, cardW = C.col ? C.w : (C.w - 2 * C.gap) / 3;
+    const tasks = [["Long code reviews", "deep, careful reading"], ["Test-writing agents", "write, run, fix, repeat"], ["Deep research", "many sources, one answer"]];
+    const cardEls = tasks.map(([nm, sub], i) => {
+      const x = C.col ? C.x : C.x + i * (cardW + C.gap), y = C.col ? C.y + i * (C.h + C.gap) : C.y;
+      const el = document.createElement("div");
+      el.className = "heavy";
+      el.style.cssText = `left:${x}px;top:${y}px;width:${cardW}px;height:${C.h}px;opacity:0`;
+      el.innerHTML = `<div class="nm soft-text" style="font-size:${C.col ? 3.6 * u : 3.4 * u}px">${nm}</div>
+        <div class="sub soft-text" style="font-size:${C.col ? 2.3 * u : 2.4 * u}px;margin-top:.3em">${sub}</div>`;
+      stage.appendChild(el);
+      const spot = document.createElement("div");
+      spot.className = "spot";
+      spot.style.cssText = `left:${x - cardW * 0.25}px;top:${y - C.h * 0.6}px;width:${cardW * 1.5}px;height:${C.h * 2.2}px`;
+      stage.insertBefore(spot, el);
+      return { el, spot, x, y };
+    });
+    cardEls.forEach((c, i) => flickerOn(ctx, c.el, CUES.spend + i * 0.15));
+    [CUES.review, CUES.tests, CUES.research].forEach((at, i) => {
+      const c = cardEls[i];
+      tl.to(c.spot, { opacity: 1, duration: 0.3, ease: "power2.out" }, at)
+        .to(c.el, { borderColor: "#B4F7FF", scale: 1.06, duration: 0.25, ease: "power2.out" }, at)
+        .set(c.el, { boxShadow: "0 0 6px #fff, 0 0 20px #B4F7FF, 0 0 42px #36D6E7" }, at)
+        .to(c.spot, { opacity: 0, duration: 0.4 }, at + 1.5)
+        .to(c.el, { borderColor: "rgba(255,255,255,.35)", scale: 1, boxShadow: "0 0 0 rgba(0,0,0,0)", duration: 0.4 }, at + 1.5);
+      const f = createFlare(ctx, { x: c.x + cardW / 2, y: c.y + C.h / 2, size: 22 * u, color: "cyan" });
+      f.burst(at + 0.1, 0.7);
+    });
+    tl.to(cardEls.map((c) => c.el), { opacity: 0, y: 2 * u, duration: 0.4, ease: "power2.in" }, CUES.rule5 - 0.5);
+
+    // ===== Rule 5: the meter returns, with an outcome readout beside each bar =====
+    const M = L.meter, mx = M.cx - M.w / 2;
+    const m = createMeter(ctx, { x: mx, y: M.y, w: M.w, h: M.h });
+    tl.fromTo(m.el, { opacity: 0, y: 3 * u }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, CUES.rule5 + 0.3);
+    tl.set(m.tokensFill, { scaleY: 0.3 }, 0).set(m.valueFill, { scaleY: 0.08 }, 0)
+      .set(m.tokensGlow, { opacity: 0.25 }, 0).set(m.valueGlow, { opacity: 0.1 }, 0);
+    const st = { tokens: 2400000, value: 0 };
+    ctx.onFrame(() => {
+      m.tokensNum.textContent = Math.round(st.tokens).toLocaleString("en-IN");
+      m.valueNum.textContent = "+" + Math.round(st.value) + "%";
+    });
+    // outcome readouts to the right of the meter (cyan = value)
+    const barW = M.w * 0.34, rx = mx + M.w + (isShort ? 1.8 : 3) * u;
+    const outs = [["Bugs closed", "12", M.y + M.h * 0.2], ["Features shipped", "5", M.y + M.h * 0.42], ["Hours saved", "30", M.y + M.h * 0.64]];
+    const rs = isShort ? 2.4 * u : 2.8 * u, rh = rs * 2.3, rw = isShort ? 0.86 * W - rx : 32 * u;
+    const outEls = outs.map(([lab, val, y]) => {
+      const el = document.createElement("div");
+      el.className = "out";
+      el.style.cssText = `left:${rx}px;top:${y}px;width:${rw}px;height:${rh}px;padding:0 ${rs * 0.8}px;font-size:${rs}px;
+        box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.4 * u}px #B4F7FF, 0 0 ${3 * u}px #36D6E7`;
+      el.innerHTML = `<span class="soft-text">${lab}</span><span class="neon-text-c" style="font-weight:800;margin-left:.6em">${val}</span>`;
+      stage.appendChild(el); return el;
+    });
+    outEls.forEach((el, i) => { flickerOn(ctx, el, CUES.readouts + i * 0.2); });
+    // magenta and cyan rise together (usage backed by outcomes)
+    tl.to(m.valueFill, { scaleY: 0.62, duration: 1.8, ease: "power2.inOut" }, CUES.rise)
+      .to(m.valueGlow, { opacity: 0.8, scaleY: 1.1, duration: 1.8, ease: "power2.inOut" }, CUES.rise)
+      .to(m.tokensFill, { scaleY: 0.62, duration: 1.8, ease: "power2.inOut" }, CUES.rise)
+      .to(m.tokensGlow, { opacity: 0.8, scaleY: 1.1, duration: 1.8, ease: "power2.inOut" }, CUES.rise)
+      .to(st, { value: 38, tokens: 5600000, duration: 1.8, ease: "power2.inOut" }, CUES.rise);
+    const flV = createFlare(ctx, { x: mx + M.w * 0.66 + barW / 2, y: M.y + M.h * 0.3, size: 22 * u, color: "cyan" });
+    flV.burst(CUES.rise + 1.5, 0.9);
+    const flT = createFlare(ctx, { x: mx + M.w * 0.17, y: M.y + M.h * 0.3, size: 22 * u, color: "magenta" });
+    flT.burst(CUES.rise + 1.5, 0.7);
+
+    // ---------- Captions (separate layers, toggle with ?captions=0) ----------
+    const cap4 = createCaption(ctx, { cx: W / 2, y: L.cap.y, w: 0.76 * W, lines: [
+      { html: "Rule 4:", size: L.cap.s1, cls: "soft-text", weight: 800 },
+      { html: "Spend Where It Pays", size: L.cap.s2, cls: "neon-text-m" } ] });
+    cap4.reveal(0, CUES.rule4);
+    cap4.reveal(1, CUES.spend + 0.2);
+    tl.to(cap4.el, { opacity: 0, duration: 0.4, ease: "power2.in" }, CUES.rule5 - 0.5);
+    const cap5 = createCaption(ctx, { cx: W / 2, y: L.cap.y, w: 0.76 * W, lines: [
+      { html: "Rule 5:", size: L.cap.s1, cls: "soft-text", weight: 800 },
+      { html: "Pair Usage with Outcome", size: L.cap.s2 * (isShort ? 0.86 : 1), cls: "neon-text-c" } ], flare: "cyan" });
+    cap5.reveal(0, CUES.rule5);
+    cap5.reveal(1, CUES.readouts);
+  },
+});
+</script>
+</body>
+</html>

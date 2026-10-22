@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<title>Beat 11 · Tokenmaxxing</title>
+<link rel="stylesheet" href="../../theme/neon.css">
+<style>
+  .neon-text-l { color: #fff;
+    text-shadow: 0 0 calc(var(--u)*.15) #fff, 0 0 calc(var(--u)*.7) #B6B2FF, 0 0 calc(var(--u)*2) #6E6BD6, 0 0 calc(var(--u)*4) #6E6BD6b3; }
+  .printer { position: absolute; border-radius: 999px; border: 3px solid #fff; background: linear-gradient(#2A2058, #120A2A); }
+  .paper { position: absolute; overflow: hidden; border: 2px solid rgba(182,178,255,.8); border-top: 0; background: rgba(226,220,255,.09); }
+  .paper .perf { position: absolute; top: 0; bottom: 0; background-image: radial-gradient(circle, rgba(8,4,20,.95) 30%, transparent 33%); background-size: 100% 2.4em; }
+  .paper .row { position: absolute; left: 0; right: 0; }
+  .paper .row b { position: absolute; font-weight: 600; color: rgba(182,178,255,.8); }
+  .paper .row i { position: absolute; border-radius: 9px; background: rgba(182,178,255,.5); }
+  .capline { position: absolute; border-radius: 9px; background: #fff; will-change: transform, opacity; opacity: 0; }
+  .cap-label { position: absolute; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; opacity: 0; }
+  .lbl { position: absolute; text-align: center; font-weight: 600; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="stage"></div>
+
+<script src="../../../engine/gsap.min.js"></script>
+<script src="../../lib/scene-runtime.js"></script>
+<script src="../../lib/backdrop.js"></script>
+<script src="../../lib/components.js"></script>
+<script>
+/* Beat 11 (1:46–2:02): "Mozilla के CTO ने इसकी तुलना उस पुरानी आदत से की, जब programmers को lines of code से आँका जाता था। तो leaderboards
+   हटा दिए गए, Meta, Amazon, Microsoft और Uber में, और companies ने लगाए budgets और caps."
+   CUES are seconds from the start of this beat. Placeholder times until the Hindi recording exists. */
+const CUES = {
+  printout: 0.5,   // "पुरानी आदत" — a dot-matrix printout feeds out, a lines-of-code counter races up
+  loc: 3.5,        // "lines of code" — caption: The Same Old Mistake: "Lines of Code"
+  domino: 7.2,     // "leaderboards हटा दिए गए" — four leaderboards topple like dominoes
+  caps: 11.6,      // "budgets और caps" — a cap line drops onto the magenta Tokens bar and presses it down
+};
+const DURATION = 16;
+
+registerScene({
+  duration: DURATION, fps: 30, seed: 11, cues: CUES,
+  build(tl, ctx) {
+    const { W, H, u, format, stage } = ctx;
+    const isShort = format === "short";
+    buildBackdrop(ctx, { duration: DURATION, panels: isShort
+      ? [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.78, y: 0.07, w: 8, color: "c" }, { x: 0.72, y: 0.86, w: 9, color: "c" }]
+      : [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.86, y: 0.07, w: 7, color: "c" }, { x: 0.90, y: 0.88, w: 6, color: "c" }] });
+
+    // ---------- Layout per format (one centred stage area, caption underneath) ----------
+    const L = isShort
+      ? { paper: { cx: 0.5 * W, y: 0.2 * H, w: 0.5 * W, h: 0.34 * H }, cnt: { y: 0.075 * H, s: 7 * u },
+          dom: { x0: 0.12 * W, w: 0.76 * W, bottom: 0.52 * H, rowH: 3.7 * u },
+          meter: { w: 24 * u, h: 52 * u, y: 0.12 * H },
+          cap: { cx: 0.5 * W, y: 0.63 * H, s1: 5.6 * u, s2: 8 * u } }
+      : { paper: { cx: 0.5 * W, y: 0.17 * H, w: 0.3 * W, h: 0.5 * H }, cnt: { y: 0.045 * H, s: 6.4 * u },
+          dom: { x0: 0.1 * W, w: 0.8 * W, bottom: 0.64 * H, rowH: 4.6 * u },
+          meter: { w: 24 * u, h: 52 * u, y: 0.1 * H },
+          cap: { cx: 0.5 * W, y: 0.74 * H, s1: 6.2 * u, s2: 8.4 * u } };
+
+    // ===== Phase A: the retro printout (lines of code = "productivity") =====
+    const P = L.paper, pLeft = P.cx - P.w / 2, N = 60, rowH = 3.4 * u, perfW = 2.4 * u;
+    const rowsHtml = Array.from({ length: N }, (_, k) => {
+      const indent = Math.floor(ctx.rng() * 4) * 3 * u, wBar = (0.18 + ctx.rng() * 0.5) * (P.w - 2 * perfW - indent - 6 * u);
+      const wBar2 = ctx.rng() < 0.45 ? (0.1 + ctx.rng() * 0.25) * (P.w - 2 * perfW - indent - 6 * u) : 0;
+      return `<div class="row" style="top:${k * rowH}px;height:${rowH}px">
+        <b style="left:${perfW + 0.8 * u}px;top:${rowH * 0.18}px;font-size:${rowH * 0.5}px">${String(k + 1).padStart(4, "0")}</b>
+        <i style="left:${perfW + 5.4 * u + indent}px;top:${rowH * 0.3}px;height:${rowH * 0.34}px;width:${wBar}px"></i>
+        ${wBar2 ? `<i style="left:${perfW + 5.4 * u + indent + wBar + 1.2 * u}px;top:${rowH * 0.3}px;height:${rowH * 0.34}px;width:${wBar2}px"></i>` : ""}</div>`;
+    }).join("");
+    const printer = document.createElement("div");
+    printer.className = "printer";
+    printer.style.cssText = `left:${pLeft - 1.6 * u}px;top:${P.y - 2.6 * u}px;width:${P.w + 3.2 * u}px;height:${2.6 * u}px;opacity:0;
+      box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px #B6B2FF, 0 0 ${3.5 * u}px #6E6BD6`;
+    printer.innerHTML = `<i style="position:absolute;right:${1.6 * u}px;top:50%;width:${0.9 * u}px;height:${0.9 * u}px;margin-top:${-0.45 * u}px;border-radius:50%;background:#B4F7FF;box-shadow:0 0 ${1 * u}px #36D6E7"></i>`;
+    const paper = document.createElement("div");
+    paper.className = "paper";
+    paper.style.cssText = `left:${pLeft}px;top:${P.y}px;width:${P.w}px;height:0`;
+    paper.innerHTML = `<div class="perf" style="left:0;width:${perfW}px;font-size:${u}px"></div><div class="perf" style="right:0;width:${perfW}px;font-size:${u}px"></div>
+      <div class="inner" style="position:absolute;left:0;right:0;top:0;height:${N * rowH}px">${rowsHtml}</div>`;
+    stage.appendChild(paper); stage.appendChild(printer);
+    const inner = paper.querySelector(".inner");
+    flickerOn(ctx, printer, CUES.printout - 0.2);
+    tl.to(paper, { height: P.h, duration: 0.9, ease: "power3.out" }, CUES.printout)
+      .to(inner, { y: -(N * rowH - P.h), duration: CUES.domino - CUES.printout - 0.7, ease: "power2.in" }, CUES.printout + 0.7);
+    // the counter: more lines = more "productive"
+    const cLabel = document.createElement("div");
+    cLabel.className = "lbl soft-text";
+    cLabel.style.cssText = `left:0;width:${W}px;top:${L.cnt.y}px;font-size:${L.cnt.s * 0.42}px;opacity:0`;
+    cLabel.textContent = "Lines of code written";
+    const cNum = document.createElement("div");
+    cNum.className = "lbl neon-text-l";
+    cNum.style.cssText = `left:0;width:${W}px;top:${L.cnt.y + L.cnt.s * 0.62}px;font-size:${L.cnt.s}px;font-weight:800;line-height:1;opacity:0`;
+    cNum.textContent = "0";
+    stage.appendChild(cLabel); stage.appendChild(cNum);
+    const st = { lines: 0 };
+    ctx.onFrame(() => { cNum.textContent = Math.round(st.lines).toLocaleString("en-IN"); });
+    flickerOn(ctx, cLabel, CUES.printout); flickerOn(ctx, cNum, CUES.printout);
+    tl.to(st, { lines: 482100, duration: CUES.domino - CUES.printout - 0.3, ease: "power2.in" }, CUES.printout);
+    const groupA = [paper, printer, cLabel, cNum];
+    tl.to(groupA, { opacity: 0, duration: 0.4, ease: "power2.in" }, CUES.domino - 0.5);
+
+    // ===== Phase B: four leaderboards topple like dominoes =====
+    const D = L.dom, gapD = 1.2 * u, wD = (D.w - 3 * gapD) / 4, nRows = 5;
+    const hD = D.rowH * 0.85 + nRows * D.rowH + 1.2 * u, yD = D.bottom - hD;
+    const fakeNums = ["84,12,300", "61,40,100", "52,03,900", "41,77,250", "33,08,400"];
+    const doms = ["Meta", "Amazon", "Microsoft", "Uber"].map((name, i) => {
+      const b = createLeaderboard(ctx, { x: D.x0 + i * (wD + gapD), y: yD, w: wD, rowH: D.rowH, title: name,
+        names: ["Dev_04", "Dev_18", "Dev_11", "Dev_02", "Dev_21"], color: "magenta" });
+      b.el.firstElementChild.style.fontSize = D.rowH * 0.5 + "px";
+      b.nums.forEach((el, k) => { el.textContent = fakeNums[k]; });
+      gsap.set(b.el, { transformOrigin: "100% 100%", opacity: 0 });
+      return b.el;
+    });
+    doms.forEach((el, i) => flickerOn(ctx, el, CUES.domino - 0.9 + i * 0.12));
+    doms.forEach((el, i) => {
+      const t0 = CUES.domino + i * 0.42;
+      tl.to(el, { rotation: 78, duration: 0.55, ease: "power2.in" }, t0)
+        .to(el, { opacity: 0, y: 3 * u, duration: 0.4, ease: "power1.in" }, t0 + 0.45);
+    });
+
+    // ===== Phase C: a cap line drops onto the magenta Tokens bar and presses it down =====
+    const M = L.meter, mx = W / 2 - M.w / 2;
+    const m = createMeter(ctx, { x: mx, y: M.y, w: M.w, h: M.h });
+    gsap.set(m.valueGlow, { opacity: 0.1 });
+    gsap.set(m.tokensFill, { scaleY: 0.97 });
+    gsap.set(m.tokensGlow, { opacity: 1, scaleY: 1.2 });
+    m.tokensNum.textContent = "4,82,00,000"; m.valueNum.textContent = "+0%";
+    tl.fromTo(m.el, { opacity: 0, y: 3 * u }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, CUES.caps - 0.9);
+    const bw = M.w * 0.34, trackTop = M.y + M.h * 0.13 + M.h * 0.02, trackH = M.h * 0.72;
+    const edge = (s) => trackTop + trackH - bw * 0.14 - s * (trackH - bw * 0.28);   // y of the top of the fill at scale s
+    const lineH = 0.8 * u, lineW = bw + 4 * u, lx = mx - 2 * u;
+    const line = document.createElement("div");
+    line.className = "capline";
+    line.style.cssText = `left:${lx}px;top:${edge(0.97) - lineH / 2}px;width:${lineW}px;height:${lineH}px;
+      box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px #B4F7FF, 0 0 ${3.5 * u}px #36D6E7`;
+    const capLabel = document.createElement("div");
+    capLabel.className = "cap-label neon-text-c";
+    capLabel.style.cssText = `left:${lx - 9 * u}px;top:${edge(0.6) - 1.7 * u}px;font-size:${3.2 * u}px;width:${7 * u}px;text-align:right`;
+    capLabel.textContent = "Cap";
+    stage.appendChild(line); stage.appendChild(capLabel);
+    const drop = edge(0.97) - lineH / 2, fall = (edge(0.6) - edge(0.97));
+    gsap.set(line, { y: -(drop + lineH) });
+    tl.set(line, { opacity: 1 }, CUES.caps - 0.05)
+      .to(line, { y: 0, duration: 0.35, ease: "power3.in" }, CUES.caps)
+      .to(line, { y: fall, duration: 0.5, ease: "power2.out" }, CUES.caps + 0.35)
+      .to(m.tokensFill, { scaleY: 0.6, duration: 0.5, ease: "power2.out" }, CUES.caps + 0.35)
+      .to(m.tokensGlow, { opacity: 0.45, scaleY: 0.8, duration: 0.5 }, CUES.caps + 0.35)
+      .to(capLabel, { opacity: 1, duration: 0.3 }, CUES.caps + 0.6);
+    const capFlare = createFlare(ctx, { x: mx + bw / 2, y: edge(0.97), size: 24 * u, color: "cyan" });
+    capFlare.burst(CUES.caps + 0.3, 0.9);
+    tl.to(m.el, { keyframes: { x: [0, -0.8 * u, 0.7 * u, -0.4 * u, 0] }, duration: 0.3, ease: "none" }, CUES.caps + 0.3);
+
+    // ---------- Caption (separate layer, toggle with ?captions=0) ----------
+    const cap = createCaption(ctx, { cx: L.cap.cx, y: L.cap.y, w: 0.76 * W, lines: [
+      { html: "The Same Old Mistake:", size: L.cap.s1, cls: "soft-text", weight: 800 },
+      { html: "\"Lines of Code\"", size: L.cap.s2, cls: "neon-text-m" } ] });
+    cap.reveal(0, CUES.loc);
+    cap.reveal(1, CUES.loc + 0.35);
+  },
+});
+</script>
+</body>
+</html>

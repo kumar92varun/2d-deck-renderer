@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<title>Beat 10 · Tokenmaxxing</title>
+<link rel="stylesheet" href="../../theme/neon.css">
+<style>
+  .belt { position: absolute; border-radius: 999px; border: 3px solid #fff; overflow: hidden;
+          background: repeating-linear-gradient(90deg, rgba(110,107,214,.9) 0 18px, rgba(18,10,38,.9) 18px 36px); }
+  .doc { position: absolute; border-radius: 0.5em; border: 2px solid #B6B2FF; background: rgba(34,28,70,.92); will-change: transform, opacity; }
+  .doc i { position: absolute; left: 18%; right: 18%; height: 7%; border-radius: 9px; background: rgba(182,178,255,.65); }
+</style>
+</head>
+<body>
+<div class="stage"></div>
+
+<script src="../../../engine/gsap.min.js"></script>
+<script src="../../lib/scene-runtime.js"></script>
+<script src="../../lib/backdrop.js"></script>
+<script src="../../lib/components.js"></script>
+<script>
+/* Beat 10 (1:32–1:46): "और productivity? लगभग वहीं की वहीं। Token leaderboard पर top करना आसान था: agents को गोल-गोल घुमाओ, या ऐसे docs
+   लिखवाओ जिन्हें कोई नहीं पढ़ता। Usage ऊपर गया। Value नहीं।"
+   CUES are seconds from the start of this beat. Placeholder times until the Hindi recording exists. */
+const CUES = {
+  scene: 0.3,    // "और productivity? लगभग वहीं की वहीं" — Tok jogs on a treadmill, the meter appears
+  loop: 3.0,     // "agents को गोल-गोल घुमाओ" — the belt and Tok speed up
+  docs: 5.5,     // "ऐसे docs लिखवाओ जिन्हें कोई नहीं पढ़ता" — papers pile up unread
+  up: 9.8,       // "Usage ऊपर गया" — the Tokens bar hits the ceiling and flares
+  flat: 11.4,    // "Value नहीं" — the Value bar stays flat and dim
+};
+const DURATION = 14;
+
+registerScene({
+  duration: DURATION, fps: 30, seed: 10, cues: CUES,
+  build(tl, ctx) {
+    const { W, H, u, format, stage } = ctx;
+    const isShort = format === "short";
+    buildBackdrop(ctx, { duration: DURATION, panels: isShort
+      ? [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.40, y: 0.05, w: 8, color: "c" }, { x: 0.72, y: 0.86, w: 9, color: "c" }]
+      : [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.50, y: 0.05, w: 7, color: "c" }, { x: 0.90, y: 0.88, w: 6, color: "c" }] });
+
+    // ---------- Layout per format ----------
+    const L = isShort
+      ? { meter: { w: 17 * u, h: 40 * u, x: 0.88 * W - 17 * u, y: 0.075 * H },
+          belt: { cx: 0.40 * W, w: 36 * u, y: 0.53 * H, h: 2.6 * u }, tok: 14 * u, pile: { x0: 0.60 * W, cols: 3 },
+          cap: { cx: 0.5 * W, y: 0.625 * H, s: 8.4 * u } }
+      : { meter: { w: 21 * u, h: 52 * u, x: 0.94 * W - 21 * u, y: 0.12 * H },
+          belt: { cx: 0.42 * W, w: 40 * u, y: 0.62 * H, h: 2.8 * u }, tok: 16 * u, pile: { x0: 0.58 * W, cols: 4 },
+          cap: { cx: 0.5 * W, y: 0.78 * H, s: 7.4 * u } };
+    const beltLeft = L.belt.cx - L.belt.w / 2;
+
+    // ---------- Meter (top-right HUD, as in beat 4) ----------
+    const m = createMeter(ctx, { x: L.meter.x, y: L.meter.y, w: L.meter.w, h: L.meter.h });
+    tl.fromTo(m.el, { x: 10 * u, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "power3.out" }, CUES.scene);
+    tl.set(m.valueGlow, { opacity: 0.1 }, 0).set(m.valueFill, { scaleY: 0.03 }, CUES.scene);
+    const st = { tokens: 0, value: 0 };
+    // tokens climb steadily while Tok jogs (usage keeps rising), then slam into the ceiling on "Usage ऊपर गया"
+    tl.to(m.tokensFill, { scaleY: 0.55, duration: CUES.up - CUES.scene - 0.5, ease: "power1.in" }, CUES.scene + 0.3)
+      .to(m.tokensGlow, { opacity: 0.55, scaleY: 0.9, duration: CUES.up - CUES.scene - 0.5, ease: "power1.in" }, CUES.scene + 0.3)
+      .to(st, { tokens: 9400000, duration: CUES.up - CUES.scene - 0.5, ease: "power2.in" }, CUES.scene + 0.3);
+    tl.to(m.tokensFill, { scaleY: 0.97, duration: 0.3, ease: "back.out(2)" }, CUES.up)
+      .to(m.tokensGlow, { opacity: 1, scaleY: 1.2, duration: 0.3 }, CUES.up)
+      .to(st, { tokens: 48200000, duration: 0.5, ease: "power3.out" }, CUES.up);
+    const topFlare = createFlare(ctx, { x: L.meter.x + L.meter.w * 0.17, y: L.meter.y + L.meter.h * 0.16, size: 22 * u, color: "magenta" });
+    topFlare.burst(CUES.up + 0.2, 1);
+    tl.to(m.el, { keyframes: { x: [0, -1.2 * u, 1.0 * u, -0.7 * u, 0.4 * u, 0] }, duration: 0.35, ease: "none" }, CUES.up + 0.2);
+    // the Value bar does not move: a faint nudge of light on "Value नहीं", nothing more
+    tl.to(m.valueGlow, { opacity: 0.2, duration: 0.2 }, CUES.flat).to(m.valueGlow, { opacity: 0.1, duration: 0.5 }, CUES.flat + 0.2);
+    ctx.onFrame(() => {
+      m.tokensNum.textContent = Math.round(st.tokens).toLocaleString("en-IN");
+      m.valueNum.textContent = "+" + Math.round(st.value) + "%";
+    });
+
+    // ---------- Treadmill: the belt scrolls faster after "गोल-गोल" ----------
+    const belt = document.createElement("div");
+    belt.className = "belt";
+    belt.style.cssText = `left:${beltLeft}px;top:${L.belt.y}px;width:${L.belt.w}px;height:${L.belt.h}px;
+      box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px #B6B2FF, 0 0 ${3.5 * u}px #6E6BD6;opacity:0`;
+    stage.appendChild(belt);
+    flickerOn(ctx, belt, CUES.scene);
+    gsap.set(belt, { backgroundPositionX: 0 });
+    tl.to(belt, { backgroundPositionX: -260, duration: CUES.loop - CUES.scene, ease: "none" }, CUES.scene)
+      .to(belt, { backgroundPositionX: -260 - 3600, duration: DURATION - CUES.loop, ease: "power1.in" }, CUES.loop);
+
+    // ---------- Tok jogs in place: bounces every beat, faster after "गोल-गोल" ----------
+    const tok = createTok(ctx, { size: L.tok, color: "magenta" });
+    const tokTop = L.belt.y - L.tok + 0.2 * u;
+    gsap.set(tok.el, { left: L.belt.cx - L.tok / 2, top: tokTop, opacity: 0 });
+    tl.set(tok.el, { opacity: 1 }, CUES.scene);
+    for (let t = CUES.scene + 0.2; t < DURATION - 0.4; ) {
+      const period = t < CUES.loop ? 0.5 : (t < CUES.docs ? 0.36 : 0.3);
+      tl.to(tok.el, { y: -1.4 * u, duration: period * 0.45, ease: "power2.out" }, t)
+        .to(tok.el, { y: 0, duration: period * 0.5, ease: "power2.in" }, t + period * 0.45);
+      tok.squash(t + period * 0.92, 0.35);
+      t += period;
+    }
+    [2.0, 4.4, 7.2, 10.6, 12.8].forEach((t) => tok.blink(t));
+
+    // ---------- Papers that nobody reads pile up beside the treadmill ----------
+    const dw = 5.2 * u, dh = 6.6 * u, stepX = dw + 0.7 * u, N = 12;
+    const launchX = L.belt.cx + L.tok / 2 - dw / 2, launchY = tokTop + L.tok * 0.25;
+    for (let k = 0; k < N; k++) {
+      const t0 = CUES.docs + k * 0.42, d = 0.55;
+      const col = k % L.pile.cols, row = Math.floor(k / L.pile.cols);
+      const dstX = L.pile.x0 + col * stepX + (ctx.rng() - 0.5) * 0.6 * u, dstY = L.belt.y - dh * (row + 1) - row * 0.5 * u + 0.2 * u;
+      const rot = (ctx.rng() - 0.5) * 12;
+      const el = document.createElement("div");
+      el.className = "doc";
+      el.style.cssText = `left:0;top:0;width:${dw}px;height:${dh}px;opacity:0;box-shadow:0 0 ${1 * u}px rgba(182,178,255,.55)`;
+      el.innerHTML = [18, 36, 54, 72].map((y) => `<i style="top:${y}%"></i>`).join("");
+      stage.appendChild(el);
+      const apex = Math.min(launchY, dstY) - 0.08 * H;
+      gsap.set(el, { x: launchX, y: launchY, scale: 0.5 });
+      tl.to(el, { opacity: 0.95, scale: 1, duration: 0.12, ease: "back.out(2)" }, t0)
+        .to(el, { x: dstX, duration: d, ease: "power1.out" }, t0)
+        .to(el, { y: apex, duration: d * 0.45, ease: "power2.out" }, t0)
+        .to(el, { y: dstY, duration: d * 0.55, ease: "bounce.out" }, t0 + d * 0.45)
+        .to(el, { rotation: rot, duration: d, ease: "none" }, t0);
+    }
+
+    // ---------- Caption (separate layer, toggle with ?captions=0) ----------
+    const arrow = `<svg viewBox="0 0 60 24" style="width:1.05em;height:.45em;vertical-align:.04em;margin-left:.15em;filter:drop-shadow(0 0 .1em #36D6E7)"><path d="M4 12H50M39 3L52 12L39 21" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const cap = createCaption(ctx, { cx: L.cap.cx, y: L.cap.y, w: 0.76 * W, lines: [
+      { html: "Usage ↑", size: L.cap.s, cls: "neon-text-m" },
+      { html: "Value " + arrow, size: L.cap.s, cls: "neon-text-c" } ] });
+    cap.reveal(0, CUES.up + 0.2);
+    cap.reveal(1, CUES.flat);
+  },
+});
+</script>
+</body>
+</html>

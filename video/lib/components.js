@@ -13,7 +13,7 @@
   };
 
   /* ---------- Tok, the mascot ---------- */
-  window.createTok = function (ctx, { size, color = "magenta" }) {
+  window.createTok = function (ctx, { size, color = "magenta", mood = "happy" }) {
     const c = COLORS[color], id = "tokglow" + uid++;
     const wrap = document.createElement("div");
     wrap.className = "tok";
@@ -43,7 +43,7 @@
             <circle cx="43" cy="54" r="7.5" fill="#fff"/>
             <circle cx="77" cy="54" r="7.5" fill="#fff"/>
           </g>
-          <path class="tok-mouth" d="M48 76 Q60 86 72 76" fill="none" stroke="${c.hi}" stroke-width="4" stroke-linecap="round" filter="url(#${id})"/>
+          <path class="tok-mouth" d="${mood === "sad" ? "M48 84 Q60 74 72 84" : "M48 76 Q60 86 72 76"}" fill="none" stroke="${c.hi}" stroke-width="4" stroke-linecap="round" filter="url(#${id})"/>
         </g>
       </svg>`;
     ctx.stage.appendChild(wrap);
@@ -143,6 +143,32 @@
       ${names.map(row).join("")}`;
     ctx.stage.appendChild(el);
     return { el, rows: Array.from(el.querySelectorAll(".lb-row")), nums: Array.from(el.querySelectorAll(".num")) };
+  };
+
+  /* ---------- Caption block: a .captions layer with 1+ centred lines and a flare behind the first ----------
+     lines: [{ html, size, cls = "neon-text-m", weight = 800 }]. reveal(i, at) slams line 0 in (with the flare) and
+     fades later lines up. Everything starts hidden. */
+  window.createCaption = function (ctx, { cx, y, w, lines, flare = "magenta" }) {
+    const u = ctx.u, el = document.createElement("div");
+    el.className = "layer captions";
+    el.innerHTML = `<div style="position:absolute;left:${cx - w / 2}px;top:${y}px;width:${w}px;text-align:center;line-height:1.15">` +
+      lines.map((l, i) => `<div class="cap-line ${l.cls || "neon-text-m"}" style="font-size:${l.size}px;font-weight:${l.weight || 800};
+        white-space:nowrap;opacity:0;${i ? "margin-top:.22em;" : ""}">${l.html}</div>`).join("") + `</div>`;
+    ctx.stage.appendChild(el);
+    const els = Array.from(el.querySelectorAll(".cap-line"));
+    const fl = createFlare(ctx, { x: cx, y: y + lines[0].size * 0.6, size: 46 * u, color: flare });
+    el.insertBefore(fl.el, el.firstChild); fl.el.style.zIndex = -1;
+    return {
+      el, lines: els, flare: fl,
+      reveal(i, at, peak = 0.8) {
+        if (i === 0) {
+          ctx.tl.fromTo(els[0], { opacity: 0, scale: 1.45 }, { opacity: 1, scale: 1, duration: 0.18, ease: "power4.out" }, at);
+          fl.burst(at, peak);
+        } else {
+          ctx.tl.fromTo(els[i], { opacity: 0, y: 3 * u }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, at);
+        }
+      },
+    };
   };
 
   /* ---------- Tokens / Value meter ---------- */

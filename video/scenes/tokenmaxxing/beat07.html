@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<title>Beat 7 · Tokenmaxxing</title>
+<link rel="stylesheet" href="../../theme/neon.css">
+</head>
+<body>
+<div class="stage"></div>
+
+<script src="../../../engine/gsap.min.js"></script>
+<script src="../../lib/scene-runtime.js"></script>
+<script src="../../lib/backdrop.js"></script>
+<script src="../../lib/components.js"></script>
+<script>
+/* Beat 7 (1:00–1:12): "Meta में एक internal leaderboard था, बताया जाता है उसका नाम था "Claudeonomics", जो लोगों को token खपत
+   के हिसाब से rank करता था। जल्द ही Amazon, OpenAI और बाकियों के पास भी अपने leaderboards थे."
+   Company names are plain text (no logos); "Claudeonomics" is labelled "as reported".
+   CUES are seconds from the start of this beat. Placeholder times until the Hindi recording exists. */
+const CUES = {
+  main: 0.4,     // "Meta में एक internal leaderboard था" — the first leaderboard window appears
+  name: 2.6,     // "Claudeonomics" — its title lights up, "Meta · as reported" tag
+  amazon: 6.0,   // "Amazon" — a second leaderboard pops up
+  openai: 7.4,   // "OpenAI" — a third one
+  rest: 8.8,     // "बाकियों" — the rest pop up, caption "Leaderboards Everywhere"
+};
+const DURATION = 12;
+
+registerScene({
+  duration: DURATION, fps: 30, seed: 7, cues: CUES,
+  build(tl, ctx) {
+    const { W, H, u, format, stage } = ctx;
+    const isShort = format === "short";
+    buildBackdrop(ctx, { duration: DURATION, panels: isShort
+      ? [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.78, y: 0.07, w: 8, color: "c" }, { x: 0.72, y: 0.86, w: 9, color: "c" }]
+      : [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.86, y: 0.07, w: 7, color: "c" }, { x: 0.90, y: 0.88, w: 6, color: "c" }] });
+
+    // ---------- Layout per format (centred; the Short stays inside 12%–88% of the width) ----------
+    const gap = 1.6 * u;
+    const L = isShort
+      ? { main: { x: 0.12 * W, y: 0.15 * H, w: 0.76 * W, rowH: 7 * u },
+          small: { cols: 2, x0: 0.12 * W, y0: 0.395 * H, w: (0.76 * W - gap) / 2, rowH: 4.6 * u },
+          cap: { cx: 0.5 * W, y: 0.665 * H, s1: 8.4 * u } }
+      : { main: { x: 0.2 * W, y: 0.08 * H, w: 0.6 * W, rowH: 6 * u },
+          small: { cols: 4, x0: 0.1 * W, y0: 0.47 * H, w: (0.8 * W - 3 * gap) / 4, rowH: 4.6 * u },
+          cap: { cx: 0.5 * W, y: 0.76 * H, s1: 7.4 * u } };
+    L.small.h = L.small.rowH * 0.85 + 3 * L.small.rowH + 1.2 * u;
+
+    // Numbers climb in uneven jumps (seeded) on every board
+    const tick = (board, targets, t0, t1, steps = 12) => {
+      const st = targets.map(() => ({ v: 0 }));
+      targets.forEach((tg, i) => {
+        const w = Array.from({ length: steps }, () => 0.4 + ctx.rng()), sum = w.reduce((a, b) => a + b, 0);
+        let acc = 0;
+        w.forEach((v, k) => {
+          acc += (v / sum) * tg;
+          tl.to(st[i], { v: acc, duration: (t1 - t0) / steps * 0.8, ease: "power1.out" }, t0 + k * (t1 - t0) / steps);
+        });
+      });
+      ctx.onFrame(() => board.nums.forEach((el, i) => { el.textContent = Math.round(st[i].v).toLocaleString("en-IN"); }));
+    };
+
+    // ---------- The first leaderboard: "Claudeonomics" ----------
+    const titleFlare = createFlare(ctx, { x: L.main.x + 17 * u, y: L.main.y + L.main.rowH * 0.42, size: 24 * u, color: "magenta" });
+    const main = createLeaderboard(ctx, { ...L.main, title: "Claudeonomics", names: ["Dev_07", "Dev_21", "Dev_03", "Dev_14"], color: "magenta" });
+    const headH = L.main.rowH * 0.85;
+    const title = main.el.firstElementChild;
+    title.style.fontSize = L.main.rowH * 0.5 + "px";
+    // a neon copy of the title fades in on the name cue; a tag says where it was reported
+    const titleNeon = title.cloneNode(true);
+    titleNeon.className = "neon-text-m"; titleNeon.style.opacity = 0; titleNeon.style.fontWeight = 800;
+    main.el.appendChild(titleNeon);
+    const tag = document.createElement("div");
+    tag.className = "soft-text";
+    tag.style.cssText = `position:absolute;right:${2 * u}px;top:0;height:${headH}px;display:flex;align-items:center;font-weight:600;
+      font-size:${L.main.rowH * 0.3}px;opacity:0;white-space:nowrap`;
+    tag.textContent = "Meta · as reported";
+    main.el.appendChild(tag);
+
+    flickerOn(ctx, main.el, CUES.main);
+    tl.fromTo(main.el, { y: 5 * u }, { y: 0, duration: 0.5, ease: "power3.out" }, CUES.main);
+    tick(main, [18400000, 15700000, 12900000, 10300000], CUES.main + 0.9, DURATION - 0.3);
+    tl.to(titleNeon, { opacity: 1, duration: 0.2, ease: "power2.out" }, CUES.name)
+      .to(tag, { opacity: 0.9, duration: 0.4 }, CUES.name + 0.2);
+    titleFlare.burst(CUES.name, 0.9);
+
+    // ---------- The others pop up around it ----------
+    const others = [
+      { name: "Amazon", at: CUES.amazon, targets: [9800000, 7400000, 6100000] },
+      { name: "OpenAI", at: CUES.openai, targets: [11200000, 8300000, 5900000] },
+      { name: "Microsoft", at: CUES.rest, targets: [8600000, 7000000, 5200000] },
+      { name: "Uber", at: CUES.rest + 0.25, targets: [7700000, 6300000, 4800000] },
+    ];
+    others.forEach((o, i) => {
+      const col = i % L.small.cols, row = Math.floor(i / L.small.cols);
+      const x = L.small.x0 + col * (L.small.w + gap), y = L.small.y0 + row * (L.small.h + gap);
+      const b = createLeaderboard(ctx, { x, y, w: L.small.w, rowH: L.small.rowH, title: o.name, names: ["Dev_04", "Dev_18", "Dev_11"], color: "magenta" });
+      b.el.firstElementChild.style.fontSize = L.small.rowH * 0.4 + "px";
+      tl.fromTo(b.el, { scale: 0.6, opacity: 0, transformOrigin: "50% 50%" },
+                      { scale: 1, opacity: 1, duration: 0.4, ease: "back.out(1.8)" }, o.at);
+      const f = createFlare(ctx, { x: x + L.small.w / 2, y: y + L.small.h / 2, size: 18 * u, color: "magenta" });
+      f.burst(o.at + 0.1, 0.6);
+      tick(b, o.targets, o.at + 0.5, DURATION - 0.3, 10);
+    });
+
+    // ---------- Caption (separate layer, toggle with ?captions=0) ----------
+    const cap = createCaption(ctx, { cx: L.cap.cx, y: L.cap.y, w: 0.76 * W, lines: [
+      { html: "Leaderboards", size: L.cap.s1, cls: "neon-text-m" },
+      { html: "Everywhere", size: L.cap.s1 * 0.62, cls: "soft-text", weight: 600 } ] });
+    cap.reveal(0, CUES.rest);
+    cap.reveal(1, CUES.rest + 0.35);
+  },
+});
+</script>
+</body>
+</html>

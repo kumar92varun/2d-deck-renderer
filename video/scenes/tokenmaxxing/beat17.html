@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<title>Beat 17 · Tokenmaxxing</title>
+<link rel="stylesheet" href="../../theme/neon.css">
+<style>
+  .word { position: absolute; text-align: center; font-weight: 800; white-space: nowrap; will-change: transform, opacity; }
+  .word .wrap { position: relative; display: inline-block; }
+  .crumble { position: absolute; border-radius: 5px; will-change: transform, opacity; }
+  .rule { position: absolute; display: flex; align-items: center; white-space: nowrap; font-weight: 600; opacity: 0; }
+  .rule b { flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid #B4F7FF; font-weight: 800; }
+  .follow { position: absolute; display: flex; align-items: center; justify-content: center; gap: .5em; font-weight: 800; white-space: nowrap; opacity: 0;
+            border-radius: 999px; border: 3px solid #fff; background: rgba(18,10,38,.85); will-change: transform, opacity; }
+</style>
+</head>
+<body>
+<div class="stage"></div>
+
+<script src="../../../engine/gsap.min.js"></script>
+<script src="../../lib/scene-runtime.js"></script>
+<script src="../../lib/backdrop.js"></script>
+<script src="../../lib/components.js"></script>
+<script>
+/* Beat 17 (3:22–3:40): "Tokens एक खर्च हैं, score नहीं। ये मत पूछो "मैंने कितना AI इस्तेमाल किया?" पूछो "मुझे इससे मिला क्या?" यही है valuemaxxing। अगले video के लिए follow करो."
+   "Score" crumbles away and "Cost" stays; Tok waves; the end card lists the five rules and a follow prompt.
+   Tok is calm and deliberate. CUES are seconds from the start of this beat. Placeholder times until the recording exists. */
+const CUES = {
+  words: 0.4,      // "Tokens एक खर्च हैं" — "Score" appears with "Cost"
+  crumble: 2.6,    // "score नहीं" — "Score" crumbles into dust; "Cost" stays and brightens
+  question: 5.4,   // "मुझे इससे मिला क्या?" — the question lands
+  wave: 8.4,       // "यही है valuemaxxing" — Tok waves; the five rules assemble
+  follow: 13.0,    // "अगले video के लिए follow करो" — the follow prompt pops
+};
+const DURATION = 18;
+
+registerScene({
+  duration: DURATION, fps: 30, seed: 17, cues: CUES,
+  build(tl, ctx) {
+    const { W, H, u, format, stage } = ctx;
+    const isShort = format === "short";
+    buildBackdrop(ctx, { duration: DURATION, panels: isShort
+      ? [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.78, y: 0.07, w: 8, color: "c" }, { x: 0.72, y: 0.86, w: 9, color: "c" }]
+      : [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.86, y: 0.07, w: 7, color: "c" }, { x: 0.90, y: 0.88, w: 6, color: "c" }] });
+
+    // ---------- Layout per format (centred) ----------
+    const cx = W / 2;
+    const L = isShort
+      ? { s: 12 * u, yScore: 0.2 * H, yCost: 0.27 * H, q: { y: 0.42 * H, s: 5.6 * u }, tok: 13 * u, tokY: 0.2 * H,
+          rules: { y: 0.38 * H, s: 3.9 * u, step: 8 * u, w: 0.7 * W }, follow: { y: 0.7 * H, s: 3.8 * u } }
+      : { s: 11 * u, yScore: 0.13 * H, yCost: 0.13 * H, q: { y: 0.4 * H, s: 5.6 * u }, tok: 15 * u, tokY: 0.1 * H,
+          rules: { y: 0.3 * H, s: 3.6 * u, step: 7.4 * u, w: 0.4 * W }, follow: { y: 0.82 * H, s: 4 * u } };
+
+    // ===== Act 1: "Score" crumbles, "Cost" stays =====
+    const mkWord = (text, x, y, s, cls) => {
+      const el = document.createElement("div");
+      el.className = "word";
+      el.style.cssText = `left:${x - 30 * u}px;width:${60 * u}px;top:${y}px;font-size:${s}px;opacity:0`;
+      el.innerHTML = `<span class="wrap ${cls}">${text}</span>`;
+      stage.appendChild(el); return el;
+    };
+    const scoreX = isShort ? cx : cx - 24 * u, costX = isShort ? cx : cx + 24 * u;
+    const score = mkWord("Score", scoreX, L.yScore, L.s, "neon-text-m"), cost = mkWord("Cost", costX, L.yCost, L.s, "neon-text-c");
+    flickerOn(ctx, score, CUES.words); flickerOn(ctx, cost, CUES.words + 0.3);
+    const costFlare = createFlare(ctx, { x: costX, y: L.yCost + L.s * 0.6, size: 40 * u, color: "cyan" });
+    // dust: bits that fall away from where "Score" sits
+    const dustN = 26, dust = [];
+    for (let k = 0; k < dustN; k++) {
+      const d = document.createElement("i");
+      d.className = "crumble";
+      const sz = (0.6 + ctx.rng() * 1.3) * u;
+      d.style.cssText = `left:${scoreX - 13 * u + ctx.rng() * 26 * u}px;top:${L.yScore + L.s * (0.25 + ctx.rng() * 0.6)}px;width:${sz}px;height:${sz}px;background:#E39BFF;opacity:0;
+        box-shadow:0 0 ${0.8 * u}px #B23BE8`;
+      stage.appendChild(d); dust.push(d);
+      tl.set(d, { opacity: 1 }, CUES.crumble + 0.05)
+        .to(d, { x: (ctx.rng() - 0.5) * 8 * u, y: (6 + ctx.rng() * 12) * u, rotation: (ctx.rng() - 0.5) * 240, opacity: 0, duration: 0.9 + ctx.rng() * 0.5, ease: "power1.in" }, CUES.crumble + 0.05);
+    }
+    tl.to(score, { keyframes: { x: [0, -0.6 * u, 0.6 * u, -0.4 * u, 0] }, duration: 0.25, ease: "none" }, CUES.crumble)
+      .to(score, { opacity: 0, scale: 0.9, y: 2 * u, duration: 0.35, ease: "power2.in" }, CUES.crumble + 0.2);
+    tl.to(cost, { scale: 1.1, duration: 0.15, ease: "power2.out" }, CUES.crumble + 0.3)
+      .to(cost, { scale: 1, duration: 0.4, ease: "elastic.out(1,0.5)" }, CUES.crumble + 0.45);
+    costFlare.burst(CUES.crumble + 0.3, 1);
+    // act 1 fades out as the question arrives
+    tl.to([cost], { opacity: 0, duration: 0.4, ease: "power2.in" }, CUES.question - 0.5);
+
+    // ===== The question =====
+    const qCap = createCaption(ctx, { cx, y: L.q.y, w: 0.8 * W, lines: [
+      { html: "What did I get from it?", size: L.q.s, cls: "neon-text-c" } ], flare: "cyan" });
+    qCap.reveal(0, CUES.question, 1);
+    tl.to(qCap.el, { opacity: 0, duration: 0.4, ease: "power2.in" }, CUES.wave - 0.6);
+
+    // ===== Act 2: Tok waves, the five rules assemble =====
+    const tok = createTok(ctx, { size: L.tok, color: "magenta" });
+    const R = L.rules, n = 5;
+    const tokX = isShort ? cx - L.tok / 2 : cx - R.w / 2 - L.tok - 6 * u;
+    gsap.set(tok.el, { left: tokX, top: L.tokY, opacity: 0 });
+    flickerOn(ctx, tok.el, CUES.wave);
+    tok.squash(CUES.wave + 0.3, 1.1);
+    // a little hand that waves beside Tok
+    const hand = document.createElement("div");
+    const hs = 3.4 * u;
+    hand.style.cssText = `position:absolute;left:${tokX + L.tok - hs * 0.2}px;top:${L.tokY + L.tok * 0.45}px;width:${hs}px;height:${hs}px;border-radius:50%;
+      border:3px solid #E39BFF;background:linear-gradient(#4B1F70,#1A0D35);opacity:0;transform-origin:50% 120%;box-shadow:0 0 ${1.2 * u}px #B23BE8`;
+    stage.appendChild(hand);
+    tl.to(hand, { opacity: 1, duration: 0.2 }, CUES.wave + 0.5);
+    for (let k = 0; k < 6; k++) tl.to(hand, { rotation: k % 2 ? -26 : 26, duration: 0.22, ease: "sine.inOut" }, CUES.wave + 0.7 + k * 0.24);
+    tl.to(hand, { rotation: 0, duration: 0.2 }, CUES.wave + 2.2);
+    [CUES.wave + 3.4, CUES.follow + 1.8].forEach((t) => tok.blink(t));
+
+    const rulesTxt = ["Outcome first", "Right task, right model", "Context, not volume", "Spend where it pays", "Pair usage with outcome"];
+    const rx = cx - R.w / 2, rulesEls = rulesTxt.map((t, i) => {
+      const el = document.createElement("div");
+      el.className = "rule soft-text";
+      const bs = R.s * 1.7;
+      el.style.cssText = `left:${rx}px;width:${R.w}px;top:${R.y + i * R.step}px;height:${R.step * 0.8}px;font-size:${R.s}px`;
+      el.innerHTML = `<b class="neon-text-c" style="width:${bs}px;height:${bs}px;font-size:${R.s * 0.9}px;margin-right:${R.s * 0.7}px">${i + 1}</b><span>${t}</span>`;
+      stage.appendChild(el); return el;
+    });
+    rulesEls.forEach((el, i) => {
+      tl.fromTo(el, { opacity: 0, x: -3 * u }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, CUES.wave + 1.0 + i * 0.5);
+    });
+
+    // ===== Follow prompt =====
+    const F = L.follow, fw = (isShort ? 64 : 66) * u, fh = F.s * 2.6;
+    const fol = document.createElement("div");
+    fol.className = "follow";
+    fol.style.cssText = `left:${cx - fw / 2}px;top:${F.y}px;width:${fw}px;height:${fh}px;font-size:${F.s}px;
+      box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px #B4F7FF, 0 0 ${4 * u}px #36D6E7`;
+    fol.innerHTML = `<span class="neon-text-c">Follow</span><span class="soft-text" style="font-weight:600">for the next video</span>`;
+    stage.appendChild(fol);
+    const folFlare = createFlare(ctx, { x: cx, y: F.y + fh / 2, size: 36 * u, color: "cyan" });
+    tl.fromTo(fol, { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2.2)" }, CUES.follow);
+    folFlare.burst(CUES.follow + 0.1, 0.9);
+    tl.to(fol, { scale: 1.05, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 3 }, CUES.follow + 1);
+  },
+});
+</script>
+</body>
+</html>

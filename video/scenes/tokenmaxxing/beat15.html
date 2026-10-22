@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<title>Beat 15 · Tokenmaxxing</title>
+<link rel="stylesheet" href="../../theme/neon.css">
+<style>
+  .prompt { position: absolute; display: flex; align-items: center; justify-content: center; font-weight: 600; white-space: nowrap; opacity: 0;
+            border-radius: 999px; border: 3px solid #fff; background: rgba(18,10,38,.85); will-change: transform, opacity; }
+  .file { position: absolute; opacity: 0; will-change: transform, opacity; display: flex; flex-direction: column; align-items: center; }
+  .file .pg { position: relative; border-radius: 0.5em; border: 2px solid #B4F7FF; background: rgba(54,214,231,.12); }
+  .file .pg i { position: absolute; left: 20%; right: 20%; height: 7%; border-radius: 9px; background: rgba(180,247,255,.7); }
+  .file .nm { margin-top: .4em; font-weight: 600; white-space: nowrap; }
+  .coin { position: absolute; left: 0; top: 0; border-radius: 50%; opacity: 0; will-change: transform, opacity;
+          background: radial-gradient(circle at 35% 35%, #fff, #E39BFF 45%, #B23BE8); }
+  .lbl { position: absolute; text-align: center; font-weight: 600; white-space: nowrap; opacity: 0; }
+  .mark { position: absolute; display: flex; align-items: center; justify-content: center; border-radius: 50%; opacity: 0; font-weight: 800; }
+</style>
+</head>
+<body>
+<div class="stage"></div>
+
+<script src="../../../engine/gsap.min.js"></script>
+<script src="../../lib/scene-runtime.js"></script>
+<script src="../../lib/backdrop.js"></script>
+<script src="../../lib/components.js"></script>
+<script>
+/* Beat 15 (2:44–2:56): "तीसरा नियम: volume नहीं, context। सही files के साथ एक साफ़ prompt, दस अधूरे retries से बेहतर है। Rework में ही tokens चुपचाप गायब होते हैं।"
+   CUES are seconds from the start of this beat. Placeholder times until the Hindi recording exists. */
+const CUES = {
+  rule: 0.4,      // "तीसरा नियम" — "Rule 3:" slams in
+  context: 1.8,   // "volume नहीं, context" — "Context, Not Volume"; both columns appear
+  retries: 3.2,   // "दस अधूरे retries" — left: ten vague prompts loop, each burning a coin
+  clean: 6.6,     // "सही files के साथ एक साफ़ prompt" — right: one prompt with files, first try
+  vanish: 9.6,    // "tokens चुपचाप गायब होते हैं" — the left pile of coins fades away
+};
+const DURATION = 12;
+
+registerScene({
+  duration: DURATION, fps: 30, seed: 15, cues: CUES,
+  build(tl, ctx) {
+    const { W, H, u, format, stage } = ctx;
+    const isShort = format === "short";
+    buildBackdrop(ctx, { duration: DURATION, panels: isShort
+      ? [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.78, y: 0.07, w: 8, color: "c" }, { x: 0.72, y: 0.86, w: 9, color: "c" }]
+      : [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.86, y: 0.07, w: 7, color: "c" }, { x: 0.90, y: 0.88, w: 6, color: "c" }] });
+
+    // ---------- Layout: two mirrored columns centred on the screen ----------
+    const colGap = (isShort ? 4 : 10) * u, colW = isShort ? 0.35 * W : 0.28 * W;
+    const lcx = W / 2 - colGap / 2 - colW / 2, rcx = W / 2 + colGap / 2 + colW / 2;
+    const L = isShort
+      ? { top: 0.19 * H, tok: 11 * u, pw: colW, ph: 6.4 * u, s: 3 * u, cap: { y: 0.55 * H, s1: 5 * u, s2: 6.4 * u } }
+      : { top: 0.16 * H, tok: 13 * u, pw: colW, ph: 7.4 * u, s: 3.3 * u, cap: { y: 0.745 * H, s1: 6 * u, s2: 8 * u } };
+    const mkLbl = (text, cx, y, cls, s) => {
+      const el = document.createElement("div");
+      el.className = "lbl " + cls;
+      el.style.cssText = `left:${cx - colW / 2}px;width:${colW}px;top:${y}px;font-size:${s}px`;
+      el.textContent = text; stage.appendChild(el); return el;
+    };
+    const headY = L.top - 5.8 * u;
+    const hL = mkLbl("10 vague retries", lcx, headY, "neon-text-m", 3.3 * u), hR = mkLbl("1 clear prompt", rcx, headY, "neon-text-c", 3.3 * u);
+    tl.to([hL, hR], { opacity: 1, duration: 0.4, stagger: 0.1 }, CUES.context);
+
+    // ---------- Left: ten vague prompts loop around Tok, burning a coin each ----------
+    const tokL = createTok(ctx, { size: L.tok, color: "magenta" });
+    const tokTop = L.top + L.ph * 2 + 3 * u;
+    gsap.set(tokL.el, { left: lcx - L.tok / 2, top: tokTop, opacity: 0 });
+    flickerOn(ctx, tokL.el, CUES.context + 0.2);
+    const tokR = createTok(ctx, { size: L.tok, color: "cyan" });
+    gsap.set(tokR.el, { left: rcx - L.tok / 2, top: tokTop, opacity: 0 });
+    flickerOn(ctx, tokR.el, CUES.context + 0.3);
+    [4.4, 8.0, 10.6].forEach((t) => tokL.blink(t)); [5.2, 9.0].forEach((t) => tokR.blink(t));
+
+    const cs = 2.4 * u, coinCols = isShort ? 5 : 5, cstep = cs + 0.5 * u;
+    const coinsTop = tokTop + L.tok + 2.4 * u;
+    const coins = [];
+    for (let k = 0; k < 10; k++) {
+      const t0 = CUES.retries + k * 0.32, d = 0.5;
+      const p = document.createElement("div");
+      p.className = "prompt soft-text";
+      p.style.cssText = `left:${lcx - L.pw / 2}px;top:${L.top}px;width:${L.pw}px;height:${L.ph}px;font-size:${L.s}px;border-color:#E39BFF;
+        box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.4 * u}px #E39BFF, 0 0 ${3 * u}px #B23BE8`;
+      p.textContent = ["fix this", "try again", "not working", "still broken", "again?"][k % 5];
+      stage.appendChild(p);
+      // each prompt drops to Tok, "fails" (a shake), and bounces back up to be re-sent
+      tl.fromTo(p, { opacity: 0, y: -1.5 * u }, { opacity: 1, y: 0, duration: 0.15, ease: "power2.out" }, t0)
+        .to(p, { y: L.ph + 2.4 * u, scale: 0.7, duration: d * 0.5, ease: "power2.in" }, t0 + 0.1)
+        .to(p, { opacity: 0, duration: 0.12 }, t0 + 0.1 + d * 0.5);
+      if (k % 2 === 0) tokL.squash(t0 + 0.1 + d * 0.5, 0.5);
+      const c = document.createElement("div");
+      c.className = "coin";
+      const slot = [lcx - (coinCols * cstep) / 2 + (k % coinCols) * cstep + (cstep - cs) / 2, coinsTop + Math.floor(k / coinCols) * cstep];
+      c.style.cssText = `width:${cs}px;height:${cs}px;box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.4 * u}px #E39BFF, 0 0 ${3 * u}px #B23BE8`;
+      stage.appendChild(c); coins.push(c);
+      gsap.set(c, { x: lcx - cs / 2, y: tokTop + L.tok / 2, scale: 0.4 });
+      tl.to(c, { opacity: 1, duration: 0.05 }, t0 + 0.3)
+        .to(c, { x: slot[0], duration: 0.35, ease: "power1.out" }, t0 + 0.3)
+        .to(c, { y: slot[1], duration: 0.35, ease: "bounce.out" }, t0 + 0.3)
+        .to(c, { scale: 1, duration: 0.2 }, t0 + 0.3);
+    }
+    // ... and the coins quietly vanish ("tokens चुपचाप गायब")
+    tl.to(coins, { opacity: 0, y: "+=" + 2 * u, duration: 0.5, ease: "power1.in", stagger: 0.05 }, CUES.vanish);
+    const mk = (x, y, ch, color) => {
+      const el = document.createElement("div");
+      el.className = "mark";
+      el.style.cssText = `left:${x}px;top:${y}px;width:${4.6 * u}px;height:${4.6 * u}px;font-size:${3 * u}px;color:#fff;border:3px solid ${color};background:rgba(18,10,38,.9);
+        box-shadow:0 0 ${1.2 * u}px ${color}`;
+      el.textContent = ch; stage.appendChild(el); return el;
+    };
+    const xMark = mk(lcx + colW / 2 - 2.4 * u, L.top - 2.4 * u, "✕", "#E39BFF");
+    tl.to(xMark, { opacity: 1, scale: 1, duration: 0.25, ease: "back.out(2)" }, CUES.vanish + 0.2);
+
+    // ---------- Right: one prompt with attached files lands first time ----------
+    const pR = document.createElement("div");
+    pR.className = "prompt soft-text";
+    pR.style.cssText = `left:${rcx - L.pw / 2}px;top:${L.top}px;width:${L.pw}px;height:${L.ph}px;font-size:${L.s}px;border-color:#B4F7FF;
+      box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.4 * u}px #B4F7FF, 0 0 ${3 * u}px #36D6E7`;
+    pR.textContent = "Clear prompt";
+    stage.appendChild(pR);
+    flickerOn(ctx, pR, CUES.clean);
+    const fw = 5.2 * u, fh = 6.4 * u, files = ["api.ts", "spec.md", "logs"];
+    const filesEl = files.map((nm, i) => {
+      const f = document.createElement("div");
+      f.className = "file";
+      const gap = 1.8 * u;
+      f.style.cssText = `left:${rcx - (3 * fw + 2 * gap) / 2 + i * (fw + gap)}px;top:${L.top + L.ph + 1.6 * u}px;width:${fw}px`;
+      f.innerHTML = `<div class="pg" style="width:${fw}px;height:${fh}px">${[22, 40, 58, 76].map((y) => `<i style="top:${y}%"></i>`).join("")}</div>
+        <div class="nm soft-text" style="font-size:${2 * u}px">${nm}</div>`;
+      stage.appendChild(f); return f;
+    });
+    tl.fromTo(filesEl, { opacity: 0, y: -2 * u }, { opacity: 1, y: 0, duration: 0.35, ease: "back.out(2)", stagger: 0.14 }, CUES.clean + 0.5);
+    // the whole bundle drops into Tok in one go, and a single coin pays for it
+    const bundle = [pR, ...filesEl];
+    const hitT = CUES.clean + 1.7;
+    tl.to(bundle, { y: "+=" + (tokTop - L.top - L.ph), scale: 0.4, opacity: 0, duration: 0.45, ease: "power2.in", stagger: 0.04 }, hitT);
+    tokR.squash(hitT + 0.45, 1);
+    const c1 = document.createElement("div");
+    c1.className = "coin";
+    c1.style.cssText = `width:${cs}px;height:${cs}px;box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.4 * u}px #E39BFF, 0 0 ${3 * u}px #B23BE8`;
+    stage.appendChild(c1);
+    gsap.set(c1, { x: rcx - cs / 2, y: tokTop + L.tok / 2, scale: 0.4 });
+    tl.to(c1, { opacity: 1, duration: 0.05 }, hitT + 0.5).to(c1, { y: coinsTop, duration: 0.4, ease: "bounce.out" }, hitT + 0.5).to(c1, { scale: 1, duration: 0.2 }, hitT + 0.5);
+    const okMark = mk(rcx + colW / 2 - 2.4 * u, L.top - 2.4 * u, "✓", "#36D6E7");
+    tl.to(okMark, { opacity: 1, duration: 0.25 }, hitT + 0.55);
+    const okFlare = createFlare(ctx, { x: rcx, y: tokTop + L.tok / 2, size: 22 * u, color: "cyan" });
+    okFlare.burst(hitT + 0.45, 0.9);
+
+    // ---------- Caption (separate layer, toggle with ?captions=0) ----------
+    const cap = createCaption(ctx, { cx: W / 2, y: L.cap.y, w: 0.76 * W, lines: [
+      { html: "Rule 3:", size: L.cap.s1, cls: "soft-text", weight: 800 },
+      { html: "Context, Not Volume", size: L.cap.s2, cls: "neon-text-c" } ], flare: "cyan" });
+    cap.reveal(0, CUES.rule);
+    cap.reveal(1, CUES.context + 0.2);
+  },
+});
+</script>
+</body>
+</html>

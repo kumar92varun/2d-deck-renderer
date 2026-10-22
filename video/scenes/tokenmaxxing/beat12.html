@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<title>Beat 12 · Tokenmaxxing</title>
+<link rel="stylesheet" href="../../theme/neon.css">
+<style>
+  .wrap { position: relative; display: inline-block; }
+  .wrap .strike { position: absolute; left: -3%; right: -3%; top: 56%; border-radius: 9px; background: #fff; transform: scaleX(0); transform-origin: 0 50%; }
+  .sc { position: absolute; will-change: transform, opacity; }
+  .formula { position: absolute; display: flex; align-items: center; justify-content: center; gap: .5em; font-weight: 800; white-space: nowrap;
+             border-radius: 999px; border: 3px solid #fff; background: rgba(18,10,38,.8); }
+</style>
+</head>
+<body>
+<div class="stage"></div>
+
+<script src="../../../engine/gsap.min.js"></script>
+<script src="../../lib/scene-runtime.js"></script>
+<script src="../../lib/backdrop.js"></script>
+<script src="../../lib/components.js"></script>
+<script>
+/* Beat 12 (2:02–2:18): "तो क्या AI इस्तेमाल करना बंद कर दें? बिल्कुल नहीं। कुछ teams उल्टी तरफ़ चली गईं और अब कम से कम tokens इस्तेमाल करती हैं।
+   वो भी उतना ही गलत है। असली लक्ष्य है valuemaxxing: हर token से ज़्यादा से ज़्यादा value निकालना।"
+   Tok is calm and deliberate from here on. CUES are seconds from the start of this beat. Placeholder times until the recording exists. */
+const CUES = {
+  starve: 0.5,        // "कम से कम tokens इस्तेमाल करती हैं" — a sad Tok beside a near-empty bar: "Tokenminning"
+  wrong: 5.0,         // "वो भी उतना ही गलत है" — "Tokenminning" is struck out
+  valuemaxxing: 7.0,  // "valuemaxxing" — Tok recovers; a balance scale appears, tokens side heavy
+  balance: 9.2,       // "हर token से ज़्यादा value" — the value side grows and the scale levels out
+  pertoken: 11.6,     // "हर token" — the formula card Value ÷ Tokens and the caption land
+};
+const DURATION = 16;
+
+registerScene({
+  duration: DURATION, fps: 30, seed: 12, cues: CUES,
+  build(tl, ctx) {
+    const { W, H, u, format, stage } = ctx;
+    const isShort = format === "short";
+    buildBackdrop(ctx, { duration: DURATION, panels: isShort
+      ? [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.78, y: 0.07, w: 8, color: "c" }, { x: 0.72, y: 0.86, w: 9, color: "c" }]
+      : [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.86, y: 0.07, w: 7, color: "c" }, { x: 0.90, y: 0.88, w: 6, color: "c" }] });
+
+    // ---------- Layout per format (centred) ----------
+    const L = isShort
+      ? { tok: 15 * u, meter: { w: 21 * u, h: 36 * u, y: 0.17 * H }, gap: 6 * u,
+          scale: { beamY: 0.255 * H, Lb: 36 * u, post: 0.455 * H, tok2: 11 * u },
+          formula: { y: 0.505 * H, w: 40 * u, h: 8 * u, s: 4.4 * u },
+          cap1: { y: 0.585 * H, s: 6.4 * u }, cap3: { y: 0.64 * H, s1: 8.4 * u } }
+      : { tok: 17 * u, meter: { w: 21 * u, h: 44 * u, y: 0.16 * H }, gap: 7 * u,
+          scale: { beamY: 0.17 * H, Lb: 40 * u, post: 0.5 * H, tok2: 12 * u },
+          formula: { y: 0.55 * H, w: 44 * u, h: 8.5 * u, s: 4.7 * u },
+          cap1: { y: 0.68 * H, s: 6.4 * u }, cap3: { y: 0.72 * H, s1: 7.4 * u } };
+
+    // ===== Phase 1: Tok starving next to a nearly empty Tokens bar ("tokenminning") =====
+    const pairW = L.tok + L.gap + L.meter.w, tokX = (W - pairW) / 2, meterX = tokX + L.tok + L.gap;
+    const m = createMeter(ctx, { x: meterX, y: L.meter.y, w: L.meter.w, h: L.meter.h });
+    const base = L.meter.y + L.meter.h * 0.87;                      // the bottom of the bars is Tok's floor
+    gsap.set(m.valueGlow, { opacity: 0.08 });
+    m.tokensNum.textContent = "12"; m.valueNum.textContent = "+0%";
+    tl.fromTo(m.el, { opacity: 0, y: 3 * u }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, CUES.starve)
+      .set(m.tokensFill, { scaleY: 0.04 }, CUES.starve).set(m.valueFill, { scaleY: 0.03 }, CUES.starve)
+      .to(m.tokensGlow, { opacity: 0.12, duration: 0.3 }, CUES.starve);
+    const tokSad = createTok(ctx, { size: L.tok, color: "magenta", mood: "sad" });
+    gsap.set(tokSad.el, { left: tokX, top: base - L.tok, opacity: 0, scaleY: 0.94 });
+    tl.to(tokSad.el, { opacity: 0.85, duration: 0.4 }, CUES.starve);
+    for (let k = 0; k < 4; k++) {                                  // slow, tired breathing
+      tl.to(tokSad.el, { y: 0.9 * u, duration: 0.9, ease: "sine.inOut" }, CUES.starve + 0.6 + k * 1.7)
+        .to(tokSad.el, { y: 0, duration: 0.8, ease: "sine.inOut" }, CUES.starve + 1.5 + k * 1.7);
+    }
+    tokSad.blink(2.6);
+    // fade the starving scene out when the scale arrives
+    tl.to([m.el, tokSad.el], { opacity: 0, duration: 0.4, ease: "power2.in" }, CUES.valuemaxxing - 0.3);
+
+    const cap1 = createCaption(ctx, { cx: W / 2, y: L.cap1.y, w: 0.76 * W, lines: [
+      { html: `<span class="wrap">Tokenminning<i class="strike" style="height:${0.7 * u}px;margin-top:${-0.35 * u}px;box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.2 * u}px #E39BFF"></i></span>`, size: L.cap1.s, cls: "neon-text-m" } ] });
+    cap1.reveal(0, CUES.starve + 0.9, 0.5);
+    tl.to(cap1.el.querySelector(".strike"), { scaleX: 1, duration: 0.22, ease: "power3.out" }, CUES.wrong)
+      .to(cap1.lines[0], { opacity: 0.5, duration: 0.3 }, CUES.wrong + 0.15)
+      .to(cap1.el, { opacity: 0, duration: 0.4, ease: "power2.in" }, CUES.valuemaxxing - 0.3);
+
+    // ===== Phase 2: the balance scale =====
+    const S = L.scale, scx = W / 2, panW = 12 * u, strL = 8 * u;
+    const mk = (cls, css, html = "") => { const el = document.createElement("div"); el.className = "sc " + cls; el.style.cssText = css; el.innerHTML = html; stage.appendChild(el); return el; };
+    const glow = (hi, main) => `box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px ${hi}, 0 0 ${3.5 * u}px ${main}`;
+    const post = mk("post", `left:${scx - 0.5 * u}px;top:${S.beamY}px;width:${1 * u}px;height:${S.post - S.beamY}px;border-radius:9px;background:#fff;opacity:0;${glow("#B6B2FF", "#6E6BD6")}`);
+    const foot = mk("foot", `left:${scx - 7 * u}px;top:${S.post}px;width:${14 * u}px;height:${1.3 * u}px;border-radius:9px;background:#fff;opacity:0;${glow("#B6B2FF", "#6E6BD6")}`);
+    const beam = mk("beam", `left:${scx - S.Lb / 2}px;top:${S.beamY - 0.5 * u}px;width:${S.Lb}px;height:${1 * u}px;border-radius:9px;background:#fff;opacity:0;${glow("#B6B2FF", "#6E6BD6")}`);
+    const hub = mk("hub", `left:${scx - 1.6 * u}px;top:${S.beamY - 1.6 * u}px;width:${3.2 * u}px;height:${3.2 * u}px;border-radius:50%;background:#fff;opacity:0;${glow("#B6B2FF", "#6E6BD6")}`);
+    const coinHtml = [0, 1, 2, 3].map((i) => `<i style="position:absolute;left:${panW * 0.5 - 2.2 * u + (i % 2) * 1.6 * u - 0.8 * u}px;top:${-2.6 * u - Math.floor(i / 2) * 2.4 * u}px;width:${3.4 * u}px;height:${3.4 * u}px;border-radius:50%;
+      background:radial-gradient(circle at 35% 35%, #fff, #E39BFF 45%, #B23BE8);box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px #E39BFF, 0 0 ${3 * u}px #B23BE8"></i>`).join("");
+    const gemHtml = `<i class="gem" style="position:absolute;left:${panW / 2 - 2.2 * u}px;top:${-4.6 * u}px;width:${4.4 * u}px;height:${4.4 * u}px;transform:rotate(45deg);border-radius:0.6em;
+      background:linear-gradient(135deg, #fff, #B4F7FF 40%, #36D6E7);box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.8 * u}px #B4F7FF, 0 0 ${4 * u}px #36D6E7"></i>`;
+    const mkPan = (hi, main, content) => {
+      const el = mk("pan", `left:0;top:0;width:${panW}px;height:${strL + 1.6 * u}px;opacity:0`,
+        `<i style="position:absolute;left:${panW / 2 - 0.15 * u}px;top:0;width:${0.3 * u}px;height:${strL}px;background:#fff;box-shadow:0 0 ${0.8 * u}px ${hi}"></i>
+         <div style="position:absolute;left:0;top:${strL}px;width:${panW}px;height:${1.6 * u}px;border-radius:0 0 ${panW}px ${panW}px;background:rgba(18,10,38,.9);border:3px solid ${hi};${glow(hi, main)}"></div>
+         <div style="position:absolute;left:0;top:${strL}px;width:${panW}px;height:0">${content}</div>`);
+      return el;
+    };
+    const panL = mkPan("#E39BFF", "#B23BE8", coinHtml), panR = mkPan("#B4F7FF", "#36D6E7", gemHtml);
+    const gem = panR.querySelector(".gem");
+    const ang = { a: -14 };                                            // degrees; negative = the tokens (left) side is heavy
+    ctx.onFrame(() => {
+      const r = ang.a * Math.PI / 180, dx = (S.Lb / 2) * Math.cos(r), dy = (S.Lb / 2) * Math.sin(r);
+      beam.style.transform = `rotate(${ang.a}deg)`;
+      panL.style.transform = `translate(${scx - dx - panW / 2}px, ${S.beamY + dy}px)`;
+      panR.style.transform = `translate(${scx + dx - panW / 2}px, ${S.beamY - dy}px)`;
+    });
+    const parts = [post, foot, beam, hub, panL, panR];
+    parts.forEach((p) => flickerOn(ctx, p, CUES.valuemaxxing));
+    // a small tilt wobble, then the value side grows and the beam settles level
+    tl.to(ang, { a: -12, duration: 0.5, ease: "sine.inOut" }, CUES.valuemaxxing + 0.6)
+      .to(ang, { a: -14, duration: 0.6, ease: "sine.inOut" }, CUES.valuemaxxing + 1.1)
+      .to(ang, { a: 0, duration: 1.4, ease: "elastic.out(1,0.45)" }, CUES.balance);
+    tl.to(gem, { scale: 1.45, duration: 0.5, ease: "back.out(2)" }, CUES.balance);
+    const balFlare = createFlare(ctx, { x: scx, y: S.beamY, size: 34 * u, color: "cyan" });
+    balFlare.burst(CUES.balance + 0.5, 0.9);
+
+    // Tok, calm again, stands beside the scale
+    const tokHappy = createTok(ctx, { size: S.tok2, color: "magenta" });
+    gsap.set(tokHappy.el, { left: scx + 15 * u, top: S.post - S.tok2 + 1.3 * u, opacity: 0 });
+    flickerOn(ctx, tokHappy.el, CUES.valuemaxxing + 0.3);
+    tokHappy.squash(CUES.valuemaxxing + 0.5, 0.8);
+    [9.8, 13.4].forEach((t) => tokHappy.blink(t));
+
+    // ===== Formula card: Value ÷ Tokens =====
+    const F = L.formula;
+    const card = document.createElement("div");
+    card.className = "formula";
+    card.style.cssText = `left:${W / 2 - F.w / 2}px;top:${F.y}px;width:${F.w}px;height:${F.h}px;font-size:${F.s}px;opacity:0;
+      box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px #B6B2FF, 0 0 ${3.5 * u}px #6E6BD6`;
+    card.innerHTML = `<span class="neon-text-c">Value</span><span style="color:#fff;font-weight:600">÷</span><span class="neon-text-m">Tokens</span>`;
+    stage.appendChild(card);
+    flickerOn(ctx, card, CUES.pertoken - 0.2);
+
+    // ---------- Caption (separate layer, toggle with ?captions=0) ----------
+    const cap3 = createCaption(ctx, { cx: W / 2, y: L.cap3.y, w: 0.76 * W, lines: [
+      { html: "Valuemaxxing", size: L.cap3.s1, cls: "neon-text-c" },
+      { html: "= Value per Token", size: L.cap3.s1 * 0.62, cls: "soft-text", weight: 600 } ], flare: "cyan" });
+    cap3.reveal(0, CUES.valuemaxxing + 0.2);
+    cap3.reveal(1, CUES.pertoken);
+  },
+});
+</script>
+</body>
+</html>

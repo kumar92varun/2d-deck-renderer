@@ -61,7 +61,8 @@ click-to-advance, no npm) apply to `/decks` only. Videos are timeline-driven, da
   edges, so panels never sit behind text, the action or the meter. The older violet haze is still available as
   `?bg=violet` / `--bg violet`, but navy is the default and the look to build in.
 - **Neon look:** white-hot core + coloured halo. Use `.neon-text-m` / `.neon-text-c`, `createTile`, `createNeonBox`,
-  `createTok`, `createMeter`, `createFlare`, `flickerOn` from `lib/components.js`. Add new reusable pieces there,
+  `createTok` (`mood: "sad"` for the starving Tok), `createMeter`, `createLeaderboard`, `createCaption` (the standard
+  slam-in caption block on its own `.captions` layer), `createFlare`, `flickerOn` from `lib/components.js`. Add new reusable pieces there,
   not inline in a scene, when a second beat would use them.
 - **Colour meaning is fixed:** magenta = tokens/cost/usage, cyan = value/outcome. Never swap them.
 - **Tok:** the mascot. Rounded tile, dot eyes, smile. Squash & stretch on landings and throws (`tok.squash`),

@@ -26,7 +26,17 @@ If the script or storyboard changes there, update this file too. This file is wh
 | 4 | `scenes/tokenmaxxing/beat04.html` | built, placeholder cues (waiting for recording) |
 | 5 | `scenes/tokenmaxxing/beat05.html` | built, placeholder cues (waiting for recording) |
 | 6 | `scenes/tokenmaxxing/beat06.html` | built, placeholder cues (waiting for recording); quote shown as a labelled paraphrase |
-| 7–17 | — | not started |
+| 7 | `scenes/tokenmaxxing/beat07.html` | built, placeholder cues (waiting for recording); "Claudeonomics" tagged "Meta · as reported"; other boards use placeholder names |
+| 8 | `scenes/tokenmaxxing/beat08.html` | built, placeholder cues (waiting for recording) |
+| 9 | `scenes/tokenmaxxing/beat09.html` | built, placeholder cues (waiting for recording); carries "* According to reports" |
+| 10 | `scenes/tokenmaxxing/beat10.html` | built, placeholder cues (waiting for recording) |
+| 11 | `scenes/tokenmaxxing/beat11.html` | built, placeholder cues (waiting for recording) |
+| 12 | `scenes/tokenmaxxing/beat12.html` | built, placeholder cues (waiting for recording); first beat with a sad Tok (tokenminning) |
+| 13 | `scenes/tokenmaxxing/beat13.html` | built, placeholder cues (waiting for recording) |
+| 14 | `scenes/tokenmaxxing/beat14.html` | built, placeholder cues (waiting for recording) |
+| 15 | `scenes/tokenmaxxing/beat15.html` | built, placeholder cues (waiting for recording) |
+| 16 | `scenes/tokenmaxxing/beat16.html` | built, placeholder cues (waiting for recording); covers both rules 4 and 5 |
+| 17 | `scenes/tokenmaxxing/beat17.html` | built, placeholder cues (waiting for recording) |
 
 ## Storyboard
 
