@@ -35,8 +35,8 @@ registerScene({
   build(tl, ctx) {
     const { W, H, u, format, stage } = ctx;
     buildBackdrop(ctx, { duration: DURATION, panels: format === "short"
-      ? [{ x: 0.05, y: 0.30, w: 10, color: "m" }, { x: 0.42, y: 0.27, w: 8, color: "c" }, { x: 0.74, y: 0.86, w: 9, color: "c" }]
-      : [{ x: 0.40, y: 0.09, w: 8, color: "m" }, { x: 0.64, y: 0.16, w: 7, color: "c" }, { x: 0.82, y: 0.80, w: 8, color: "c" }] });
+      ? [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.40, y: 0.055, w: 8, color: "c" }, { x: 0.74, y: 0.86, w: 9, color: "c" }]
+      : [{ x: 0.40, y: 0.05, w: 8, color: "m" }, { x: 0.62, y: 0.06, w: 7, color: "c" }, { x: 0.82, y: 0.80, w: 8, color: "c" }] });
 
     // ---------- Layout per format ----------
     const L = format === "short"
@@ -130,7 +130,7 @@ registerScene({
       const cs = 3.4 * u;
       coin.style.cssText = `position:absolute;left:0;top:0;width:${cs}px;height:${cs}px;border-radius:50%;
         background:radial-gradient(circle at 35% 35%, #fff, #E39BFF 45%, #B23BE8);
-        box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${2 * u}px #E39BFF, 0 0 ${4 * u}px #B23BE8;opacity:0`;
+        box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${1.4 * u}px #E39BFF, 0 0 ${3 * u}px #B23BE8;opacity:0`;
       stage.appendChild(coin);
       const ct = t0 + d + 0.04, cd = 0.34;
       tl.set(coin, { x: toX - cs / 2, y: L.box.y - cs * 0.3, opacity: 1, scale: 0.6 }, ct)
@@ -182,7 +182,7 @@ registerScene({
     const badge = document.createElement("div");
     badge.className = "badge";
     badge.style.cssText += `left:${L.badge.x}px;top:${L.badge.y}px;font-size:${L.badge.s}px;opacity:0;
-      box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${2 * u}px #B4F7FF, 0 0 ${4.5 * u}px #36D6E7`;
+      box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${1.4 * u}px #B4F7FF, 0 0 ${3.2 * u}px #36D6E7`;
     badge.innerHTML = `<span class="soft-text">Silicon Valley</span><span class="neon-text-c" style="font-weight:800">2026</span>`;
     cap.appendChild(badge);
     const bFlare = createFlare(ctx, { x: L.badge.x + 18 * u, y: L.badge.y + 3 * u, size: 30 * u, color: "cyan" });

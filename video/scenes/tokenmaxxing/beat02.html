@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="../../theme/neon.css">
 <style>
   .neon-text-g { color: #fff;
-    text-shadow: 0 0 calc(var(--u)*.3) #fff, 0 0 calc(var(--u)*1.2) #FFE7A3, 0 0 calc(var(--u)*3) #F5B82E, 0 0 calc(var(--u)*6) #F5B82E; }
+    text-shadow: 0 0 calc(var(--u)*.15) #fff, 0 0 calc(var(--u)*.7) #FFE7A3, 0 0 calc(var(--u)*2) #F5B82E, 0 0 calc(var(--u)*4) #F5B82Eb3; }
   .word { position: absolute; text-align: center; line-height: 1.15; font-weight: 800; letter-spacing: .01em; white-space: nowrap; }
   .word .wrap { position: relative; display: inline-block; }
   .word .strike { position: absolute; left: -3%; right: -3%; top: 56%; border-radius: 9px; background: #fff;
@@ -79,7 +79,7 @@ registerScene({
     const badge = document.createElement("div");
     badge.className = "badge";
     badge.style.cssText += `left:${bx}px;top:${rowCy}px;height:${L.badge.h}px;padding:0 ${L.badge.h * 0.5}px;font-size:${L.badge.s}px;opacity:0;
-      box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${2 * u}px #FFE7A3, 0 0 ${4.5 * u}px #F5B82E`;
+      box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${1.4 * u}px #FFE7A3, 0 0 ${3.2 * u}px #F5B82E`;
     badge.innerHTML = `<span class="neon-text-g">TOKEN LEGEND</span>`;
     stage.appendChild(badge);
     gsap.set(badge, { xPercent: -50, yPercent: -50 });

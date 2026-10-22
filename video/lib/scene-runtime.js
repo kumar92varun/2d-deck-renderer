@@ -2,7 +2,7 @@
    - Every scene builds ONE paused GSAP timeline.
    - Render mode (?render=1): Puppeteer calls window.__scene.seek(t) per frame.
    - Preview mode: plays in real time with a scrub bar (Space = play/pause, ←/→ = ±1 frame).
-   Query params: format=short|long, render=1, captions=0, guides=1, t=<seconds>
+   Query params: format=short|long, render=1, captions=0, guides=1, t=<seconds>, bg=navy|violet (default navy)
    Rule for scene code: animate ONLY through the timeline (no CSS animations,
    no setTimeout, no Math.random) so every frame is identical on every render. */
 
@@ -12,6 +12,8 @@
   const format = FORMATS[params.get("format")] ? params.get("format") : "short";
   const [W, H] = FORMATS[format];
   const isRender = params.get("render") === "1";
+  const bg = params.get("bg") === "violet" ? "violet" : "navy";
+  document.documentElement.dataset.bg = bg;
 
   // Seeded RNG so "random" layouts are identical every render.
   function rng(seed) {
@@ -57,7 +59,7 @@
     const frameHooks = [];
     const ctx = {
       W, H, format, u: Math.min(W, H) / 100, stage, tl,
-      rng: rng(seed), cues, isRender,
+      rng: rng(seed), cues, isRender, bg,
       onFrame: (fn) => frameHooks.push(fn),
     };
     build(tl, ctx);

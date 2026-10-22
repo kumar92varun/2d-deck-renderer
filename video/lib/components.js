@@ -23,9 +23,9 @@
            style="position:absolute;left:${-size * 20 / 120}px;top:${-size * 20 / 120}px;overflow:visible">
         <defs>
           <filter id="${id}" filterUnits="userSpaceOnUse" x="-20" y="-20" width="160" height="160">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b1"/>
-            <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b2"/>
-            <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="b3"/>
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="b1"/>
+            <feGaussianBlur in="SourceGraphic" stdDeviation="4.5" result="b2"/>
+            <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="b3"/>
             <feMerge><feMergeNode in="b3"/><feMergeNode in="b2"/><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
           </filter>
           <linearGradient id="${id}f" x1="0" y1="0" x2="0" y2="1">
@@ -74,8 +74,8 @@
       display:flex;align-items:center;justify-content:center;border-radius:${size * 0.24}px;
       font-weight:600;font-size:${size * 0.42}px;color:#fff;white-space:nowrap;
       background:rgba(18,10,38,.55);border:${Math.max(2, 0.28 * u)}px solid #fff;
-      box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${1.6 * u}px ${c.hi}, 0 0 ${3.2 * u}px ${c.main}, inset 0 0 ${1.2 * u}px ${c.main};
-      text-shadow:0 0 ${0.8 * u}px ${c.hi};will-change:transform,opacity`;
+      box-shadow:0 0 ${0.35 * u}px #fff, 0 0 ${1.1 * u}px ${c.hi}, 0 0 ${2.4 * u}px ${c.main}, inset 0 0 ${1 * u}px ${c.main};
+      text-shadow:0 0 ${0.5 * u}px ${c.hi};will-change:transform,opacity`;
     ctx.stage.appendChild(el);
     return el;
   };
@@ -87,8 +87,8 @@
     el.className = "neon-box";
     el.style.cssText = `position:absolute;width:${w}px;height:${h}px;border-radius:${2.2 * u}px;
       border:${0.45 * u}px solid #fff;background:radial-gradient(ellipse at 50% 60%, ${c.main}33, rgba(18,10,38,.65) 70%);
-      box-shadow:0 0 ${0.8 * u}px #fff, 0 0 ${2.5 * u}px ${c.hi}, 0 0 ${6 * u}px ${c.main}, 0 0 ${12 * u}px ${c.main}88,
-        inset 0 0 ${3 * u}px ${c.main};
+      box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px ${c.hi}, 0 0 ${4 * u}px ${c.main}, 0 0 ${8 * u}px ${c.main}66,
+        inset 0 0 ${2.5 * u}px ${c.main};
       display:flex;align-items:center;justify-content:center;will-change:transform,opacity`;
     el.innerHTML = `<span class="neon-text-${color === "cyan" ? "c" : "m"}" style="font-weight:800;font-size:${h * 0.34}px;letter-spacing:.04em">${label}</span>`;
     ctx.stage.appendChild(el);
@@ -128,7 +128,7 @@
     el.className = "leaderboard";
     el.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${headH + rowH * n + 1.2 * u}px;
       border-radius:${2 * u}px;border:${0.4 * u}px solid #fff;background:rgba(18,10,38,.62);
-      box-shadow:0 0 ${0.8 * u}px #fff, 0 0 ${2.4 * u}px ${c.hi}, 0 0 ${6 * u}px ${c.main}, inset 0 0 ${2.5 * u}px ${c.main}66;
+      box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px ${c.hi}, 0 0 ${4 * u}px ${c.main}, inset 0 0 ${2.5 * u}px ${c.main}66;
       will-change:transform,opacity`;
     const row = (name, i) => `
       <div class="lb-row" style="position:absolute;left:${2 * u}px;right:${2 * u}px;top:${headH + i * rowH}px;height:${rowH}px;
@@ -163,7 +163,7 @@
           <div class="fill f${i}" style="position:absolute;left:${barW * 0.14}px;right:${barW * 0.14}px;bottom:${barW * 0.14}px;
                height:calc(100% - ${barW * 0.28}px);border-radius:${barW / 2}px;transform-origin:50% 100%;transform:scaleY(0);
                background:linear-gradient(to top, ${c.main}, ${c.hi} 70%, #fff);
-               box-shadow:0 0 ${0.8 * u}px #fff, 0 0 ${2.4 * u}px ${c.hi}, 0 0 ${5 * u}px ${c.main}"></div>
+               box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px ${c.hi}, 0 0 ${3.5 * u}px ${c.main}"></div>
         </div>
         <div class="glow g${i}" style="position:absolute;left:${left - barW * 0.8}px;top:${trackTop - trackH * 0.1}px;width:${barW * 2.6}px;height:${trackH * 1.3}px;
              background:radial-gradient(ellipse 45% 27% at 50% 70%, ${c.main}88, ${c.main}00);mix-blend-mode:screen;opacity:.4;

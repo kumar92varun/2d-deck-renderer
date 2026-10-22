@@ -51,13 +51,15 @@ click-to-advance, no npm) apply to `/decks` only. Videos are timeline-driven, da
 | --- | --- | --- |
 | Tokens / cost | Magenta-violet | `#B23BE8` (glow highlight `#E39BFF`) |
 | Value / outcome | Cyan | `#36D6E7` (glow highlight `#B4F7FF`) |
-| Background base | Deep violet-black | `#120A26` |
-| Fog midtone | Lavender-blue | `#6E6BD6` |
+| Background base | Navy-black (chosen by Varun after comparing it with the older violet look) | `#040914` |
+| Accent haze | Navy blue, with faint magenta (top-left) and cyan (top-right) | `#1E46A5` |
 | Text | Soft white | `#F4F1FF` |
 
-- **Backdrop:** always `buildBackdrop(ctx, { duration, panels })`: drifting magenta (top-left) → cyan (top-right)
-  fog, white-hot light panels with coloured bloom, faint branch silhouettes (≤15% opacity), grain, vignette.
-  Pass `panels` positions per format so panels never sit behind text or the meter.
+- **Backdrop:** always `buildBackdrop(ctx, { duration, panels })`: a dark navy-black base with a slow navy glow and only
+  faint magenta (top-left) and cyan (top-right) haze, so the neon objects pop. Plus white-hot light panels with coloured
+  bloom, very faint branch silhouettes, light grain and a vignette. Pass `panels` positions per format, at the frame
+  edges, so panels never sit behind text, the action or the meter. The older violet haze is still available as
+  `?bg=violet` / `--bg violet`, but navy is the default and the look to build in.
 - **Neon look:** white-hot core + coloured halo. Use `.neon-text-m` / `.neon-text-c`, `createTile`, `createNeonBox`,
   `createTok`, `createMeter`, `createFlare`, `flickerOn` from `lib/components.js`. Add new reusable pieces there,
   not inline in a scene, when a second beat would use them.
@@ -80,6 +82,18 @@ click-to-advance, no npm) apply to `/decks` only. Videos are timeline-driven, da
 - Radial-gradient glow elements must fade to transparent inside their own box, or they show a hard edge.
 - Flares must fade fully to `opacity: 0`; a leftover low-opacity flare reads as a smudge.
 - Heaps or rows of tiles get fixed widths and explicit slots, so labels never overlap.
+
+## Sharpness rules (the first renders looked dull and soft; this is why)
+
+- Anything with a hard edge must not live in the low-resolution backdrop canvas. The light-panel cores are small DOM boxes
+  (crisp at any scale); only soft bloom, fog and vignette are in the canvas. Draw the vignette *before* the panel bloom,
+  or it dims the panels to grey.
+- Keep glows tight: text-shadow and box-shadow outer radii around 2–4u, never 6u+. A wide halo makes the whole frame look hazy.
+- Grain is ~2% opacity and uses its own seeded generator (it must never consume `ctx.rng()`, or renders at different
+  scales would lay scenes out differently). Heavy grain smears and bands after YouTube's re-encode.
+- Render finals with `--scale 2` (2160×3840 / 3840×2160) when sharpness matters for upload; YouTube gives 1440p+ uploads
+  a higher-bitrate encode. `--bg violet` selects the older violet haze (`ctx.bg`); the default is the navy-black backdrop.
+- Keep light panels at the frame edges, never behind or beside the action: now that they are crisp they compete with content.
 
 ## The iteration loop (fast first, slow last)
 

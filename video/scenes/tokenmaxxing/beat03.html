@@ -74,7 +74,7 @@ registerScene({
     const sentWrap = document.createElement("div");
     sentWrap.style.cssText = `position:absolute;left:${L.row.cx - W / 2}px;width:${W}px;top:${L.row.y - L.sent * 1.1}px;text-align:center;will-change:transform,opacity`;
     sentWrap.innerHTML = `<span class="pill soft-text" style="font-size:${L.sent}px;padding:${L.sent * 0.35}px ${L.sent * 0.8}px;
-      box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${1.8 * u}px #E39BFF, 0 0 ${3.6 * u}px #B23BE8">Summarize this doc for me</span>`;
+      box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${1.2 * u}px #E39BFF, 0 0 ${2.6 * u}px #B23BE8">Summarize this doc for me</span>`;
     stage.appendChild(sentWrap);
     const pill = sentWrap.firstElementChild;
     flickerOn(ctx, pill, CUES.sentence);
@@ -141,7 +141,7 @@ registerScene({
       const coin = document.createElement("div");
       coin.style.cssText = `position:absolute;left:0;top:0;width:${cs}px;height:${cs}px;border-radius:50%;
         background:radial-gradient(circle at 35% 35%, #fff, #E39BFF 45%, #B23BE8);
-        box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${2 * u}px #E39BFF, 0 0 ${4 * u}px #B23BE8;opacity:0;will-change:transform`;
+        box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${1.4 * u}px #E39BFF, 0 0 ${3 * u}px #B23BE8;opacity:0;will-change:transform`;
       stage.appendChild(coin); coins.push(coin);
       const p = coinPos(k), cd = 0.4;
       tl.set(coin, { x: fromX - cs / 2, y: fromY - cs / 2, opacity: 1, scale: 0.6 }, at)

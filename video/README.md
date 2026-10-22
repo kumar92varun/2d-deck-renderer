@@ -39,10 +39,13 @@ node render.mjs scenes/tokenmaxxing/beat04.html --format long            # 1920�
 node render.mjs scenes/tokenmaxxing/beat04.html --format both --draft    # fast check of both sizes
 node render.mjs scenes/tokenmaxxing/beat04.html --workers 4              # split across 4 browsers (≈ half your CPU cores)
 node render.mjs scenes/tokenmaxxing/beat04.html --stills 0.8,6,11        # PNG stills only
+node render.mjs scenes/tokenmaxxing/beat04.html --scale 2                # 2x: 2160x3840 / 3840x2160, sharper on YouTube (~4x slower)
+node render.mjs scenes/tokenmaxxing/beat04.html --bg violet              # the older violet haze instead of the default navy-black backdrop
 node render.mjs scenes/tokenmaxxing/beat04.html --no-captions            # clean plate without captions
 ```
 
-Final = PNG frames, x264 CRF 14, BT.709, yuv420p (YouTube-safe). Draft = JPEG frames + fast encode.
+Final = PNG frames, x264 CRF 14, fully BT.709-tagged (matrix, primaries, transfer), yuv420p (YouTube-safe).
+`--scale 2` and `--bg violet` add `-2x` / `-violet` to the file name, so variants never overwrite each other. Draft = JPEG frames + fast encode.
 Memory: each worker is one Chrome tab, roughly 300–500 MB. Frames stream straight to ffmpeg; nothing is written to disk.
 
 ## Syncing to your Hindi voiceover
@@ -65,7 +68,7 @@ shorter, change `DURATION` too.
 
 ```
 storyboard/<video>.md   beats, cue words, on-screen text, Hindi script, build status
-theme/neon.css          colours, fonts, glow utilities — change the palette here
+theme/neon.css          colours, fonts, glow utilities — change the palette here (default backdrop: navy-black)
 lib/scene-runtime.js    timeline, seeking, preview controls, formats
 lib/backdrop.js         magenta→cyan fog, light panels, branches, grain (one low-res canvas)
 lib/components.js       Tok, token tiles, Tokens/Value meter, neon box, flares

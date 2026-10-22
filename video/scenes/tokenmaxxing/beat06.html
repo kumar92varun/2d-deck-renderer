@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="../../theme/neon.css">
 <style>
   .neon-text-l { color: #fff;
-    text-shadow: 0 0 calc(var(--u)*.3) #fff, 0 0 calc(var(--u)*1.2) #B6B2FF, 0 0 calc(var(--u)*3) #6E6BD6, 0 0 calc(var(--u)*6) #6E6BD6; }
+    text-shadow: 0 0 calc(var(--u)*.15) #fff, 0 0 calc(var(--u)*.7) #B6B2FF, 0 0 calc(var(--u)*2) #6E6BD6, 0 0 calc(var(--u)*4) #6E6BD6b3; }
   .caption { position: absolute; text-align: center; line-height: 1.15; font-weight: 800; white-space: nowrap; letter-spacing: .01em; }
   .caption .seg { opacity: 0; }
   .qcard { position: absolute; display: flex; flex-direction: column; justify-content: center; }
@@ -63,7 +63,7 @@ registerScene({
     card.className = "qcard";
     card.style.cssText = `left:${L.card.x}px;top:${L.card.y}px;width:${L.card.w}px;height:${L.card.h}px;padding:${pad}px;gap:${2.4 * u}px;border-radius:${1.8 * u}px;
       border:${0.4 * u}px solid #fff;background:linear-gradient(160deg, rgba(34,20,70,.92), rgba(14,8,32,.94));
-      box-shadow:0 0 ${0.8 * u}px #fff, 0 0 ${2.4 * u}px #B6B2FF, 0 0 ${6 * u}px #6E6BD6, inset 0 0 ${3 * u}px rgba(110,107,214,.45);will-change:transform,opacity`;
+      box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px #B6B2FF, 0 0 ${4 * u}px #6E6BD6, inset 0 0 ${3 * u}px rgba(110,107,214,.45);will-change:transform,opacity`;
     card.innerHTML = `
       <div class="quote soft-text" style="font-size:${L.q}px">If your <span class="hl hl1 neon-text-l">$500K engineer</span> isn&rsquo;t burning
         <span class="hl hl2 neon-text-m">$250K worth of tokens</span>, something is wrong.</div>
@@ -95,7 +95,7 @@ registerScene({
       const fill = document.createElement("div");
       fill.className = "fill";
       fill.style.cssText = `left:${inset}px;top:${inset}px;height:${B.h - 2 * inset - 4}px;width:${innerW * r.frac}px;border-radius:${B.h / 2}px;background:${r.grad};
-        box-shadow:0 0 ${0.8 * u}px #fff, 0 0 ${2.2 * u}px ${r.glow}, 0 0 ${4.5 * u}px ${r.glow2}`;
+        box-shadow:0 0 ${0.8 * u}px #fff, 0 0 ${1.5 * u}px ${r.glow}, 0 0 ${3 * u}px ${r.glow2}`;
       track.appendChild(fill);
       stage.appendChild(lab); stage.appendChild(track);
       flickerOn(ctx, lab, CUES.card + 0.4 + i * 0.15);

@@ -13,6 +13,9 @@
 
    Options
      --format short|long|both   default short (1080x1920)
+     --scale N                  render at N x resolution, e.g. 2 -> 2160x3840 / 3840x2160 (default 1). Sharper on YouTube;
+                                ~4x slower and bigger files. Files get a -2x suffix.
+     --bg navy|violet           backdrop palette (default navy). Non-default palettes add a suffix to the file name.
      --fps N                    default from the scene (30)
      --draft                    JPEG frames + fast encode (for checking timing)
      --workers N                parallel browsers, default 1 (each uses ~300–500 MB)
@@ -39,6 +42,10 @@ const workers = Math.max(1, Number(opt("workers", 1)));
 const outDir = path.resolve(opt("out", "out"));
 const stills = opt("stills", null)?.split(",").map(Number);
 const captions = !flag("no-captions");
+const scale = Math.max(1, Number(opt("scale", 1)));
+const bg = opt("bg", "navy");
+// -violet / -2x suffixes keep variants from overwriting each other (navy at 1x has no suffix)
+const suffix = (bg !== "navy" ? `-${bg}` : "") + (scale !== 1 ? `-${scale}x` : "");
 // out/<video>-<beat>-<format>.mp4, e.g. out/tokenmaxxing-beat04-short.mp4
 const name = `${path.basename(path.dirname(path.resolve(scene)))}-${path.basename(scene, ".html")}`;
 
@@ -58,8 +65,8 @@ async function launch() {
 async function openScene(browser, format) {
   const page = await browser.newPage();
   const [w, h] = format === "short" ? [1080, 1920] : [1920, 1080];
-  await page.setViewport({ width: w, height: h, deviceScaleFactor: 1 });
-  const url = pathToFileURL(path.resolve(scene)).href + `?format=${format}&render=1&captions=${captions ? 1 : 0}`;
+  await page.setViewport({ width: w, height: h, deviceScaleFactor: scale });
+  const url = pathToFileURL(path.resolve(scene)).href + `?format=${format}&render=1&captions=${captions ? 1 : 0}&bg=${bg}`;
   page.on("pageerror", (e) => console.error("[scene error]", e.message));
   await page.goto(url, { waitUntil: "load" });
   await page.waitForFunction(() => window.__scene);
@@ -84,6 +91,7 @@ async function renderRange({ format, fps, startFrame, endFrame, file, label }) {
       "-f", "image2pipe", "-framerate", String(fps), "-c:v", type === "png" ? "png" : "mjpeg", "-i", "-",
       "-vf", "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p",
       "-c:v", "libx264", ...enc, "-profile:v", "high",
+      "-x264-params", "colorprim=bt709:transfer=bt709:colormatrix=bt709:range=tv",   // full BT.709 tags so every player decodes the same colours
       "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709",
       "-movflags", "+faststart", "-r", String(fps), file], { stdio: ["pipe", "inherit", "inherit"] });
     const done = new Promise((res, rej) => ff.on("close", (c) => (c === 0 ? res() : rej(new Error("ffmpeg exited " + c)))));
@@ -113,7 +121,7 @@ for (const format of formats) {
 
   if (stills) {
     for (const t of stills) {
-      const file = path.join(outDir, `${name}-${format}-t${t}.png`);
+      const file = path.join(outDir, `${name}-${format}-t${t}${suffix}.png`);
       await writeFile(file, await grab(page, t, "png"));
       console.log("still:", file);
     }
@@ -124,8 +132,8 @@ for (const format of formats) {
 
   const from = Number(opt("from", 0)), to = Math.min(Number(opt("to", info.duration)), info.duration);
   const first = Math.round(from * fps), last = Math.round(to * fps);
-  const file = path.join(outDir, `${name}-${format}${draft ? "-draft" : ""}.mp4`);
-  console.log(`${name} · ${format} ${info.width}x${info.height} · ${fps} fps · ${last - first} frames · ${draft ? "draft" : "final"} · ${workers} worker(s)`);
+  const file = path.join(outDir, `${name}-${format}${suffix}${draft ? "-draft" : ""}.mp4`);
+  console.log(`${name} · ${format} ${info.width * scale}x${info.height * scale} · ${fps} fps · ${last - first} frames · ${draft ? "draft" : "final"} · ${workers} worker(s)`);
   const t0 = Date.now();
 
   if (workers === 1) {
@@ -135,10 +143,10 @@ for (const format of formats) {
     const chunk = Math.ceil((last - first) / workers), parts = [];
     for (let i = 0; i < workers; i++) {
       const s = first + i * chunk, e = Math.min(last, s + chunk);
-      if (s < e) parts.push({ s, e, file: path.join(outDir, `.${name}-${format}-part${i}.mp4`) });
+      if (s < e) parts.push({ s, e, file: path.join(outDir, `.${name}-${format}${suffix}-part${i}.mp4`) });
     }
     await Promise.all(parts.map((p, i) => renderRange({ format, fps, startFrame: p.s, endFrame: p.e, file: p.file, label: `worker ${i + 1}` })));
-    const list = path.join(outDir, `.${name}-${format}-parts.txt`);
+    const list = path.join(outDir, `.${name}-${format}${suffix}-parts.txt`);
     await writeFile(list, parts.map((p) => `file '${p.file}'`).join("\n"));
     await new Promise((res, rej) => spawn("ffmpeg", ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", list, "-c", "copy", "-movflags", "+faststart", file], { stdio: "inherit" })
       .on("close", (c) => (c === 0 ? res() : rej(new Error("concat failed")))));
