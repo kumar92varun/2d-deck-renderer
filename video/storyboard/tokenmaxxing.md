@@ -22,7 +22,7 @@ If the script or storyboard changes there, update this file too. This file is wh
 | --- | --- | --- |
 | 1 | `scenes/tokenmaxxing/beat01.html` | built, placeholder cues (waiting for recording) |
 | 2 | `scenes/tokenmaxxing/beat02.html` | built, placeholder cues (waiting for recording) |
-| 3 | — | not started |
+| 3 | `scenes/tokenmaxxing/beat03.html` | built, placeholder cues (waiting for recording) |
 | 4 | `scenes/tokenmaxxing/beat04.html` | built, placeholder cues (waiting for recording) |
 | 5–17 | — | not started |
 

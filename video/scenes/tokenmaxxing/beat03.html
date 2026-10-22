@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<title>Beat 3 · Tokenmaxxing</title>
+<link rel="stylesheet" href="../../theme/neon.css">
+<style>
+  .caption { position: absolute; text-align: center; line-height: 1.2; white-space: nowrap; font-weight: 800; }
+  .caption .part { opacity: 0; }
+  .pill { display: inline-block; font-weight: 600; white-space: nowrap; border-radius: 999px; border: 3px solid #fff;
+          background: rgba(18,10,38,.7); }
+</style>
+</head>
+<body>
+<div class="stage"></div>
+
+<script src="../../../engine/gsap.min.js"></script>
+<script src="../../lib/scene-runtime.js"></script>
+<script src="../../lib/backdrop.js"></script>
+<script src="../../lib/components.js"></script>
+<script>
+/* Beat 3 (0:16–0:28): "पहले समझते हैं token क्या है। जब भी आप AI से बात करते हैं, आपके शब्द छोटे-छोटे टुकड़ों में
+   कटते हैं, जिन्हें कहते हैं tokens। English में एक token लगभग पौने शब्द के बराबर होता है। और हर token का पैसा लगता है:
+   जो अंदर जाता है, और जो बाहर आता है।"
+   CUES are seconds from the start of this beat. Placeholder times until the Hindi recording exists. */
+const CUES = {
+  sentence: 0.4,        // "AI से बात करते हैं" — the prompt appears
+  tokens: 3.4,          // "tokens" — the sentence shatters into tiles
+  tok: 4.6,             // (after "tokens") — one tile turns into Tok and hops home
+  threeQuarters: 6.2,   // "पौने शब्द" — "1 token ≈ ¾ शब्द" caption
+  in: 8.2,              // "अंदर" — tiles stream into the AI box, a coin drops for each
+  out: 10.0,            // "बाहर" — new tiles stream out, a coin drops for each
+  cost: 11.0,           // end of the line — "= खर्च" lands, the coins pulse
+};
+const DURATION = 12;
+
+registerScene({
+  duration: DURATION, fps: 30, seed: 3, cues: CUES,
+  build(tl, ctx) {
+    const { W, H, u, format, stage } = ctx;
+    buildBackdrop(ctx, { duration: DURATION, panels: format === "short"
+      ? [{ x: 0.04, y: 0.075, w: 8, color: "m" }, { x: 0.80, y: 0.09, w: 8, color: "c" }, { x: 0.68, y: 0.85, w: 9, color: "c" }]
+      : [{ x: 0.04, y: 0.07, w: 8, color: "m" }, { x: 0.87, y: 0.08, w: 7, color: "c" }, { x: 0.90, y: 0.88, w: 6, color: "c" }] });
+
+    // ---------- Layout per format ----------
+    const L = format === "short"
+      ? { ts: 7 * u, row: { cx: 0.46 * W, y: 0.20 * H }, sent: 5.2 * u,
+          cap1: { cx: 0.46 * W, y: 0.305 * H, s: 5.4 * u },
+          tok: { x: 0.07 * W, base: 0.55 * H, size: 15 * u },
+          box: { x: 0.39 * W, w: 26 * u, h: 20 * u },
+          out: { x0: 0.675 * W, cols: 2 },
+          coin: { y: 0.605 * H },
+          cap2: { cx: 0.46 * W, y: 0.675 * H, s: 6.2 * u } }
+      : { ts: 7 * u, row: { cx: 0.5 * W, y: 0.17 * H }, sent: 5.4 * u,
+          cap1: { cx: 0.5 * W, y: 0.265 * H, s: 4.8 * u },
+          tok: { x: 0.08 * W, base: 0.68 * H, size: 17 * u },
+          box: { x: 0.34 * W, w: 29 * u, h: 22 * u },
+          out: { x0: 0.64 * W, cols: 3 },
+          coin: { y: 0.735 * H },
+          cap2: { cx: 0.5 * W, y: 0.815 * H, s: 5.4 * u } };
+    const ts = L.ts, tw = ts * 1.32, base = L.tok.base;
+    L.box.y = base - L.box.h;
+    const boxCx = L.box.x + L.box.w / 2;
+
+    // ---------- The prompt (a chat-style pill) that will shatter ----------
+    const shatterFlare = createFlare(ctx, { x: L.row.cx, y: L.row.y, size: 46 * u, color: "magenta" });
+    const sentWrap = document.createElement("div");
+    sentWrap.style.cssText = `position:absolute;left:${L.row.cx - W / 2}px;width:${W}px;top:${L.row.y - L.sent * 1.1}px;text-align:center;will-change:transform,opacity`;
+    sentWrap.innerHTML = `<span class="pill soft-text" style="font-size:${L.sent}px;padding:${L.sent * 0.35}px ${L.sent * 0.8}px;
+      box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${1.8 * u}px #E39BFF, 0 0 ${3.6 * u}px #B23BE8">Summarize this doc for me</span>`;
+    stage.appendChild(sentWrap);
+    const pill = sentWrap.firstElementChild;
+    flickerOn(ctx, pill, CUES.sentence);
+    tl.fromTo(sentWrap, { y: 3 * u }, { y: 0, duration: 0.4, ease: "power3.out" }, CUES.sentence);
+    tl.to(pill, { scale: 1.07, duration: 0.08, ease: "power2.out" }, CUES.tokens - 0.08)
+      .to(pill, { opacity: 0, scale: 1.2, duration: 0.12, ease: "power2.in" }, CUES.tokens);
+    shatterFlare.burst(CUES.tokens, 0.9);
+
+    // ---------- Box (flickers on just before Tok lands) ----------
+    const box = createNeonBox(ctx, { w: L.box.w, h: L.box.h, label: "AI", color: "cyan" });
+    gsap.set(box, { left: L.box.x, top: L.box.y });
+    flickerOn(ctx, box, CUES.tok - 0.3);
+
+    // ---------- Tiles: the pieces of the prompt ----------
+    const pieces = ["Sum", "mar", "ize", "this", "doc", "for", "me"];
+    const widths = pieces.map((p) => ts * (0.5 + 0.27 * p.length));
+    const gap = 0.9 * u, total = widths.reduce((a, b) => a + b, 0) + gap * (pieces.length - 1);
+    const rowTop = L.row.y - ts / 2;
+    const tiles = [], lefts = [];
+    let cursor = L.row.cx - total / 2;
+    pieces.forEach((p, i) => {
+      const el = createTile(ctx, { text: p, size: ts });
+      el.style.width = widths[i] + "px"; el.style.padding = "0";
+      gsap.set(el, { left: cursor, top: rowTop });
+      lefts.push(cursor); tiles.push(el);
+      cursor += widths[i] + gap;
+    });
+    const tileCx = (i) => lefts[i] + widths[i] / 2;
+    // Burst out from the middle of the old pill into the row
+    tiles.forEach((el, i) => {
+      tl.fromTo(el, { x: L.row.cx - tileCx(i), scale: 0.3, opacity: 0, rotation: (ctx.rng() - 0.5) * 50 },
+                    { x: 0, scale: 1, opacity: 1, rotation: (ctx.rng() - 0.5) * 5, duration: 0.45, ease: "back.out(1.7)" }, CUES.tokens + 0.04 * i);
+    });
+
+    // ---------- One tile becomes Tok, who hops home and lands with a squash ----------
+    const TOK_FROM = 2;                                           // the "ize" tile
+    const tok = createTok(ctx, { size: L.tok.size, color: "magenta" });
+    const tokTop = base - L.tok.size, s0 = 0.47;
+    const dx = tileCx(TOK_FROM) - (L.tok.x + L.tok.size / 2), dy = (L.row.y + 0.235 * L.tok.size) - base;
+    gsap.set(tok.el, { left: L.tok.x, top: tokTop, x: dx, y: dy, scaleX: s0, scaleY: s0, opacity: 0 });
+    const bornFlare = createFlare(ctx, { x: tileCx(TOK_FROM), y: L.row.y, size: 16 * u, color: "magenta" });
+    tl.to(tiles[TOK_FROM], { scale: 1.25, duration: 0.08, ease: "power2.out" }, CUES.tok)
+      .to(tiles[TOK_FROM], { scale: 0.4, opacity: 0, duration: 0.1, ease: "power2.in" }, CUES.tok + 0.08)
+      .set(tok.el, { opacity: 1 }, CUES.tok + 0.1);
+    bornFlare.burst(CUES.tok, 0.9);
+    const js = CUES.tok + 0.12, jd = 0.75;
+    tl.to(tok.el, { x: 0, duration: jd, ease: "power1.inOut" }, js)
+      .to(tok.el, { y: dy - 0.06 * H, duration: 0.25, ease: "power2.out" }, js)
+      .to(tok.el, { y: 0, duration: jd - 0.25, ease: "power2.in" }, js + 0.25)
+      .to(tok.el, { scaleX: 1, scaleY: 1, duration: 0.6, ease: "power2.out" }, js);
+    tok.squash(js + jd, 1.3);
+    [6.8, 9.3, 11.0].forEach((t) => tok.blink(t));
+    tok.squash(CUES.in, 0.5);
+    tok.squash(CUES.out, 0.5);
+
+    // ---------- Coin row (one coin per token, in then out) ----------
+    const inIdx = [0, 1, 3, 4, 5, 6];                             // everything except Tok's tile
+    const outTexts = ["Here", "is", "the", "gist", "!"];
+    const N = inIdx.length + outTexts.length;
+    const cs = 3.4 * u, cstep = 4.1 * u, coinLeft = boxCx - (N * cstep) / 2 + (cstep - cs) / 2;
+    const coinPos = (k) => ({ x: coinLeft + k * cstep, y: L.coin.y - cs / 2 });
+    const coins = [];
+    const dropCoin = (k, fromX, fromY, at) => {
+      const coin = document.createElement("div");
+      coin.style.cssText = `position:absolute;left:0;top:0;width:${cs}px;height:${cs}px;border-radius:50%;
+        background:radial-gradient(circle at 35% 35%, #fff, #E39BFF 45%, #B23BE8);
+        box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${2 * u}px #E39BFF, 0 0 ${4 * u}px #B23BE8;opacity:0;will-change:transform`;
+      stage.appendChild(coin); coins.push(coin);
+      const p = coinPos(k), cd = 0.4;
+      tl.set(coin, { x: fromX - cs / 2, y: fromY - cs / 2, opacity: 1, scale: 0.6 }, at)
+        .to(coin, { x: p.x, duration: cd, ease: "power1.inOut" }, at)
+        .to(coin, { y: p.y, duration: cd, ease: "bounce.out" }, at)
+        .to(coin, { scale: 1, duration: cd * 0.4 }, at);
+    };
+    const gulp = (at) => tl.to(box, { scaleX: 1.07, scaleY: 0.94, duration: 0.06, ease: "power2.out" }, at)
+                           .to(box, { scaleX: 1, scaleY: 1, duration: 0.25, ease: "elastic.out(1,0.4)" }, at + 0.06);
+
+    // ---------- IN: the prompt's tokens stream into the box ----------
+    const entryY = L.box.y + L.box.h * 0.3;
+    inIdx.forEach((i, k) => {
+      const t0 = CUES.in + k * 0.22, d = 0.5;
+      tl.to(tiles[i], { x: boxCx - tileCx(i), duration: d, ease: "power1.inOut" }, t0)
+        .to(tiles[i], { y: entryY - ts / 2 - rowTop, duration: d, ease: "power2.in" }, t0)
+        .to(tiles[i], { rotation: (k % 2 ? 1 : -1) * 25, duration: d, ease: "none" }, t0)
+        .to(tiles[i], { scale: 0.15, opacity: 0, duration: 0.1, ease: "power2.in" }, t0 + d);
+      gulp(t0 + d);
+      dropCoin(k, boxCx, L.box.y + L.box.h * 0.75, t0 + d + 0.04);
+    });
+
+    // ---------- OUT: new tokens stream out of the box ----------
+    const outStep = tw + 0.8 * u;
+    outTexts.forEach((txt, k) => {
+      const t0 = CUES.out + k * 0.2, d = 0.5;
+      const el = createTile(ctx, { text: txt, size: ts });
+      el.style.width = tw + "px"; el.style.padding = "0";
+      const col = k % L.out.cols, row = Math.floor(k / L.out.cols);
+      const rows = Math.ceil(outTexts.length / L.out.cols);        // first word on the top row, reads left-to-right, top-to-bottom
+      const dstX = L.out.x0 + col * outStep, dstY = base - ts - (rows - 1 - row) * (ts + 0.6 * u);
+      const srcX = L.box.x + L.box.w * 0.6 - tw / 2, srcY = L.box.y + L.box.h * 0.4 - ts / 2;
+      const apex = Math.min(srcY, dstY) - 0.07 * H;
+      gsap.set(el, { left: 0, top: 0, x: srcX, y: srcY, opacity: 0, scale: 0.3 });
+      tl.to(el, { opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)" }, t0)
+        .to(el, { x: dstX, duration: d, ease: "power1.out" }, t0)
+        .to(el, { y: apex, duration: d * 0.45, ease: "power2.out" }, t0)
+        .to(el, { y: dstY, duration: d * 0.55, ease: "bounce.out" }, t0 + d * 0.45);
+      gulp(t0);
+      dropCoin(inIdx.length + k, L.box.x + L.box.w * 0.6, L.box.y + L.box.h * 0.75, t0 + 0.12);
+    });
+
+    // ---------- Captions (separate layer, toggle with ?captions=0) ----------
+    const cap = document.createElement("div");
+    cap.className = "layer captions";
+    cap.innerHTML = `
+      <div class="caption cap1" style="left:${L.cap1.cx - W / 2}px;width:${W}px;top:${L.cap1.y}px;font-size:${L.cap1.s}px;opacity:0">
+        <span class="neon-text-m">1 token</span> <span class="soft-text">≈ ¾ शब्द</span>
+      </div>
+      <div class="caption cap2" style="left:${L.cap2.cx - W / 2}px;width:${W}px;top:${L.cap2.y}px;font-size:${L.cap2.s}px">
+        <span class="part p1 neon-text-m">Input</span>
+        <span class="part p2 soft-text">+</span> <span class="part p2 neon-text-m">Output</span>
+        <span class="part p3 soft-text">=</span> <span class="part p3 neon-text-m">खर्च</span>
+      </div>`;
+    stage.appendChild(cap);
+    const cap1 = cap.querySelector(".cap1");
+    tl.fromTo(cap1, { opacity: 0, y: 3 * u }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, CUES.threeQuarters)
+      .to(cap1, { opacity: 0, duration: 0.25 }, CUES.in - 0.3);
+    const cap1Flare = createFlare(ctx, { x: L.cap1.cx, y: L.cap1.y + L.cap1.s * 0.6, size: 36 * u, color: "magenta" });
+    cap.insertBefore(cap1Flare.el, cap.firstChild);
+    cap1Flare.burst(CUES.threeQuarters, 0.6);
+
+    const reveal = (sel, at) => {
+      const parts = cap.querySelectorAll(sel);
+      tl.fromTo(parts, { opacity: 0, y: 2 * u, scale: 1.25 }, { opacity: 1, y: 0, scale: 1, duration: 0.22, ease: "power3.out", stagger: 0.08 }, at);
+    };
+    reveal(".p1", CUES.in);
+    reveal(".p2", CUES.out);
+    reveal(".p3", CUES.cost);
+    const costFlare = createFlare(ctx, { x: L.cap2.cx, y: L.cap2.y + L.cap2.s * 0.6, size: 46 * u, color: "magenta" });
+    cap.insertBefore(costFlare.el, cap.firstChild);
+    costFlare.burst(CUES.cost, 0.9);
+    // all the coins pulse together when the total is named
+    tl.to(coins, { scale: 1.25, duration: 0.12, ease: "power2.out", stagger: 0.02 }, CUES.cost)
+      .to(coins, { scale: 1, duration: 0.3, ease: "elastic.out(1,0.5)", stagger: 0.02 }, CUES.cost + 0.12);
+  },
+});
+</script>
+</body>
+</html>
