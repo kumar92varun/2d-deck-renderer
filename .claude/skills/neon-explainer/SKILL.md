@@ -147,6 +147,23 @@ in that one scene, then go through these steps in order, stopping as soon as the
 
 ## Syncing to the recording
 
+**Silence at the ends of a recording is not part of the scene.** Varun leaves silence before and after each take and trims it
+in the editor, keeping about 0.5 s at each end. So scene time 0 is 0.5 s before the first speech and the scene ends 0.5 s after
+the last speech; never add gaps or stretch `DURATION` for extra silence. `tools/cue-times.mjs` does this: it prints scene times
+(audio time minus an offset), the scene length, and the offset to trim off the start when muxing (`ffmpeg -ss OFFSET -t LENGTH`).
+It recognises each speech run separately, because whisper's own word times drift after pauses.
+
+**Every beat built from a recording is delivered with his audio merged in.** The renderer makes silent picture only, so after
+rendering run, from `video/out/videos/`: `ffmpeg -y -i <video>.mp4 -ss OFFSET -t SCENE_LENGTH -i "<recording>.m4a" -map 0:v -map 1:a
+-c:v copy -c:a aac -b:a 192k -movflags +faststart <video>-audio.mp4` for both the long and the short file (OFFSET and SCENE_LENGTH come
+from `tools/cue-times.mjs`). Give Varun the full paths of the `-audio.mp4` files, not the silent ones.
+
+**The full routine per recorded beat:** transcribe (`--transcript`) and show him any new or changed script words for approval, save the
+approved text to the storyboard, run the cue times, re-time the scene, render both formats at `--scale 2`, merge the audio, report paths.
+
+**No Tok mascot.** Varun judged it pointless: do not use `createTok` in any beat. When a recording arrives for a beat that has Tok,
+remove it (and re-centre the layout around what is left) as part of re-timing. Beat 3 is already done.
+
 Varun records the voiceover per beat (one audio file per beat, each starting at 0:00). **Get the times from the audio
 yourself instead of asking him to read a clock:**
 

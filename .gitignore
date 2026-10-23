@@ -4,3 +4,6 @@
 video/node_modules/
 video/out/
 .DS_Store
+
+# Voiceover recordings (large, personal)
+recordings/

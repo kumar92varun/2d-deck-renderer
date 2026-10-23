@@ -19,20 +19,24 @@
 <script src="../../lib/backdrop.js"></script>
 <script src="../../lib/components.js"></script>
 <script>
-/* Beat 3 (0:16–0:28): "पहले समझते हैं token क्या है। जब भी आप AI से बात करते हैं, आपके शब्द छोटे-छोटे टुकड़ों में
-   कटते हैं, जिन्हें कहते हैं tokens। English में एक token लगभग पौने शब्द के बराबर होता है। और हर token का पैसा लगता है:
-   जो अंदर जाता है, और जो बाहर आता है।"
-   CUES are seconds from the start of this beat. Placeholder times until the Hindi recording exists. */
+/* Beat 3 (0:16–0:38, Take 2): "चलो, सबसे पहले समझते हैं कि tokens होते क्या हैं। जब भी हम AI से chat करते हैं, तो AI हमारे words को
+   छोटे-छोटे parts में बाँटता है, जिन्हें हम tokens कहते हैं। एक token, एक English word का लगभग ¾ होता है। हर token: जो हम AI में
+   input करते हैं, या AI हमें output देता है। उस हर एक token का पैसा लगता है।"
+   CUES are seconds from the start of this beat, measured from Varun's recording with tools/cue-times.mjs. Scene time 0 is
+   0.5 s before he starts speaking and the scene ends 0.5 s after he stops; he trims the extra silence in the editor.
+ */
 const CUES = {
-  sentence: 0.4,        // "AI से बात करते हैं" — the prompt appears
-  tokens: 3.4,          // "tokens" — the sentence shatters into tiles
-  tok: 4.6,             // (after "tokens") — one tile turns into Tok and hops home
-  threeQuarters: 6.2,   // "पौने शब्द" — "1 token ≈ ¾ word" caption
-  in: 8.2,              // "अंदर" — tiles stream into the AI box, a coin drops for each
-  out: 10.0,            // "बाहर" — new tiles stream out, a coin drops for each
-  cost: 11.0,           // end of the line — "= Cost" lands, the coins pulse
+  title: 0.5,           // "चलो, सबसे पहले समझते हैं कि tokens होते क्या हैं" — "What is a token?" title (speech 0.5–2.9)
+  sentence: 3.8,        // "जब भी हम AI से chat करते हैं" (AI 3.81) — the prompt appears
+  tokens: 7.6,          // "बाँटता" 7.61 — the sentence shatters into tiles ("parts")
+  named: 9.14,          // "tokens" 9.14 — the tiles pulse and are named "Tokens"
+  box: 10.4,            // "एक token" 10.69 — the AI box lights up
+  threeQuarters: 13.4,  // "¾" 13.39 — "1 token ≈ ¾ word" caption
+  in: 16.6,             // "input" 16.61 — tiles stream into the AI box, a coin drops for each
+  out: 18.15,           // "output" 18.16 — new tiles stream out, a coin drops for each
+  cost: 20.9,           // "पैसा" 20.92 — "= Cost" lands, the coins pulse
 };
-const DURATION = 12;
+const DURATION = 22.3;
 
 registerScene({
   duration: DURATION, fps: 30, seed: 3, cues: CUES,
@@ -46,28 +50,33 @@ registerScene({
     const L = format === "short"
       ? { ts: 7 * u, row: { cx: 0.5 * W, y: 0.20 * H }, sent: 5.2 * u,
           cap1: { cx: 0.5 * W, y: 0.305 * H, s: 5.4 * u },
-          tok: { base: 0.55 * H, size: 15 * u },
+          base: 0.55 * H,
           box: { w: 26 * u, h: 20 * u },
           out: { cols: 2 },
           coin: { y: 0.605 * H },
           cap2: { cx: 0.5 * W, y: 0.675 * H, s: 6.2 * u } }
       : { ts: 7 * u, row: { cx: 0.5 * W, y: 0.17 * H }, sent: 5.4 * u,
           cap1: { cx: 0.5 * W, y: 0.265 * H, s: 4.8 * u },
-          tok: { base: 0.68 * H, size: 17 * u },
+          base: 0.68 * H,
           box: { w: 29 * u, h: 22 * u },
           out: { cols: 3 },
           coin: { y: 0.735 * H },
           cap2: { cx: 0.5 * W, y: 0.815 * H, s: 5.4 * u } };
-    const ts = L.ts, tw = ts * 1.32, base = L.tok.base;
-    // Tok + box + reply grid are laid out as one cluster centred on the screen.
+    const ts = L.ts, tw = ts * 1.32, base = L.base;
+    // The AI box + reply grid are laid out as one cluster centred on the screen.
     // In the Short the cluster is capped at 76% of the width so it stays out of the right 12% safe zone.
     const outStep = tw + 0.8 * u, gridW = (L.out.cols - 1) * outStep + tw;
-    const g = format === "short" ? (0.76 * W - (L.tok.size + L.box.w + gridW)) / 2 : 9.3 * u;
-    L.tok.x = (W - (L.tok.size + L.box.w + gridW + 2 * g)) / 2;
-    L.box.x = L.tok.x + L.tok.size + g;
+    const g = 9.3 * u;
+    L.box.x = (W - (L.box.w + gridW + g)) / 2;
     L.out.x0 = L.box.x + L.box.w + g;
     L.box.y = base - L.box.h;
     const boxCx = L.box.x + L.box.w / 2;
+
+    // ---------- Title over the first sentence ----------
+    const title = createCaption(ctx, { cx: W / 2, y: (format === "short" ? 0.2 : 0.17) * H, w: 0.76 * W, lines: [
+      { html: "What is a token?", size: (format === "short" ? 7 : 6.4) * u, cls: "neon-text-m" } ], flare: "magenta" });
+    title.reveal(0, CUES.title);
+    tl.to(title.el, { opacity: 0, duration: 0.4, ease: "power2.in" }, CUES.sentence - 0.6);
 
     // ---------- The prompt (a chat-style pill) that will shatter ----------
     const shatterFlare = createFlare(ctx, { x: L.row.cx, y: L.row.y, size: 46 * u, color: "magenta" });
@@ -79,14 +88,18 @@ registerScene({
     const pill = sentWrap.firstElementChild;
     flickerOn(ctx, pill, CUES.sentence);
     tl.fromTo(sentWrap, { y: 3 * u }, { y: 0, duration: 0.4, ease: "power3.out" }, CUES.sentence);
+    // the prompt sits on screen for ~5 s: it breathes, then trembles harder as "tokens" approaches
+    tl.to(pill, { scale: 1.025, duration: (CUES.tokens - 0.2 - CUES.sentence - 0.6) / 4, ease: "sine.inOut", yoyo: true, repeat: 3 }, CUES.sentence + 0.6);
+    for (let k = 0; k < 8; k++) tl.to(pill, { x: (k % 2 ? -1 : 1) * (0.2 + k * 0.12) * u, duration: 0.07, ease: "none" }, CUES.tokens - 1.0 + k * 0.1);
+    tl.set(pill, { x: 0 }, CUES.tokens - 0.15);
     tl.to(pill, { scale: 1.07, duration: 0.08, ease: "power2.out" }, CUES.tokens - 0.08)
       .to(pill, { opacity: 0, scale: 1.2, duration: 0.12, ease: "power2.in" }, CUES.tokens);
     shatterFlare.burst(CUES.tokens, 0.9);
 
-    // ---------- Box (flickers on just before Tok lands) ----------
+    // ---------- Box ----------
     const box = createNeonBox(ctx, { w: L.box.w, h: L.box.h, label: "AI", color: "cyan" });
     gsap.set(box, { left: L.box.x, top: L.box.y });
-    flickerOn(ctx, box, CUES.tok - 0.3);
+    flickerOn(ctx, box, CUES.box);
 
     // ---------- Tiles: the pieces of the prompt ----------
     const pieces = ["Sum", "mar", "ize", "this", "doc", "for", "me"];
@@ -109,29 +122,8 @@ registerScene({
                     { x: 0, scale: 1, opacity: 1, rotation: (ctx.rng() - 0.5) * 5, duration: 0.45, ease: "back.out(1.7)" }, CUES.tokens + 0.04 * i);
     });
 
-    // ---------- One tile becomes Tok, who hops home and lands with a squash ----------
-    const TOK_FROM = 2;                                           // the "ize" tile
-    const tok = createTok(ctx, { size: L.tok.size, color: "magenta" });
-    const tokTop = base - L.tok.size, s0 = 0.47;
-    const dx = tileCx(TOK_FROM) - (L.tok.x + L.tok.size / 2), dy = (L.row.y + 0.235 * L.tok.size) - base;
-    gsap.set(tok.el, { left: L.tok.x, top: tokTop, x: dx, y: dy, scaleX: s0, scaleY: s0, opacity: 0 });
-    const bornFlare = createFlare(ctx, { x: tileCx(TOK_FROM), y: L.row.y, size: 16 * u, color: "magenta" });
-    tl.to(tiles[TOK_FROM], { scale: 1.25, duration: 0.08, ease: "power2.out" }, CUES.tok)
-      .to(tiles[TOK_FROM], { scale: 0.4, opacity: 0, duration: 0.1, ease: "power2.in" }, CUES.tok + 0.08)
-      .set(tok.el, { opacity: 1 }, CUES.tok + 0.1);
-    bornFlare.burst(CUES.tok, 0.9);
-    const js = CUES.tok + 0.12, jd = 0.75;
-    tl.to(tok.el, { x: 0, duration: jd, ease: "power1.inOut" }, js)
-      .to(tok.el, { y: dy - 0.06 * H, duration: 0.25, ease: "power2.out" }, js)
-      .to(tok.el, { y: 0, duration: jd - 0.25, ease: "power2.in" }, js + 0.25)
-      .to(tok.el, { scaleX: 1, scaleY: 1, duration: 0.6, ease: "power2.out" }, js);
-    tok.squash(js + jd, 1.3);
-    [6.8, 9.3, 11.0].forEach((t) => tok.blink(t));
-    tok.squash(CUES.in, 0.5);
-    tok.squash(CUES.out, 0.5);
-
     // ---------- Coin row (one coin per token, in then out) ----------
-    const inIdx = [0, 1, 3, 4, 5, 6];                             // everything except Tok's tile
+    const inIdx = [0, 1, 2, 3, 4, 5, 6];                          // every tile of the prompt
     const outTexts = ["Here", "is", "the", "gist", "!"];
     const N = inIdx.length + outTexts.length;
     const cs = 3.4 * u, cstep = 4.1 * u, coinLeft = W / 2 - (N * cstep) / 2 + (cstep - cs) / 2;
@@ -155,7 +147,7 @@ registerScene({
     // ---------- IN: the prompt's tokens stream into the box ----------
     const entryY = L.box.y + L.box.h * 0.3;
     inIdx.forEach((i, k) => {
-      const t0 = CUES.in + k * 0.22, d = 0.5;
+      const t0 = CUES.in + k * 0.17, d = 0.5;
       tl.to(tiles[i], { x: boxCx - tileCx(i), duration: d, ease: "power1.inOut" }, t0)
         .to(tiles[i], { y: entryY - ts / 2 - rowTop, duration: d, ease: "power2.in" }, t0)
         .to(tiles[i], { rotation: (k % 2 ? 1 : -1) * 25, duration: d, ease: "none" }, t0)
@@ -166,7 +158,7 @@ registerScene({
 
     // ---------- OUT: new tokens stream out of the box ----------
     outTexts.forEach((txt, k) => {
-      const t0 = CUES.out + k * 0.2, d = 0.5;
+      const t0 = CUES.out + k * 0.14, d = 0.5;
       const el = createTile(ctx, { text: txt, size: ts });
       el.style.width = tw + "px"; el.style.padding = "0";
       const col = k % L.out.cols, row = Math.floor(k / L.out.cols);
@@ -207,6 +199,13 @@ registerScene({
       const parts = cap.querySelectorAll(sel);
       tl.fromTo(parts, { opacity: 0, y: 2 * u, scale: 1.25 }, { opacity: 1, y: 0, scale: 1, duration: 0.22, ease: "power3.out", stagger: 0.08 }, at);
     };
+    // "tokens" is named: the tiles pulse and a label sits where the ¾ caption comes later
+    const nameCap = createCaption(ctx, { cx: L.cap1.cx, y: L.cap1.y, w: 0.76 * W, lines: [
+      { html: "Tokens", size: L.cap1.s * 1.1, cls: "neon-text-m" } ], flare: "magenta" });
+    nameCap.reveal(0, CUES.named);
+    tl.to(nameCap.el, { opacity: 0, duration: 0.3 }, CUES.box + 1.6);
+    tl.to(tiles, { scale: 1.12, duration: 0.14, ease: "power2.out", stagger: 0.04 }, CUES.named)
+      .to(tiles, { scale: 1, duration: 0.3, ease: "elastic.out(1,0.5)", stagger: 0.04 }, CUES.named + 0.14);
     reveal(".p1", CUES.in);
     reveal(".p2", CUES.out);
     reveal(".p3", CUES.cost);
