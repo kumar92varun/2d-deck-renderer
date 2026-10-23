@@ -5,6 +5,8 @@
 <title>Beat 4 · Tokenmaxxing</title>
 <link rel="stylesheet" href="../../theme/neon.css">
 <style>
+  .neon-text-g { color: #fff;
+    text-shadow: 0 0 calc(var(--u)*.15) #fff, 0 0 calc(var(--u)*.7) #FFE7A3, 0 0 calc(var(--u)*2) #F5B82E, 0 0 calc(var(--u)*4) #F5B82Eb3; }
   .caption { position: absolute; text-align: center; line-height: 1.15; }
   .caption .l1 { display: block; font-weight: 800; letter-spacing: .01em; }
   .caption .l2 { display: block; font-weight: 600; margin-top: .25em; }
@@ -20,176 +22,159 @@
 <script src="../../lib/backdrop.js"></script>
 <script src="../../lib/components.js"></script>
 <script>
-/* Beat 4 (0:28–0:40): "Tokenmaxxing मतलब ... 2026 की शुरुआत में चल पड़ा।"
-   CUES are seconds from the start of this beat. Replace them with the times from
-   your Hindi recording; every animation keyed to a cue moves with it. */
+/* Beat 4 (0:49–1:08): "तो Tokenmaxxing का मतलब हुआ कि जितना हो सके, उतने ज़्यादा tokens consume करो। इसमें assumption ये थी कि ज़्यादा tokens use
+   करने से output भी अच्छा आएगा, और ऐसे developers ज़्यादा productive है, ज़्यादा "AI Native" है। ये term Silicon Valley में 2026 की शुरुआत में चल पड़ी।"
+   CUES are seconds from the start of this beat, measured from Varun's recording with tools/cue-times.mjs. Scene time 0 is 0.5 s before
+   he starts speaking and the scene ends 0.5 s after he stops.
+   Tiles fly non-stop into the AI box; the meter's Tokens bar AND Value bar rise together (the assumption: more tokens = more value);
+   "More tokens → Better output?"; then PRODUCTIVE, AI NATIVE and Silicon Valley 2026 badges. No mascot. */
 const CUES = {
-  tokenmaxxing: 0.7,   // "Tokenmaxxing" — caption slams in
-  meter: 1.5,          // meter appears
-  y2026: 9.2,          // "2026" — badge pops
+  tokenmaxxing: 0.8,   // "Tokenmaxxing" 0.81 — caption slams in
+  usage: 2.5,          // "जितना हो सके" 2.5 — "= As many tokens as possible"
+  meter: 3.4,          // "उतने ज़्यादा tokens" 3.38 — the AI box lights up, the meter appears, the tiles start flying
+  assumption: 6.1,     // "assumption" 6.08 — "More tokens" appears
+  output: 8.85,        // "output" 8.87 — "→ Better output?" appears
+  chainOut: 11.4,      // after "आएगा" — the chain leaves
+  productive: 11.95,   // "productive" 11.94 — gold badge stamps on
+  aiNative: 13.5,      // "AI Native" 13.53 — badge stamps on
+  y2026: 16.3,         // "2026" 16.3 — the Silicon Valley badge pops
+  ramp: 12.8,          // the bars have reached the top; tiles keep flying
 };
-const DURATION = 12;
+const DURATION = 18.7;
 
 registerScene({
   duration: DURATION, fps: 30, seed: 4, cues: CUES,
   build(tl, ctx) {
     const { W, H, u, format, stage } = ctx;
-    buildBackdrop(ctx, { duration: DURATION, panels: format === "short"
+    const isShort = format === "short";
+    buildBackdrop(ctx, { duration: DURATION, panels: isShort
       ? [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.40, y: 0.055, w: 8, color: "c" }, { x: 0.74, y: 0.86, w: 9, color: "c" }]
       : [{ x: 0.40, y: 0.05, w: 8, color: "m" }, { x: 0.62, y: 0.06, w: 7, color: "c" }, { x: 0.82, y: 0.80, w: 8, color: "c" }] });
 
     // ---------- Layout per format ----------
-    const L = format === "short"
-      ? { tok: { base: 0.64 * H, size: 16 * u },
-          box: { w: 24 * u, h: 22 * u },
+    const L = isShort
+      ? { base: 0.64 * H, box: { w: 24 * u, h: 22 * u, cx: 0.5 * W },
           meter: { w: 21 * u, h: 48 * u, x: 0.88 * W - 21 * u, y: 0.11 * H },
-          cap: { cx: 0.5 * W, y: 0.685 * H, w: 0.76 * W, s1: 9 * u, s2: 5.6 * u },
-          badge: { x: 0.07 * W, y: 0.115 * H, s: 4.2 * u },
-          pile: { x: 0.03 * W } }
-      : { tok: { base: 0.72 * H, size: 19 * u },
-          box: { w: 31 * u, h: 24 * u },
+          cap: { cx: 0.5 * W, y: 0.685 * H, w: 0.76 * W, s1: 9 * u, s2: 4.6 * u },
+          chain: { cx: 0.5 * W, y: 0.31 * H, s: 5.2 * u },
+          badges: { x: 0.07 * W, y: 0.11 * H, step: 0.062 * H, s: 3.4 * u } }
+      : { base: 0.72 * H, box: { w: 31 * u, h: 24 * u, cx: 0.46 * W },
           meter: { w: 21 * u, h: 52 * u, x: 0.94 * W - 21 * u, y: 0.12 * H },
-          cap: { cx: 0.5 * W, y: 0.79 * H, w: 0.7 * W, s1: 8.4 * u, s2: 4.8 * u },
-          badge: { x: 0.05 * W, y: 0.09 * H, s: 4 * u },
-          pile: { x: 0.04 * W } };
-    // Tile heap + Tok + box are one cluster centred on the screen (the meter is a corner HUD and stays top-right).
-    // In the Short the cluster is capped at 76% of the width to stay out of the right 12% safe zone.
-    const ts = 6.4 * u, tw = ts * 1.32, step = tw + 0.8 * u;
-    const heapSpan = 3 * step + 1.5 * u;
-    const gapTB = format === "short" ? 0.76 * W - (heapSpan + L.tok.size + L.box.w) : 12 * u;
-    L.tok.x = (W - (heapSpan + L.tok.size + gapTB + L.box.w)) / 2 + heapSpan;
-    L.box.x = L.tok.x + L.tok.size + gapTB;
-    L.box.y = L.tok.base - L.box.h;
+          cap: { cx: 0.5 * W, y: 0.79 * H, w: 0.7 * W, s1: 8.4 * u, s2: 4.4 * u },
+          chain: { cx: 0.5 * W, y: 0.17 * H, s: 5.4 * u },
+          badges: { x: 0.05 * W, y: 0.09 * H, step: 0.095 * H, s: 3.6 * u } };
+    const ts = 6.4 * u, tw = ts * 1.32;
+    L.box.x = L.box.cx - L.box.w / 2; L.box.y = L.base - L.box.h;
 
-    // ---------- Actors ----------
+    // ---------- Box and meter ----------
     const box = createNeonBox(ctx, { w: L.box.w, h: L.box.h, label: "AI", color: "cyan" });
     gsap.set(box, { left: L.box.x, top: L.box.y, opacity: 0 });
-
-    // A neat pyramid of tiles to the left of Tok (fixed-width tiles so nothing overlaps)
-    const heapTexts = ["the", "AI", "ing", "of", "doc", "?"];
-    const heap = [];
-    const slots = [[0, 0], [1, 0], [2, 0], [0.5, 1], [1.5, 1], [1, 2]];
-    const heapX = L.tok.x - 3 * step - 1.5 * u;
-    heapTexts.forEach((t, i) => {
-      const el = createTile(ctx, { text: t, size: ts });
-      el.style.width = tw + "px"; el.style.padding = "0";
-      const [col, row] = slots[i];
-      gsap.set(el, { left: heapX + col * step, top: L.tok.base - ts - row * (ts + 0.6 * u),
-                     rotation: (ctx.rng() - 0.5) * 8, opacity: 0, scale: 0.5 });
-      heap.push(el);
-    });
-    tl.to(heap, { opacity: 0.9, scale: 1, duration: 0.25, ease: "back.out(2)", stagger: 0.03 }, 0.1);
-
-    const tok = createTok(ctx, { size: L.tok.size, color: "magenta" });
-    const tokTop = L.tok.base - L.tok.size;
-    gsap.set(tok.el, { left: L.tok.x, top: tokTop, y: -0.5 * H });
-    tl.to(tok.el, { y: 0, duration: 0.42, ease: "power3.in" }, 0.05);
-    tok.squash(0.47, 1.3);
-    flickerOn(ctx, box, 0.25);
-    [1.0, 4.6, 7.9].forEach((t) => tok.blink(t));
-
-    // ---------- Meter ----------
+    flickerOn(ctx, box, CUES.meter);
     const m = createMeter(ctx, { x: L.meter.x, y: L.meter.y, w: L.meter.w, h: L.meter.h });
     tl.fromTo(m.el, { x: 12 * u, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "power3.out" }, CUES.meter);
     tl.set(m.valueGlow, { opacity: 0.12 }, 0);
 
-    // ---------- The throwing loop: accelerating, non-stop ----------
+    // ---------- Tiles fly into the box, faster and faster, non-stop ----------
     const tileTexts = ["Hi", "to", "ken", "the", "pro", "mpt", "act", "ion", "s", "PR", "doc", "ref", "of", "?", "ing", "max", "xx", "AI", "yes", "ok", "fix", "bug", "run", "re", "try", "was", "json", "</>", "lo", "gs"];
     const throws = [];
-    let t = CUES.meter + 0.45, gap = 0.85;
-    while (t < DURATION - 1.2) { throws.push(t); t += gap; gap = Math.max(0.2, gap * 0.88); }
-    const N = throws.length;
+    let t = CUES.meter + 0.5, gap = 0.85;
+    while (t < DURATION - 1.2) { throws.push(t); t += gap; gap = Math.max(0.3, gap * 0.9); }
+    const ramp = throws.filter((x) => x < CUES.ramp), N = ramp.length;
 
-    const fromX = L.tok.x + L.tok.size * 0.5, fromY = tokTop - ts * 0.2;
+    const fromX = -tw, fromY = L.base - ts * 1.2;
     const toX = L.box.x + L.box.w * 0.5, toY = L.box.y + L.box.h * 0.35;
-    const trackRect = { // centre of the Tokens bar's bottom, in stage coords
-      x: L.meter.x + L.meter.w * 0.17, y: L.meter.y + L.meter.h * 0.86 };
-
+    const trackX = L.meter.x + L.meter.w * 0.17, trackY = L.meter.y + L.meter.h * 0.86;
     const state = { tokens: 0, value: 0 };
     throws.forEach((t0, k) => {
-      const p = k / Math.max(1, N - 1);           // 0 → 1 as Tok speeds up
-      const d = 0.55 - 0.17 * p;                  // flight time shrinks
-      tok.squash(t0 - 0.12, 0.6 + 0.8 * p);
-
+      const p = Math.min(1, k / Math.max(1, N - 1));
+      const d = 0.75 - 0.25 * p;
       const tile = createTile(ctx, { text: tileTexts[k % tileTexts.length], size: ts });
-      gsap.set(tile, { left: 0, top: 0, x: fromX - ts / 2, y: fromY, opacity: 0, scale: 0.3 });
-      const apex = Math.min(fromY, toY) - (format === "short" ? 0.12 : 0.18) * H;
-      tl.to(tile, { opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)" }, t0 - 0.1)
-        .to(tile, { x: toX - ts / 2, duration: d, ease: "none" }, t0)
+      tile.style.width = tw + "px"; tile.style.padding = "0";
+      gsap.set(tile, { left: 0, top: 0, x: fromX, y: fromY, opacity: 0, scale: 0.6 });
+      const apex = Math.min(fromY, toY) - (isShort ? 0.1 : 0.16) * H;
+      tl.to(tile, { opacity: 1, scale: 1, duration: 0.1 }, t0 - 0.05)
+        .to(tile, { x: toX - tw / 2, duration: d, ease: "none" }, t0)
         .to(tile, { y: apex, duration: d * 0.5, ease: "power2.out" }, t0)
         .to(tile, { y: toY, duration: d * 0.5, ease: "power2.in" }, t0 + d * 0.5)
-        .to(tile, { rotation: (k % 2 ? 1 : -1) * (200 + 160 * p), duration: d, ease: "none" }, t0)
+        .to(tile, { rotation: (k % 2 ? 1 : -1) * (120 + 160 * p), duration: d, ease: "none" }, t0)
         .to(tile, { scale: 0.15, opacity: 0, duration: 0.1, ease: "power2.in" }, t0 + d);
-
-      // The box gulps it
       tl.to(box, { scaleX: 1.07, scaleY: 0.94, duration: 0.06, ease: "power2.out" }, t0 + d)
         .to(box, { scaleX: 1, scaleY: 1, duration: 0.25, ease: "elastic.out(1,0.4)" }, t0 + d + 0.06);
+      if (k >= N) return;                                          // after the ramp, tiles keep flying but the bars are full
 
-      // A cost coin flies from the box into the Tokens bar
-      const coin = document.createElement("div");
-      const cs = 3.4 * u;
+      // A cost coin flies from the box into the Tokens bar; the Value bar follows it a beat later
+      const coin = document.createElement("div"), cs = 3.4 * u;
       coin.style.cssText = `position:absolute;left:0;top:0;width:${cs}px;height:${cs}px;border-radius:50%;
         background:radial-gradient(circle at 35% 35%, #fff, #E39BFF 45%, #B23BE8);
         box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${1.4 * u}px #E39BFF, 0 0 ${3 * u}px #B23BE8;opacity:0`;
       stage.appendChild(coin);
-      const ct = t0 + d + 0.04, cd = 0.34;
+      const ct = t0 + d + 0.04, cd = 0.34, hit = ct + cd;
       tl.set(coin, { x: toX - cs / 2, y: L.box.y - cs * 0.3, opacity: 1, scale: 0.6 }, ct)
-        .to(coin, { x: trackRect.x - cs / 2, duration: cd, ease: "power1.inOut" }, ct)
-        .to(coin, { y: trackRect.y - cs / 2, duration: cd, ease: "back.in(1.4)" }, ct)
+        .to(coin, { x: trackX - cs / 2, duration: cd, ease: "power1.inOut" }, ct)
+        .to(coin, { y: trackY - cs / 2, duration: cd, ease: "back.in(1.4)" }, ct)
         .to(coin, { scale: 1, duration: cd * 0.4 }, ct)
         .to(coin, { opacity: 0, scale: 0.4, duration: 0.08 }, ct + cd);
-
-      // Tokens bar steps up with each coin; the count grows fast (Indian digit grouping)
-      const hit = ct + cd;
       const level = 0.97 * (k + 1) / N;
       tl.to(m.tokensFill, { scaleY: level, duration: 0.18, ease: "back.out(2)" }, hit)
         .to(m.tokensGlow, { opacity: 0.4 + 0.6 * p, scaleY: 0.4 + 0.8 * level, duration: 0.18 }, hit)
-        .to(state, { tokens: Math.round(2400 * Math.pow(1.34, k)), duration: 0.18, ease: "power1.out" }, hit);
-
-      // Value barely moves: a tiny nudge every 8th tile
-      if (k % 8 === 7) tl.to(m.valueFill, { scaleY: "+=0.025", duration: 0.3, ease: "power1.out" }, hit)
-                         .to(state, { value: "+=1", duration: 0.3 }, hit);
+        .to(state, { tokens: Math.round(2400 * Math.pow(1.3, k)), duration: 0.18, ease: "power1.out" }, hit);
+      // Value rises the same way, a beat behind: the assumption is that more tokens means more value
+      tl.to(m.valueFill, { scaleY: 0.9 * (k + 1) / N, duration: 0.25, ease: "back.out(2)" }, hit + 0.3)
+        .to(m.valueGlow, { opacity: 0.25 + 0.65 * p, scaleY: 0.4 + 0.7 * (k + 1) / N, duration: 0.25 }, hit + 0.3)
+        .to(state, { value: Math.round(86 * (k + 1) / N), duration: 0.25, ease: "power1.out" }, hit + 0.3);
     });
-
-    // Ceiling: the Tokens bar maxes out — flare + shake
-    const last = throws[N - 1] + 0.55 - 0.17 + 0.38;
-    const topFlare = createFlare(ctx, { x: trackRect.x, y: L.meter.y + L.meter.h * 0.16, size: 22 * u, color: "magenta" });
-    topFlare.burst(last, 1);
+    // When both bars top out: flares and a shake
+    const last = ramp[N - 1] + 0.75 - 0.25 + 0.7;
+    const f1 = createFlare(ctx, { x: trackX, y: L.meter.y + L.meter.h * 0.16, size: 22 * u, color: "magenta" });
+    const f2 = createFlare(ctx, { x: L.meter.x + L.meter.w * 0.83, y: L.meter.y + L.meter.h * 0.2, size: 22 * u, color: "cyan" });
+    f1.burst(last, 1); f2.burst(last + 0.1, 1);
     tl.to(m.el, { keyframes: { x: [0, -1.2 * u, 1.0 * u, -0.7 * u, 0.4 * u, 0] }, duration: 0.35, ease: "none" }, last);
-
     ctx.onFrame(() => {
       m.tokensNum.textContent = Math.round(state.tokens).toLocaleString("en-IN");
       m.valueNum.textContent = "+" + Math.round(state.value) + "%";
     });
 
-    // ---------- Caption (separate layer, toggle with ?captions=0) ----------
+    // ---------- Captions (separate layers, toggle with ?captions=0) ----------
     const cap = document.createElement("div");
     cap.className = "layer captions";
     cap.innerHTML = `
       <div class="caption" style="left:${L.cap.cx - L.cap.w / 2}px;top:${L.cap.y}px;width:${L.cap.w}px">
         <span class="l1 neon-text-m" style="font-size:${L.cap.s1}px">Tokenmaxxing</span>
-        <span class="l2 soft-text" style="font-size:${L.cap.s2}px">= <span class="neon-text-m">Usage</span> as <span class="neon-text-m">Score</span></span>
+        <span class="l2 soft-text" style="font-size:${L.cap.s2}px;opacity:0">= <span class="neon-text-m">As many tokens as possible</span></span>
       </div>`;
     stage.appendChild(cap);
     const l1 = cap.querySelector(".l1"), l2 = cap.querySelector(".l2");
     const capFlare = createFlare(ctx, { x: L.cap.cx, y: L.cap.y + L.cap.s1 * 0.6, size: 46 * u, color: "magenta" });
     cap.appendChild(capFlare.el); capFlare.el.style.zIndex = -1;
+    gsap.set(l1, { opacity: 0 });
     tl.fromTo(l1, { opacity: 0, scale: 1.45 }, { opacity: 1, scale: 1, duration: 0.18, ease: "power4.out" }, CUES.tokenmaxxing);
     capFlare.burst(CUES.tokenmaxxing, 0.8);
-    tl.fromTo(l2, { opacity: 0, y: 3 * u }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, CUES.tokenmaxxing + 0.35);
+    tl.fromTo(l2, { opacity: 0, y: 3 * u }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, CUES.usage);
 
-    // ---------- 2026 badge ----------
-    const badge = document.createElement("div");
-    badge.className = "badge";
-    badge.style.cssText += `left:${L.badge.x}px;top:${L.badge.y}px;font-size:${L.badge.s}px;opacity:0;
-      box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${1.4 * u}px #B4F7FF, 0 0 ${3.2 * u}px #36D6E7`;
-    badge.innerHTML = `<span class="soft-text">Silicon Valley</span><span class="neon-text-c" style="font-weight:800">2026</span>`;
-    cap.appendChild(badge);
-    const bFlare = createFlare(ctx, { x: L.badge.x + 18 * u, y: L.badge.y + 3 * u, size: 30 * u, color: "cyan" });
-    cap.insertBefore(bFlare.el, badge);
-    tl.fromTo(badge, { opacity: 0, scale: 0.6, transformOrigin: "0% 50%" },
-                     { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(2.2)" }, CUES.y2026);
-    bFlare.burst(CUES.y2026, 0.9);
+    // "More tokens → Better output?" — the assumption
+    const chain = createCaption(ctx, { cx: L.chain.cx, y: L.chain.y, w: 0.76 * W, lines: [
+      { html: "More tokens", size: L.chain.s, cls: "neon-text-m" },
+      { html: "→ Better output?", size: L.chain.s, cls: "neon-text-c" } ], flare: "cyan" });
+    chain.reveal(0, CUES.assumption);
+    chain.reveal(1, CUES.output);
+    tl.to(chain.lines[1], { scale: 1.06, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 3 }, CUES.output + 0.6);
+    tl.to(chain.el, { opacity: 0, duration: 0.4, ease: "power2.in" }, CUES.chainOut);
+
+    // Badges stacked top-left: PRODUCTIVE, AI NATIVE, then where it began
+    const mkBadge = (html, y, glow) => {
+      const el = document.createElement("div");
+      el.className = "badge";
+      el.style.cssText += `left:${L.badges.x}px;top:${y}px;font-size:${L.badges.s}px;opacity:0;box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${1.4 * u}px ${glow[0]}, 0 0 ${3.2 * u}px ${glow[1]}`;
+      el.innerHTML = html; cap.appendChild(el); return el;
+    };
+    const bProd = mkBadge(`<span class="neon-text-g" style="font-weight:800">PRODUCTIVE</span>`, L.badges.y, ["#FFE7A3", "#F5B82E"]);
+    const bAi = mkBadge(`<span class="neon-text-c" style="font-weight:800">AI NATIVE</span>`, L.badges.y + L.badges.step, ["#B4F7FF", "#36D6E7"]);
+    const bSv = mkBadge(`<span class="soft-text">Silicon Valley</span><span class="neon-text-c" style="font-weight:800">2026</span>`, L.badges.y + 2 * L.badges.step, ["#B4F7FF", "#36D6E7"]);
+    [[bProd, CUES.productive, "gold"], [bAi, CUES.aiNative, "cyan"], [bSv, CUES.y2026, "cyan"]].forEach(([el, at, col]) => {
+      tl.fromTo(el, { opacity: 0, scale: 0.6, transformOrigin: "0% 50%" }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(2.2)" }, at);
+      const f = createFlare(ctx, { x: L.badges.x + 10 * u, y: parseFloat(el.style.top) + 3 * u, size: 26 * u, color: col });
+      cap.insertBefore(f.el, el); f.burst(at, 0.9);
+    });
   },
 });
 </script>

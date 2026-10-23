@@ -5,18 +5,12 @@
 <title>Beat 6 · Tokenmaxxing</title>
 <link rel="stylesheet" href="../../theme/neon.css">
 <style>
-  .neon-text-l { color: #fff;
-    text-shadow: 0 0 calc(var(--u)*.15) #fff, 0 0 calc(var(--u)*.7) #B6B2FF, 0 0 calc(var(--u)*2) #6E6BD6, 0 0 calc(var(--u)*4) #6E6BD6b3; }
-  .caption { position: absolute; text-align: center; line-height: 1.15; font-weight: 800; white-space: nowrap; letter-spacing: .01em; }
-  .caption .seg { opacity: 0; }
-  .qcard { position: absolute; display: flex; flex-direction: column; justify-content: center; }
-  .qcard .quote { font-weight: 600; line-height: 1.3; }
-  .qcard .hl { display: inline-block; }
-  .qcard .who { font-weight: 800; letter-spacing: .02em; }
-  .qcard .note { font-weight: 400; opacity: .75; }
-  .bar-label { position: absolute; font-weight: 600; white-space: nowrap; }
-  .track { position: absolute; overflow: hidden; background: rgba(18,10,38,.5); border: 2px solid rgba(255,255,255,.2); }
-  .fill { position: absolute; transform-origin: 0 50%; transform: scaleX(0); }
+  .abs { position: absolute; white-space: nowrap; }
+  .frame { position: absolute; border-radius: 1.6em; border: 3px solid #fff; overflow: hidden; will-change: transform, opacity; }
+  .card { position: absolute; border-radius: 1.8em; border: 3px solid #fff; background: rgba(12,8,30,.86); will-change: transform, opacity; }
+  .track { position: absolute; border-radius: 999px; background: rgba(180,247,255,.1); overflow: hidden; }
+  .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; transform-origin: 0 50%; }
+  .tag { position: absolute; padding: .3em .9em; border-radius: 999px; font-weight: 800; letter-spacing: .1em; white-space: nowrap; will-change: transform, opacity; }
 </style>
 </head>
 <body>
@@ -27,108 +21,105 @@
 <script src="../../lib/backdrop.js"></script>
 <script src="../../lib/components.js"></script>
 <script>
-/* Beat 6 (0:50–1:00): "बड़े-बड़े नाम इसके साथ थे। Nvidia के Jensen Huang ने कहा कि अगर आपका पाँच लाख डॉलर वाला engineer
-   ढाई लाख डॉलर के tokens नहीं जला रहा, तो कुछ गड़बड़ है।"
-   The card text is a PARAPHRASE of what AP reported, shown without quotation marks and labelled as such.
-   CUES are seconds from the start of this beat. Placeholder times until the Hindi recording exists. */
+/* Beat 6 (desktop). "Tokenmaxxing को बड़ी tech companies में तेज़ी से adapt किया जाने लगा। Nvidia के CEO Jensen Huang ने एक famous quote भी दिया कि अगर आपका पाँच लाख dollar
+   salary वाला engineer ढाई लाख dollars के tokens नहीं consume कर रहा है, तो कुछ गड़बड़ है। इस quote ने tokenmaxxing को और भी ज़्यादा hype दी।"
+   Part 1: five companies' adoption bars shoot up. Part 2: a photo of Jensen Huang (CC BY 2.0, credited on screen, captioned with its real date) next to a card that
+   is labelled as a PARAPHRASE (no quotation marks: his exact wording varies between reports); a $500K salary bar, a $250K tokens bar, and SOMETHING IS WRONG
+   against a shorter dashed bar. Part 3: the hype meter spikes. The figures come from reporting on his remarks; nothing here is invented. No mascot.
+   CUES are seconds from the start of this beat, measured from Varun's recording (scene time 0 = 0.5 s before he speaks). */
 const CUES = {
-  card: 0.3,       // "बड़े-बड़े नाम इसके साथ थे" — the quote card appears
-  speaker: 2.6,    // "Nvidia के Jensen Huang" — the attribution lands
-  salary: 4.6,     // "पाँच लाख डॉलर वाला engineer" — salary bar fills, "$500K Salary" caption
-  tokens: 6.4,     // "ढाई लाख डॉलर के tokens" — tokens bar fills to half, "vs $250K Tokens" caption, flare
+  tokenmaxxing: 0.5,   // "Tokenmaxxing" — title
+  fast: 2.4,           // "तेज़ी से adapt" — the adoption bars shoot up
+  nvidia: 4.4,         // "Nvidia के CEO" — the photo card and NVIDIA tag appear
+  jensen: 5.6,         // "Jensen Huang" — the name plate
+  quote: 7.1,          // "famous quote" — the paraphrase card
+  salary: 9.5,         // "पाँच लाख dollar salary" — $500,000 line and the salary bar
+  tokensAmt: 11.5,     // "ढाई लाख dollars" — the $250,000 tokens bar
+  tokensWord: 13.1,    // "tokens" — the tokens bar is labelled
+  wrong: 15.3,         // "कुछ गड़बड़ है" — SOMETHING IS WRONG
+  hypeIn: 16.8,        // "इस quote ने" — the cards step back
+  hypeRise: 17.8,      // "tokenmaxxing को और भी ज़्यादा" — the hype meter climbs
+  hype: 19.0,          // "hype दी" — HYPE slams in
 };
-const DURATION = 10;
+const DURATION = 19.8;
 
 registerScene({
   duration: DURATION, fps: 30, seed: 6, cues: CUES,
   build(tl, ctx) {
-    const { W, H, u, format, stage } = ctx;
-    const isShort = format === "short";
-    buildBackdrop(ctx, { duration: DURATION, panels: isShort
-      ? [{ x: 0.04, y: 0.075, w: 8, color: "m" }, { x: 0.78, y: 0.085, w: 8, color: "c" }, { x: 0.70, y: 0.84, w: 9, color: "c" }]
-      : [{ x: 0.04, y: 0.07, w: 8, color: "m" }, { x: 0.87, y: 0.08, w: 7, color: "c" }, { x: 0.90, y: 0.88, w: 6, color: "c" }] });
+    const { W, H, u, stage } = ctx, M = "#E39BFF", C = "#B4F7FF";
+    buildBackdrop(ctx, { duration: DURATION, panels: [{ x: 0.04, y: 0.07, w: 8, color: "m" }, { x: 0.87, y: 0.08, w: 7, color: "c" }, { x: 0.90, y: 0.88, w: 6, color: "c" }] });
+    const K = (p, cls, css, html) => { const e = document.createElement("div"); e.className = cls; e.style.cssText = css; if (html != null) e.innerHTML = html; p.appendChild(e); return e; };
+    const cx = W / 2;
 
-    // ---------- Layout per format (everything centred on the screen) ----------
-    const L = isShort
-      ? { card: { x: 0.12 * W, y: 0.15 * H, w: 0.76 * W, h: 36 * u }, q: 4.2 * u,
-          bars: { x: 0.12 * W, w: 0.76 * W, y0: 0.385 * H, pitch: 11 * u, h: 4.2 * u },
-          cap: { cx: 0.5 * W, y: 0.605 * H, s: 6.8 * u } }
-      : { card: { x: 0.2 * W, y: 0.08 * H, w: 0.6 * W, h: 29 * u }, q: 4.4 * u,
-          bars: { x: 0.2 * W, w: 0.6 * W, y0: 0.43 * H, pitch: 13 * u, h: 4.4 * u },
-          cap: { cx: 0.5 * W, y: 0.72 * H, s: 6.4 * u } };
-    const pad = 2.6 * u;
-
-    // ---------- Quote card ----------
-    const card = document.createElement("div");
-    card.className = "qcard";
-    card.style.cssText = `left:${L.card.x}px;top:${L.card.y}px;width:${L.card.w}px;height:${L.card.h}px;padding:${pad}px;gap:${2.4 * u}px;border-radius:${1.8 * u}px;
-      border:${0.4 * u}px solid #fff;background:linear-gradient(160deg, rgba(34,20,70,.92), rgba(14,8,32,.94));
-      box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px #B6B2FF, 0 0 ${4 * u}px #6E6BD6, inset 0 0 ${3 * u}px rgba(110,107,214,.45);will-change:transform,opacity`;
-    card.innerHTML = `
-      <div class="quote soft-text" style="font-size:${L.q}px">If your <span class="hl hl1 neon-text-l">$500K engineer</span> isn&rsquo;t burning
-        <span class="hl hl2 neon-text-m">$250K worth of tokens</span>, something is wrong.</div>
-      <div style="opacity:0" class="attr">
-        <div class="who neon-text-l" style="font-size:${2.9 * u}px">Jensen Huang, Nvidia</div>
-        <div class="note soft-text" style="font-size:${1.9 * u}px;margin-top:.3em">Paraphrased from AP reporting</div>
-      </div>`;
-    stage.appendChild(card);
-    flickerOn(ctx, card, CUES.card);
-    tl.fromTo(card, { y: 4 * u }, { y: 0, duration: 0.5, ease: "power3.out" }, CUES.card);
-    const attr = card.querySelector(".attr");
-    tl.fromTo(attr, { opacity: 0, x: -2 * u }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, CUES.speaker);
-
-    // ---------- The two bars: salary vs tokens, on the same scale ----------
-    const B = L.bars, inset = 0.35 * u, innerW = B.w - 2 * inset - 4;
-    const rows = [
-      { label: "Engineer salary", frac: 1.0, grad: "linear-gradient(90deg, #6E6BD6, #B6B2FF 70%, #fff)", glow: "#B6B2FF", glow2: "#6E6BD6", at: CUES.salary },
-      { label: "Token spend",    frac: 0.5, grad: "linear-gradient(90deg, #B23BE8, #E39BFF 70%, #fff)", glow: "#E39BFF", glow2: "#B23BE8", at: CUES.tokens },
-    ];
-    const fills = rows.map((r, i) => {
-      const top = B.y0 + i * B.pitch;
-      const lab = document.createElement("div");
-      lab.className = "bar-label soft-text";
-      lab.style.cssText = `left:${B.x + 0.6 * u}px;top:${top}px;font-size:${3 * u}px`;
-      lab.textContent = r.label;
-      const track = document.createElement("div");
-      track.className = "track";
-      track.style.cssText = `left:${B.x}px;top:${top + 4 * u}px;width:${B.w}px;height:${B.h}px;border-radius:${B.h / 2}px`;
-      const fill = document.createElement("div");
-      fill.className = "fill";
-      fill.style.cssText = `left:${inset}px;top:${inset}px;height:${B.h - 2 * inset - 4}px;width:${innerW * r.frac}px;border-radius:${B.h / 2}px;background:${r.grad};
-        box-shadow:0 0 ${0.8 * u}px #fff, 0 0 ${1.5 * u}px ${r.glow}, 0 0 ${3 * u}px ${r.glow2}`;
-      track.appendChild(fill);
-      stage.appendChild(lab); stage.appendChild(track);
-      flickerOn(ctx, lab, CUES.card + 0.4 + i * 0.15);
-      flickerOn(ctx, track, CUES.card + 0.4 + i * 0.15);
-      return { fill, r, top };
+    // ================= Part 1: adoption shoots up =================
+    const title = createCaption(ctx, { cx, y: 0.1 * H, w: 0.8 * W, lines: [{ html: "TOKENMAXXING", size: 9 * u, cls: "neon-text-m" }, { html: "ADOPTED FAST IN BIG TECH", size: 2.6 * u, cls: "soft-text", weight: 600 }], flare: "magenta" });
+    title.reveal(0, CUES.tokenmaxxing, 1); title.reveal(1, CUES.tokenmaxxing + 0.5);
+    const rows = [["COMPANY A", 0.95], ["COMPANY B", 0.8], ["COMPANY C", 0.9], ["COMPANY D", 0.7], ["COMPANY E", 0.85]], bw = 78 * u, bx = cx - bw / 2 + 6 * u, by = 0.42 * H, rh = 9 * u, p1 = [];
+    rows.forEach(([nm, lv], i) => {
+      const y = by + i * rh, lab = K(stage, "abs soft-text", `left:${bx - 24 * u}px;top:${y + 1.2 * u}px;font:600 ${2.2 * u}px Poppins;letter-spacing:.15em;opacity:0`, nm);
+      const tr = K(stage, "track", `left:${bx}px;top:${y}px;width:${bw}px;height:${4.6 * u}px;opacity:0`), fl = K(tr, "fill", `width:${lv * bw}px;background:linear-gradient(90deg,#B23BE8,#E39BFF);box-shadow:0 0 ${1.6 * u}px #B23BE8;transform:scaleX(0)`);
+      const sp = K(stage, "abs", `left:${bx + lv * bw - 2 * u}px;top:${y + 0.4 * u}px;width:${6 * u}px;height:${3.8 * u}px;background:linear-gradient(90deg,rgba(255,255,255,0),#fff);border-radius:${2 * u}px;opacity:0;filter:blur(${0.3 * u}px)`);
+      tl.fromTo(lab, { opacity: 0, x: -2 * u }, { opacity: 0.9, x: 0, duration: 0.4 }, 1.0 + i * 0.1).to(tr, { opacity: 1, duration: 0.3 }, 1.0 + i * 0.1)
+        .to(fl, { scaleX: 1, duration: 1.1, ease: "power4.out" }, CUES.fast + i * 0.1).fromTo(sp, { opacity: 0 }, { opacity: 0.9, duration: 0.15 }, CUES.fast + 0.8 + i * 0.1).to(sp, { opacity: 0, duration: 0.5 }, CUES.fast + 0.95 + i * 0.1);
+      p1.push(lab, tr);
     });
+    const bflare = createFlare(ctx, { x: cx + 6 * u, y: by + 2.5 * rh, size: 60 * u, color: "magenta" }); bflare.burst(CUES.fast + 0.2, 0.7);
+    tl.to([title.el, ...p1], { opacity: 0, y: -2 * u, duration: 0.5, ease: "power2.in" }, CUES.nvidia - 0.3);
 
-    // Each bar fills on its own cue; a flare bursts at the tip of the token bar
-    const tokenTip = { x: B.x + inset + 2 + innerW * 0.5, y: fills[1].top + 4 * u + B.h / 2 };
-    const tipFlare = createFlare(ctx, { x: tokenTip.x, y: tokenTip.y, size: 26 * u, color: "magenta" });
-    fills.forEach(({ fill, r }) => tl.to(fill, { scaleX: 1, duration: 0.7, ease: "power3.out" }, r.at));
-    tipFlare.burst(CUES.tokens + 0.55, 1);
-    // The card's highlighted words pop as they are spoken
-    const pop = (sel, at) => tl.to(card.querySelector(sel), { scale: 1.12, duration: 0.1, ease: "power2.out" }, at)
-                                .to(card.querySelector(sel), { scale: 1, duration: 0.35, ease: "elastic.out(1,0.5)" }, at + 0.1);
-    pop(".hl1", CUES.salary);
-    pop(".hl2", CUES.tokens);
+    // ================= Part 2: the photo and the paraphrase =================
+    const pw = 38 * u, ph = 41 * u, px = 0.07 * W, py = 0.15 * H;
+    const frame = K(stage, "frame", `left:${px}px;top:${py}px;width:${pw}px;height:${ph}px;opacity:0;box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px #B4F7FF, 0 0 ${4 * u}px #36D6E7`);
+    const img = K(frame, "abs", `left:0;top:0;width:100%;height:100%;background:url(../../assets/jensen-huang-2023.jpg) 40% 12%/cover no-repeat`);
+    tl.fromTo(frame, { opacity: 0, y: 4 * u, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, duration: 0.7, ease: "power3.out" }, CUES.nvidia);
+    tl.fromTo(img, { scale: 1.12 }, { scale: 1, duration: 2.2, ease: "power2.out", transformOrigin: "40% 20%" }, CUES.nvidia);
+    const nv = K(stage, "tag neon-text-c", `left:${px + 1.4 * u}px;top:${py + 1.4 * u}px;font-size:${2.4 * u}px;background:rgba(8,28,40,.88);border:2px solid #fff;opacity:0;box-shadow:0 0 ${0.4 * u}px #fff, 0 0 ${1.2 * u}px #36D6E7`, "NVIDIA · CEO");
+    tl.fromTo(nv, { opacity: 0, x: -2 * u }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out" }, CUES.nvidia + 0.2);
+    const nm = K(stage, "abs", `left:${px}px;top:${py + ph + 1.6 * u}px;width:${pw}px;opacity:0`,
+      `<div class="neon-text-c" style="font:800 ${3.8 * u}px Poppins;letter-spacing:.03em">JENSEN HUANG</div><div class="soft-text" style="font:600 ${1.9 * u}px Poppins;letter-spacing:.12em;margin-top:${0.5 * u}px;opacity:.85">PHOTO FROM 2023</div>
+       <div style="font:400 ${1.4 * u}px Poppins;margin-top:${0.5 * u}px;color:rgba(244,241,255,.55)">Photo: Office of the President, Taiwan · CC BY 2.0</div>`);
+    tl.fromTo(nm, { opacity: 0, y: 2 * u }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, CUES.jensen);
+    const nflare = createFlare(ctx, { x: px + pw / 2, y: py + ph + 3 * u, size: 38 * u, color: "cyan" }); nflare.burst(CUES.jensen + 0.1, 0.8);
 
-    // ---------- Caption (separate layer, toggle with ?captions=0) ----------
-    const cap = document.createElement("div");
-    cap.className = "layer captions";
-    const seg = isShort ? "display:block" : "display:inline-block;margin:0 .25em";
-    cap.innerHTML = `
-      <div class="caption" style="left:${L.cap.cx - W / 2}px;width:${W}px;top:${L.cap.y}px;font-size:${L.cap.s}px">
-        <span class="seg s1 soft-text" style="${seg}">$500K Salary</span><span class="seg s2" style="${seg}"><span class="soft-text">vs</span> <span class="neon-text-m">$250K Tokens</span></span>
-      </div>`;
-    stage.appendChild(cap);
-    const s1 = cap.querySelector(".s1"), s2 = cap.querySelector(".s2");
-    const capFlare = createFlare(ctx, { x: L.cap.cx, y: L.cap.y + L.cap.s * (isShort ? 1.1 : 0.6), size: 46 * u, color: "magenta" });
-    cap.appendChild(capFlare.el); capFlare.el.style.zIndex = -1;
-    tl.fromTo(s1, { opacity: 0, scale: 1.3 }, { opacity: 1, scale: 1, duration: 0.2, ease: "power4.out" }, CUES.salary);
-    tl.fromTo(s2, { opacity: 0, scale: 1.3 }, { opacity: 1, scale: 1, duration: 0.2, ease: "power4.out" }, CUES.tokens);
-    capFlare.burst(CUES.tokens, 0.8);
+    const cw = 0.5 * W, cxl = 0.43 * W, cy = 0.12 * H, chh = 0.74 * H;
+    const card = K(stage, "card", `left:${cxl}px;top:${cy}px;width:${cw}px;height:${chh}px;opacity:0;box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px #E39BFF, 0 0 ${4 * u}px #B23BE8, inset 0 0 ${2.5 * u}px rgba(178,59,232,.25)`);
+    tl.fromTo(card, { opacity: 0, y: 4 * u, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.7, ease: "power3.out" }, CUES.quote);
+    const px2 = 3.4 * u;
+    K(card, "abs", `left:${px2}px;top:${2.4 * u}px;font:600 ${1.9 * u}px Poppins;letter-spacing:.3em;color:${C};opacity:.9`, "PARAPHRASED FROM REPORTING");
+    const L1 = K(card, "abs soft-text", `left:${px2}px;top:${6 * u}px;font:600 ${4.6 * u}px Poppins;opacity:0`, `A <span class="neon-text-c">$500,000</span> engineer`);
+    const L2 = K(card, "abs soft-text", `left:${px2}px;top:${11.4 * u}px;font:600 ${4.6 * u}px Poppins;opacity:0`, `should use about <span class="neon-text-m">$250,000</span>`);
+    const L3 = K(card, "abs soft-text", `left:${px2}px;top:${16.8 * u}px;font:600 ${4.6 * u}px Poppins;opacity:0`, `in <span class="neon-text-m">tokens</span> a year`);
+    const L4 = K(card, "abs", `left:${px2}px;top:${22.4 * u}px;font:800 ${4.6 * u}px Poppins;color:#FF9AB5;text-shadow:0 0 ${1.4 * u}px rgba(255,74,122,.8);opacity:0`, `or something is wrong.`);
+    [[L1, CUES.salary - 0.1], [L2, CUES.tokensAmt - 0.1], [L3, CUES.tokensWord - 0.1], [L4, CUES.wrong - 0.1]].forEach(([e, t]) => tl.fromTo(e, { opacity: 0, y: 1.6 * u }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, t));
+    // the bars
+    const bx2 = px2, bw2 = cw - 2 * px2 - 3 * u, byy = 35 * u, bh = 3.6 * u;
+    const bar = (label, y, w, grad, glow, cue, dur) => {
+      const lab = K(card, "abs", `left:${bx2}px;top:${y - 3.1 * u}px;font:600 ${1.8 * u}px Poppins;letter-spacing:.25em;color:${C};opacity:0`, label);
+      const tr = K(card, "track", `left:${bx2}px;top:${y}px;width:${bw2}px;height:${bh}px;opacity:0`), fl = K(tr, "fill", `width:${w}px;background:${grad};box-shadow:0 0 ${1.4 * u}px ${glow};transform:scaleX(0)`);
+      tl.to([lab, tr], { opacity: 1, duration: 0.3 }, cue - 0.1).to(fl, { scaleX: 1, duration: dur, ease: "power3.out" }, cue);
+      return { lab, tr, fl };
+    };
+    bar("$500K SALARY", byy, bw2, "linear-gradient(90deg,#36D6E7,#B4F7FF)", "#36D6E7", CUES.salary, 1.2);
+    bar("$250K IN TOKENS", byy + 8.4 * u, bw2 / 2, "linear-gradient(90deg,#B23BE8,#E39BFF)", "#B23BE8", CUES.tokensAmt, 1.4);
+    const half = K(card, "abs", `left:${bx2 + bw2 / 2 + 1.2 * u}px;top:${byy + 8.4 * u + 0.5 * u}px;font:700 ${2 * u}px Poppins;letter-spacing:.12em;color:${M};opacity:0`, "◂ ABOUT HALF OF THE SALARY");
+    tl.fromTo(half, { opacity: 0 }, { opacity: 0.95, duration: 0.4 }, CUES.tokensWord);
+    // against a much shorter bar, something is wrong
+    const lowW = bw2 * 0.14, low = K(card, "abs", `left:${bx2}px;top:${byy + 16.8 * u}px;width:${lowW}px;height:${bh}px;border:3px dashed #FF9AB5;border-radius:999px;opacity:0`),
+      lowL = K(card, "abs", `left:${bx2}px;top:${byy + 16.8 * u - 3.1 * u}px;font:600 ${1.8 * u}px Poppins;letter-spacing:.25em;color:#FF9AB5;opacity:0`, "FAR LESS THAN THAT");
+    const wr = K(stage, "tag", `left:${cxl + bx2 + lowW + 3 * u}px;top:${cy + byy + 16.8 * u - 0.6 * u}px;font-size:${2.6 * u}px;border:3px solid #FF4A7A;color:#FF9AB5;background:rgba(40,8,22,.9);opacity:0;box-shadow:0 0 ${1.2 * u}px rgba(255,74,122,.7)`, "⚠ SOMETHING IS WRONG");
+    tl.to([low, lowL], { opacity: 1, duration: 0.3 }, CUES.wrong - 0.1).fromTo(wr, { opacity: 0, scale: 1.8, rotation: -6 }, { opacity: 1, scale: 1, rotation: -2, duration: 0.22, ease: "power4.out" }, CUES.wrong)
+      .to(wr, { opacity: 0.55, duration: 0.3, yoyo: true, repeat: 3, ease: "sine.inOut" }, CUES.wrong + 0.6);
+    const wflare = createFlare(ctx, { x: cxl + cw * 0.55, y: cy + byy + 17 * u, size: 40 * u, color: "magenta" }); wflare.burst(CUES.wrong + 0.1, 0.9);
+
+    // ================= Part 3: the hype =================
+    tl.to([card, frame, nv, nm, wr], { opacity: 0.07, duration: 0.6, ease: "power2.inOut" }, CUES.hypeIn);
+    const hy = K(stage, "abs", `left:0;width:${W}px;text-align:center;top:${0.3 * H}px;opacity:0`,
+      `<div class="neon-text-m" style="font:800 ${15 * u}px/1 Poppins;letter-spacing:.04em">HYPE</div><div class="soft-text" style="font:600 ${2.6 * u}px Poppins;letter-spacing:.35em;margin-top:${1.6 * u}px">TOKENMAXXING GETS EVEN BIGGER</div>`);
+    const mtr = K(stage, "track", `left:${cx - 40 * u}px;top:${0.68 * H}px;width:${80 * u}px;height:${3.6 * u}px;opacity:0`), mfl = K(mtr, "fill", `width:100%;background:linear-gradient(90deg,#36D6E7,#B23BE8,#FF4A7A);box-shadow:0 0 ${2 * u}px #B23BE8;transform:scaleX(0.05)`);
+    tl.to(mtr, { opacity: 1, duration: 0.4 }, CUES.hypeIn + 0.2).to(mfl, { scaleX: 0.45, duration: CUES.hype - CUES.hypeRise, ease: "power2.in" }, CUES.hypeRise)
+      .to(mfl, { scaleX: 1, duration: 0.5, ease: "power4.out" }, CUES.hype);
+    tl.fromTo(hy, { opacity: 0, scale: 1.5 }, { opacity: 1, scale: 1, duration: 0.2, ease: "power4.out" }, CUES.hype);
+    const hflare = createFlare(ctx, { x: cx, y: 0.4 * H, size: 80 * u, color: "magenta" }); hflare.burst(CUES.hype + 0.1, 1);
+    tl.to(hy, { scale: 1.04, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 1 }, CUES.hype + 0.3);
   },
 });
 </script>

@@ -2,16 +2,14 @@
 <html lang="hi">
 <head>
 <meta charset="utf-8">
-<title>Beat 1 · Tokenmaxxing</title>
+<title>Beat 1 · Tokenmaxxing · the race</title>
 <link rel="stylesheet" href="../../theme/neon.css">
 <style>
-  .caption { position: absolute; text-align: center; line-height: 1.15; }
-  .caption .l1 { display: block; font-weight: 800; letter-spacing: .02em; white-space: nowrap; }
-  .chips { position: absolute; display: flex; }
-  .chip { position: relative; display: flex; align-items: center; white-space: nowrap; font-weight: 600;
-          border-radius: 999px; border: 3px solid #fff; background: rgba(18,10,38,.7); }
-  .chip .strike { position: absolute; left: 4%; right: 4%; top: 50%; border-radius: 9px; background: #fff;
-                  transform: scaleX(0); transform-origin: 0 50%; }
+  .num { position: absolute; left: 0; width: 100%; text-align: center; font-weight: 800; line-height: 1; opacity: 0; will-change: transform, opacity; }
+  .sign { position: absolute; display: flex; align-items: center; justify-content: center; white-space: nowrap; font-weight: 800; letter-spacing: .06em;
+          border-radius: 1.2em; border: 3px solid #fff; background: rgba(18,10,38,.78); opacity: 0; will-change: transform, opacity; }
+  .sign .strike { position: absolute; left: 5%; right: 5%; top: 50%; height: 4px; background: #fff; border-radius: 3px; transform: scaleX(0); transform-origin: 0 50%; box-shadow: 0 0 6px #fff, 0 0 14px #E39BFF; }
+  .tok { position: absolute; left: 0; width: 100%; text-align: center; font-weight: 800; opacity: 0; will-change: transform, opacity; }
 </style>
 </head>
 <body>
@@ -19,103 +17,149 @@
 
 <script src="../../../engine/gsap.min.js"></script>
 <script src="../../lib/scene-runtime.js"></script>
-<script src="../../lib/backdrop.js"></script>
 <script src="../../lib/components.js"></script>
 <script>
-/* Beat 1 (0:00–0:08): "...एक leaderboard चलता था। Code ship करने का नहीं। Bugs fix करने का नहीं। Tokens जलाने का।"
-   CUES are seconds from the start of this beat. Placeholder times until the Hindi recording exists. */
+/* Beat 1, the race (desktop). "इस साल की शुरुआत में दुनिया की कई बड़ी tech companies अपने developers के बीच एक race चला रही थी। ये race ज़्यादा features
+   बनाने की, या ज़्यादा bugs fix करने की, या ज़्यादा code deploy करने की नहीं, बल्कि ज़्यादा AI tokens consume करने की थी।"
+   A neon starting grid in perspective, seen from behind the field. The lanes light up, a countdown runs, and at "race" the developers launch down
+   the track. A sign gantry names what they are NOT racing for (features, bugs, code); each sign cracks out. At "AI tokens consume" every lane turns
+   magenta, the sign flips to MORE TOKENS and the pack surges while the token counter explodes. (The earlier leaderboard opening is kept in beat01-board.html.)
+   CUES are seconds from the start of this beat, measured from Varun's recording (scene time 0 = 0.5 s before he speaks). */
 const CUES = {
-  chips: 0.2,          // scene opens: the two outcome chips flicker on
-  board: 0.5,          // "leaderboard" — the TOKENS BURNED board slides in, numbers start ticking
-  codeShipped: 3.2,    // "Code ship करने का नहीं" — chip struck through
-  bugsFixed: 4.5,      // "Bugs fix करने का नहीं" — chip struck through
-  tokensBurned: 5.7,   // "Tokens जलाने" — caption slams in, board flares
+  lanes: 0.5,          // the grid lights up
+  companies: 1.7,      // "कई बड़ी tech companies" — lane tags COMPANY A–F appear
+  developers: 3.6,     // "developers" — the runners appear on the start line
+  three: 1.9, two: 2.9, one: 3.9,   // the countdown
+  go: 4.85,            // "race" 4.87 — GO, the runners launch
+  signs: 6.5,          // "ये race" — the gantry of three signs
+  features: 7.3,       // "features" — sign cracks out
+  bugsFixed: 9.3,      // "bugs fix"
+  codeDeploy: 11.5,    // "code deploy"
+  tokensBurned: 13.8,  // "AI tokens consume" — lanes turn magenta, MORE TOKENS, the pack surges
 };
-const DURATION = 8;
+const DURATION = 16;
 
 registerScene({
   duration: DURATION, fps: 30, seed: 1, cues: CUES,
   build(tl, ctx) {
-    const { W, H, u, format, stage } = ctx;
-    buildBackdrop(ctx, { duration: DURATION, panels: format === "short"
-      ? [{ x: 0.04, y: 0.075, w: 8, color: "m" }, { x: 0.78, y: 0.085, w: 8, color: "c" }, { x: 0.70, y: 0.84, w: 9, color: "c" }]
-      : [{ x: 0.04, y: 0.10, w: 8, color: "m" }, { x: 0.80, y: 0.05, w: 7, color: "c" }, { x: 0.92, y: 0.90, w: 6, color: "c" }] });
+    const { W, H, u, stage } = ctx, K = (p, css, html) => { const e = document.createElement("div"); e.style.cssText = css; if (html != null) e.innerHTML = html; p.appendChild(e); return e; };
+    const dpr = window.devicePixelRatio || 1;
+    const CYAN = [54, 214, 231], MAG = [178, 59, 232], CYHI = [180, 247, 255], MAGHI = [227, 155, 255];
+    const mix = (a, b, m) => a.map((v, i) => Math.round(v + (b[i] - v) * m)), rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+    const sstep = (x) => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); };
 
-    // ---------- Layout per format ----------
-    const L = format === "short"
-      ? { chips: { x: 0.12 * W, y: 0.165 * H, w: 0.76 * W, h: 6.4 * u, gap: 2 * u, dir: "row", justify: "center" },
-          board: { x: 0.12 * W, y: 0.235 * H, w: 0.76 * W, rowH: 10 * u },
-          cap: { cx: 0.5 * W, y: 0.665 * H, w: 0.76 * W, s1: 8.2 * u } }
-      : { chips: { x: 0.2 * W, y: 0.085 * H, w: 0.6 * W, h: 7 * u, gap: 3 * u, dir: "row", justify: "center" },
-          board: { x: 0.2 * W, y: 0.22 * H, w: 0.6 * W, rowH: 8 * u },
-          cap: { cx: 0.5 * W, y: 0.79 * H, w: 0.6 * W, s1: 8.4 * u } };
+    // ---------- Track state: how far the camera and each runner have travelled, as pure functions of time ----------
+    const STEP = 1 / 120, NS = Math.ceil(DURATION / STEP) + 2, NR = 6;
+    const vcam = (t) => 0.35 + 14 * sstep((t - CUES.go) / 1.6) + 20 * sstep((t - CUES.tokensBurned) / 0.7);
+    const bur = [0.26, 0.31, 0.22, 0.34, 0.28, 0.2];
+    const vrun = (i, t) => vcam(t) * (1 + 0.09 * Math.sin(0.9 * t + i * 1.7) + (t > CUES.go ? bur[i] * Math.exp(-(t - CUES.go) / 1.2) : 0) + 0.15 * sstep((t - CUES.tokensBurned) / 0.8) * (0.6 + 0.15 * i));
+    const Dc = new Float32Array(NS), Sr = Array.from({ length: NR }, () => new Float32Array(NS));
+    for (let k = 1; k < NS; k++) { const t = k * STEP; Dc[k] = Dc[k - 1] + vcam(t) * STEP; for (let i = 0; i < NR; i++) Sr[i][k] = Sr[i][k - 1] + vrun(i, t) * STEP; }
+    const at = (arr, t) => { const x = Math.max(0, t) / STEP, k = Math.min(NS - 2, Math.floor(x)), f = x - k; return arr[k] * (1 - f) + arr[k + 1] * f; };
 
-    // ---------- Panel flare (created first so it sits behind the board) ----------
-    const boardFlare = createFlare(ctx, { x: L.board.x + L.board.w / 2, y: L.board.y + 22 * u, size: 70 * u, color: "magenta" });
+    // ---------- Canvas: sky, grid, lanes, start line, runners ----------
+    const cv = document.createElement("canvas"); cv.className = "layer"; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.cssText = `width:${W}px;height:${H}px;z-index:0`;
+    stage.appendChild(cv); const g = cv.getContext("2d"); g.scale(dpr, dpr);
+    const cx = W / 2, hy = 0.4 * H, F = 0.62 * W, DN = 2.0, HC = (H - hy) * DN / F, LW = 0.9, NL = 6, FAR = 64, START = 3.4;
+    const proj = (X, d) => [cx + X * F / d, hy + HC * F / d];
+    const stars = Array.from({ length: 70 }, () => [ctx.rng() * W, ctx.rng() * hy * 0.95, 0.5 + ctx.rng() * 1.3, ctx.rng() * 6.28]);
+    const laneOn = (i, t) => sstep((t - CUES.lanes - i * 0.08) / 0.7);
+    const TAGS = ["A", "B", "C", "D", "E", "F"];
 
-    // ---------- Leaderboard ----------
-    const names = ["Dev_07", "Dev_21", "Dev_03", "Dev_14", "Dev_09"];
-    const target = [18400000, 15700000, 12900000, 10300000, 7600000];   // 1,84,00,000 … in Indian grouping
-    const board = createLeaderboard(ctx, { ...L.board, title: "Tokens", names, color: "magenta" });
-    tl.fromTo(board.el, { y: 6 * u }, { y: 0, duration: 0.5, ease: "power3.out" }, CUES.board);
-    flickerOn(ctx, board.el, CUES.board);
-    board.rows.forEach((r, i) => flickerOn(ctx, r, CUES.board + 0.35 + i * 0.12));
+    function draw(t) {
+      const m = sstep((t - CUES.tokensBurned) / 0.5), col = mix(CYAN, MAG, m), hi = mix(CYHI, MAGHI, m);
+      g.clearRect(0, 0, W, H);
+      const bgG = g.createLinearGradient(0, 0, 0, hy); bgG.addColorStop(0, "#03060F"); bgG.addColorStop(1, "#0A1230"); g.fillStyle = bgG; g.fillRect(0, 0, W, hy);
+      g.fillStyle = "#030610"; g.fillRect(0, hy, W, H - hy);
+      for (const s of stars) { g.fillStyle = `rgba(220,230,255,${0.25 + 0.35 * (0.5 + 0.5 * Math.sin(t * 1.3 + s[3]))})`; g.fillRect(s[0], s[1], s[2], s[2]); }
+      g.save(); g.translate(cx, hy); g.scale(1, 0.42); const R = W * 0.62, glow = g.createRadialGradient(0, 0, 0, 0, 0, R);
+      glow.addColorStop(0, rgba(mix(MAG, col, 0.2), 0.5)); glow.addColorStop(0.45, rgba(col, 0.15)); glow.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = glow; g.fillRect(-R, -R, 2 * R, 2 * R); g.restore();
+      const D = at(Dc, t), lanesA = sstep((t - CUES.lanes) / 1.0);
+      // cross lines rolling towards the camera
+      const DEL = 2.2, M = Math.ceil((FAR - DN) / DEL);
+      for (let k = 0; k < M; k++) {
+        let d = k * DEL - D; d = DN + (((d % (M * DEL)) + M * DEL) % (M * DEL)); if (d > FAR) continue;
+        const a = lanesA * Math.min(1, 0.42 * Math.pow(DN / d, 0.5)), [x0, y] = proj(-NL / 2 * LW, d), [x1] = proj(NL / 2 * LW, d);
+        g.strokeStyle = rgba(col, a * 0.85); g.lineWidth = 1.5 + 6 / d; g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke();
+      }
+      // lane lines
+      for (let i = 0; i <= NL; i++) {
+        const X = (i - NL / 2) * LW, [xf, yf] = proj(X, FAR), [xn, yn] = proj(X, DN * 0.5), a = lanesA * (i === 0 || i === NL ? 1 : laneOn(Math.min(i, NL - i), t) * 0.8 + 0.2);
+        const lg = g.createLinearGradient(xf, yf, xn, yn); lg.addColorStop(0, rgba(col, 0)); lg.addColorStop(0.25, rgba(col, 0.5 * a)); lg.addColorStop(1, rgba(hi, 0.95 * a));
+        g.strokeStyle = lg; g.lineWidth = 12; g.globalAlpha = 0.22; g.beginPath(); g.moveTo(xf, yf); g.lineTo(xn, yn); g.stroke();
+        g.globalAlpha = 1; g.lineWidth = 2.8; g.beginPath(); g.moveTo(xf, yf); g.lineTo(xn, yn); g.stroke();
+      }
+      // start line and the company tags painted on the lanes
+      const dsl = START - D;
+      if (dsl > DN * 0.7) {
+        const [xa, ya] = proj(-NL / 2 * LW, dsl), [xb] = proj(NL / 2 * LW, dsl), sc = F / dsl, la = lanesA;
+        g.strokeStyle = rgba(hi, 0.9 * la); g.lineWidth = Math.max(2, 0.07 * sc); g.globalAlpha = 0.25; g.beginPath(); g.moveTo(xa, ya); g.lineTo(xb, ya); g.stroke();
+        g.globalAlpha = 1; g.lineWidth = Math.max(1.5, 0.02 * sc); g.beginPath(); g.moveTo(xa, ya); g.lineTo(xb, ya); g.stroke();
+        for (let i = 0; i < NL; i++) {
+          const ta = sstep((t - CUES.companies - i * 0.16) / 0.5) * (1 - sstep((t - CUES.go - 0.4) / 0.6)); if (ta < 0.01) continue;
+          const dd = dsl + 0.9, [tx, ty] = proj((i - (NL - 1) / 2) * LW, dd), sc2 = F / dd;
+          g.fillStyle = rgba(hi, 0.85 * ta); g.textAlign = "center"; g.textBaseline = "middle";
+          g.font = `800 ${0.115 * sc2}px Poppins, sans-serif`; g.fillText("COMPANY", tx, ty - 0.22 * sc2); g.font = `800 ${0.5 * sc2}px Poppins, sans-serif`; g.fillText(TAGS[i], tx, ty + 0.12 * sc2);
+        }
+      }
+      // runners
+      for (let i = 0; i < NR; i++) {
+        const ra = sstep((t - CUES.developers - i * 0.12) / 0.4); if (ra < 0.01) continue;
+        const d = Math.max(2.4, Math.min(60, START + at(Sr[i], t) - D)), X = (i - (NR - 1) / 2) * LW, [x, y] = proj(X, d), sc = F / d, sp = vrun(i, t);
+        const tr = Math.min(7, sp * 0.22) * sc * 0.5, bw = 0.3 * sc, bh = 0.95 * sc, pulse = t < CUES.go ? 0.7 + 0.3 * Math.sin(t * 6 + i) : 1;
+        const gl = g.createRadialGradient(x, y, 0, x, y, 1.1 * sc); gl.addColorStop(0, rgba(col, 0.5 * ra)); gl.addColorStop(1, rgba(col, 0)); g.fillStyle = gl; g.fillRect(x - 1.3 * sc, y - 0.8 * sc, 2.6 * sc, 1.6 * sc);
+        if (tr > 2) { const tg = g.createLinearGradient(0, y, 0, y + tr); tg.addColorStop(0, rgba(hi, 0.55 * ra)); tg.addColorStop(1, rgba(col, 0)); g.fillStyle = tg; g.fillRect(x - bw * 0.4, y, bw * 0.8, tr); }
+        const bg2 = g.createLinearGradient(0, y - bh, 0, y); bg2.addColorStop(0, rgba(hi, ra * pulse)); bg2.addColorStop(1, rgba(col, ra * pulse));
+        g.globalAlpha = 0.28; g.fillStyle = rgba(col, 1); g.beginPath(); g.roundRect(x - bw * 0.95, y - bh * 1.05, bw * 1.9, bh * 1.1, bw); g.fill();
+        g.globalAlpha = 1; g.fillStyle = bg2; g.beginPath(); g.roundRect(x - bw / 2, y - bh, bw, bh, bw / 2); g.fill();
+        g.fillStyle = `rgba(255,255,255,${0.9 * ra})`; g.beginPath(); g.roundRect(x - bw * 0.16, y - bh * 0.92, bw * 0.32, bh * 0.7, bw * 0.16); g.fill();
+      }
+      // speed lines at the edges, strongest during the surge
+      const spd = vcam(t), sl = Math.max(0, (spd - 8) / 30);
+      if (sl > 0.01) for (let k = 0; k < 40; k++) {
+        const ang = ((k * 0.61803) % 1) * Math.PI * 2, r0 = (0.28 + 0.2 * ((k * 0.37) % 1)) * W, ph = (t * (1.2 + (k % 5) * 0.25) + k * 0.13) % 1, r1 = r0 + ph * 0.3 * W, r2 = r1 + (0.04 + 0.1 * sl) * W;
+        const x1 = cx + Math.cos(ang) * r1, y1 = hy + Math.sin(ang) * r1 * 0.62, x2 = cx + Math.cos(ang) * r2, y2 = hy + Math.sin(ang) * r2 * 0.62;
+        g.strokeStyle = rgba(hi, 0.18 * sl * (1 - ph)); g.lineWidth = 1.5; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+      }
+    }
+    ctx.onFrame((t) => draw(t)); draw(0);
+    // the soft vignette over the canvas keeps the edges dark so the signs read
+    K(stage, "position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at 50% 45%, rgba(2,4,10,0) 52%, rgba(2,4,10,.7))");
 
-    // Numbers climb in uneven jumps (seeded), each row at its own pace, never changing rank
-    const state = {};
-    names.forEach((_, i) => {
-      state["r" + i] = 0;
-      const t0 = CUES.board + 0.9, t1 = DURATION - 0.3, steps = 14;
-      let w = [], sum = 0;
-      for (let k = 0; k < steps; k++) { const v = 0.5 + ctx.rng(); w.push(v); sum += v; }
-      let at = t0, acc = 0;
-      w.forEach((v) => {
-        acc += (v / sum) * target[i];
-        tl.to(state, { ["r" + i]: acc, duration: (t1 - t0) / steps * 0.8, ease: "power1.out" }, at);
-        at += (t1 - t0) / steps;
-      });
+    // ---------- Countdown ----------
+    const cd = (txt, at, color, size) => {
+      const e = K(stage, `top:${0.34 * H}px;font-size:${size}px;z-index:5;color:#fff;text-shadow:0 0 ${0.3 * u}px #fff,0 0 ${1.2 * u}px ${color},0 0 ${3.5 * u}px ${color}`, txt); e.className = "num";
+      tl.fromTo(e, { opacity: 0, scale: 1.8 }, { opacity: 1, scale: 1, duration: 0.18, ease: "power4.out" }, at).to(e, { opacity: 0, scale: 0.7, duration: 0.45, ease: "power2.in" }, at + 0.55);
+      return e;
+    };
+    cd("3", CUES.three, "#36D6E7", 22 * u); cd("2", CUES.two, "#36D6E7", 22 * u); cd("1", CUES.one, "#B23BE8", 22 * u);
+    const go = cd("GO", CUES.go - 0.05, "#B23BE8", 20 * u); tl.to(go, { scale: 1.5, duration: 0.7, ease: "power2.out" }, CUES.go);
+
+    // ---------- Sign gantry: what the race is NOT about ----------
+    const sw = 42 * u, sh2 = 10 * u, gap = 3 * u, y0 = 0.07 * H, sx0 = (W - (3 * sw + 2 * gap)) / 2, labels = ["MORE FEATURES", "MORE BUGS FIXED", "MORE CODE SHIPPED"], cues = [CUES.features, CUES.bugsFixed, CUES.codeDeploy], signs = [];
+    labels.forEach((txt, i) => {
+      const s = K(stage, `left:${sx0 + i * (sw + gap)}px;top:${y0}px;width:${sw}px;height:${sh2}px;font-size:${3.5 * u}px;z-index:4;color:#B4F7FF;border-color:#fff;
+        box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.4 * u}px #B4F7FF, 0 0 ${3.2 * u}px #36D6E7`, `<span class="soft-text">${txt}</span><i class="strike"></i>`);
+      s.className = "sign"; signs.push(s);
+      tl.fromTo(s, { opacity: 0, y: -2 * u }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, CUES.signs + i * 0.18);
+      tl.to(s.querySelector(".strike"), { scaleX: 1, duration: 0.22, ease: "power3.out" }, cues[i])
+        .to(s, { keyframes: { x: [0, -0.8 * u, 0.8 * u, -0.5 * u, 0.3 * u, 0] }, duration: 0.3, ease: "none" }, cues[i])
+        .to(s, { opacity: 0.32, duration: 0.4 }, cues[i] + 0.2);
     });
-    ctx.onFrame(() => board.nums.forEach((el, i) => { el.textContent = Math.round(state["r" + i]).toLocaleString("en-IN"); }));
+    tl.to(signs, { opacity: 0, y: -3 * u, duration: 0.35, ease: "power2.in" }, CUES.tokensBurned - 0.05);
 
-    // ---------- Outcome chips: the things nobody ranked, struck through ----------
-    const holder = document.createElement("div");
-    holder.className = "chips";
-    holder.style.cssText = `left:${L.chips.x}px;top:${L.chips.y}px;width:${L.chips.w}px;flex-direction:${L.chips.dir === "row" ? "row" : "column"};
-      gap:${L.chips.gap}px;justify-content:${L.chips.justify};align-items:${L.chips.dir === "row" ? "center" : "flex-start"}`;
-    const chips = ["Code shipped", "Bugs fixed"].map((text) => {
-      const el = document.createElement("div");
-      el.className = "chip";
-      el.style.cssText = `height:${L.chips.h}px;padding:0 ${L.chips.h * 0.5}px;font-size:${L.chips.h * 0.46}px;
-        box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${1.2 * u}px #B4F7FF, 0 0 ${2.6 * u}px #36D6E7`;
-      el.innerHTML = `<span class="label neon-text-c">${text}</span>
-        <i class="strike" style="height:${0.4 * u}px;margin-top:${-0.2 * u}px;box-shadow:0 0 ${0.4 * u}px #fff, 0 0 ${1 * u}px #E39BFF"></i>`;
-      holder.appendChild(el);
-      return el;
-    });
-    stage.appendChild(holder);
-    chips.forEach((el, i) => flickerOn(ctx, el, CUES.chips + i * 0.15));
-
-    [[chips[0], CUES.codeShipped], [chips[1], CUES.bugsFixed]].forEach(([el, at]) => {
-      tl.to(el.querySelector(".strike"), { scaleX: 1, duration: 0.22, ease: "power3.out" }, at)
-        .to(el, { scale: 1.07, duration: 0.08, ease: "power2.out" }, at)
-        .to(el, { scale: 1, duration: 0.3, ease: "elastic.out(1,0.4)" }, at + 0.08)
-        .to(el.querySelector(".label"), { opacity: 0.6, duration: 0.3, ease: "power1.out" }, at + 0.15);
-    });
-
-    // ---------- Caption (separate layer, toggle with ?captions=0) ----------
-    const cap = document.createElement("div");
-    cap.className = "layer captions";
-    cap.innerHTML = `
-      <div class="caption" style="left:${L.cap.cx - L.cap.w / 2}px;top:${L.cap.y}px;width:${L.cap.w}px">
-        <span class="l1 neon-text-m" style="font-size:${L.cap.s1}px">TOKENS BURNED</span>
-      </div>`;
-    stage.appendChild(cap);
-    const l1 = cap.querySelector(".l1");
-    const capFlare = createFlare(ctx, { x: L.cap.cx, y: L.cap.y + L.cap.s1 * 0.6, size: 46 * u, color: "magenta" });
-    cap.appendChild(capFlare.el); capFlare.el.style.zIndex = -1;
-    tl.fromTo(l1, { opacity: 0, scale: 1.45 }, { opacity: 1, scale: 1, duration: 0.18, ease: "power4.out" }, CUES.tokensBurned);
-    capFlare.burst(CUES.tokensBurned, 0.8);
-    boardFlare.burst(CUES.tokensBurned, 0.7);
+    // ---------- MORE TOKENS and the counter ----------
+    const mt = K(stage, `top:${0.06 * H}px;font-size:${9.5 * u}px;z-index:5;color:#fff;letter-spacing:.03em;text-shadow:0 0 ${0.3 * u}px #fff,0 0 ${1.2 * u}px #E39BFF,0 0 ${3.4 * u}px #B23BE8,0 0 ${7 * u}px rgba(178,59,232,.6)`, "MORE TOKENS"); mt.className = "tok";
+    tl.fromTo(mt, { opacity: 0, scale: 1.5 }, { opacity: 1, scale: 1, duration: 0.2, ease: "power4.out" }, CUES.tokensBurned);
+    const cnt = K(stage, `top:${0.2 * H}px;font-size:${5.4 * u}px;z-index:5;color:#E39BFF;letter-spacing:.04em;font-variant-numeric:tabular-nums;text-shadow:0 0 ${1.4 * u}px rgba(178,59,232,.8)`, "0"); cnt.className = "tok";
+    const lab = K(stage, `top:${0.3 * H}px;font-size:${1.9 * u}px;z-index:5;letter-spacing:.4em;color:#B4F7FF;font-weight:600;opacity:0`, "TOKENS BURNED"); lab.className = "tok"; lab.style.fontWeight = 600;
+    const st = { n: 0 };
+    tl.fromTo(cnt, { opacity: 0 }, { opacity: 1, duration: 0.3 }, CUES.tokensBurned + 0.2).to(lab, { opacity: 0.85, duration: 0.4 }, CUES.tokensBurned + 0.4)
+      .to(st, { n: 184000000, duration: 2.0, ease: "power2.out" }, CUES.tokensBurned + 0.2);
+    ctx.onFrame(() => { cnt.textContent = Math.round(st.n).toLocaleString("en-IN"); });
+    // the flash when the lanes flip
+    const fl = K(stage, "position:absolute;inset:0;z-index:6;background:radial-gradient(circle at 50% 40%, rgba(227,155,255,.55), rgba(178,59,232,0) 60%);opacity:0;pointer-events:none");
+    tl.to(fl, { opacity: 1, duration: 0.1 }, CUES.tokensBurned - 0.05).to(fl, { opacity: 0, duration: 0.8 }, CUES.tokensBurned + 0.05);
   },
 });
 </script>

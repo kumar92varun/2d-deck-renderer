@@ -20,13 +20,13 @@ If the script or storyboard changes there, update this file too. This file is wh
 
 | Beat | Scene file | Status |
 | --- | --- | --- |
-| 1 | `scenes/tokenmaxxing/beat01.html` | built on the old script (2 chips, placeholder cues); script updated, waiting for recording to rebuild |
-| 2 | `scenes/tokenmaxxing/beat02.html` | built, placeholder cues (waiting for recording) |
+| 1 | `scenes/tokenmaxxing/beat01.html` | rebuilt as the neon race opening (desktop only), timed to the recording (16 s); the old leaderboard version is `beat01-board.html` |
+| 2 | `scenes/tokenmaxxing/beat02.html` | built, timed to the recording (33.2 s) |
 | 3 | `scenes/tokenmaxxing/beat03.html` | built, timed to Take 2 recording (22.3 s) |
-| 4 | `scenes/tokenmaxxing/beat04.html` | built, placeholder cues (waiting for recording) |
-| 5 | `scenes/tokenmaxxing/beat05.html` | built, placeholder cues (waiting for recording) |
-| 6 | `scenes/tokenmaxxing/beat06.html` | built, placeholder cues (waiting for recording); quote shown as a labelled paraphrase |
-| 7 | `scenes/tokenmaxxing/beat07.html` | built, placeholder cues (waiting for recording); "Claudeonomics" tagged "Meta · as reported"; other boards use placeholder names |
+| 4 | `scenes/tokenmaxxing/beat04.html` | built, timed to the recording (18.7 s, no Tok, both bars rise) |
+| 5 | `scenes/tokenmaxxing/beat05.html` | built, timed to the recording (23.8 s, desktop only) |
+| 6 | `scenes/tokenmaxxing/beat06.html` | built, timed to the recording (19.8 s, desktop only); photo `assets/jensen-huang-2023.jpg` (CC BY 2.0, credited on screen) |
+| 7 | `scenes/tokenmaxxing/beat07.html` | built, timed to the recording (17.1 s, desktop only); names and numbers on the boards are illustrative; "Claudeonomics" tagged "Meta · as reported" |
 | 8 | `scenes/tokenmaxxing/beat08.html` | built, placeholder cues (waiting for recording) |
 | 9 | `scenes/tokenmaxxing/beat09.html` | built, placeholder cues (waiting for recording); carries "* According to reports" |
 | 10 | `scenes/tokenmaxxing/beat10.html` | built, placeholder cues (waiting for recording) |
@@ -44,12 +44,12 @@ Times are targets; each scene is re-timed to the recorded Hindi audio through it
 
 | Beat | Time | Cue word (Hindi VO) | Visual | On-screen text |
 | --- | --- | --- | --- | --- |
-| 1 | 0:00–0:20 | features / bugs fix / code deploy / AI tokens consume | A glowing leaderboard slides in; names and big magenta numbers tick upward. Rows for "code shipped" and "bugs fixed" get struck through. | TOKENS BURNED |
-| 2 | 0:08–0:16 | "Token Legend" / valuemaxxing | A gold badge stamps onto the top row with a glow flare. Title card: "tokenmaxxing" crosses out to "valuemaxxing" in neon cyan. | Tokenmaxxing → Valuemaxxing |
+| 1 | 0:00–0:16 | race / features / bugs fix / code deploy / AI tokens consume | Neon starting grid in perspective, lanes tagged COMPANY A–F, countdown 3-2-1-GO, developers launch down the track. A gantry of signs (MORE FEATURES / BUGS FIXED / CODE SHIPPED) cracks out one by one; at "AI tokens consume" the lanes turn magenta, MORE TOKENS and the token counter appear, the pack surges. | MORE TOKENS |
+| 2 | 0:16–0:49 | productive / under-productive / tokenmaxxing / hype / loss-making / valuemaxxing | Beat-1 board: gold PRODUCTIVE badge on the top row, bottom rows dim with an UNDER-PRODUCTIVE tag. Board leaves; "Tokenmaxxing" lights up, FALSE HYPE and LOSS-MAKING stamp on with a falling line. Tokenmaxxing is struck out and "Valuemaxxing" slams in (cyan). | Tokenmaxxing → Valuemaxxing |
 | 3 | 0:16–0:38 | tokens / input / output | A sentence shatters into coloured tiles; one becomes Tok (squash on landing). Tiles stream into an AI box (in) and back out (out), each dropping a coin. | 1 token ≈ ¾ word · Input + Output = Cost |
-| 4 | 0:28–0:40 | Tokenmaxxing / 2026 | Tok shovels tiles into the box non-stop. The meter appears: magenta Tokens bar blazes up, cyan Value bar barely glows. | Tokenmaxxing = Usage as Score |
-| 5 | 0:40–0:50 | एक number | A boardroom slide with a single giant counter; executives (simple silhouettes) nod. | AI Adoption = Just 1 Number |
-| 6 | 0:50–1:00 | ढाई लाख डॉलर के tokens | Quote card with speaker name. Two stacked bars: $500K salary vs $250K tokens. | $500K Salary vs $250K Tokens · Jensen Huang, Nvidia |
+| 4 | 0:49–1:08 | Tokenmaxxing / assumption / output / productive / AI Native / 2026 | Tiles fly non-stop into the AI box; the Tokens bar and the Value bar rise together. "More tokens → Better output?" appears, then PRODUCTIVE, AI NATIVE and Silicon Valley 2026 badges. No Tok mascot. | Tokenmaxxing = As many tokens as possible |
+| 5 | 0:54–1:18 | tokenmaxxing / productivity / number / tokens / assume | A trend spreads through a network of company nodes and a popularity curve climbs (FAMOUS). Boardroom slide: empty AI-productivity gauge, blank ONE EASY NUMBER slot, leaders looking on; the token count fills the slot and swings the gauge; "More tokens → more productivity" is stamped ASSUMED. | More tokens → more productivity (assumed) |
+| 6 | 1:18–1:38 | पाँच लाख / ढाई लाख / tokens / hype | Adoption bars shoot up. Photo of Jensen Huang (2023, credited) next to a PARAPHRASE card (no quote marks): $500K salary bar, $250K tokens bar, SOMETHING IS WRONG vs a short dashed bar. Hype meter spikes: HYPE. | $500K Salary vs $250K Tokens |
 | 7 | 1:00–1:12 | Claudeonomics / Amazon / OpenAI | A generic leaderboard window titled "Claudeonomics"; more leaderboards pop up beside it, labelled with company names in plain text (no logos). | Leaderboards Everywhere |
 | 8 | 1:12–1:22 | bills आने लगे / 1 जून | An invoice unrolls from the top of the screen and keeps going. A calendar flips to June 1. | Usage-based Billing · June 1 |
 | 9 | 1:22–1:32 | 10 करोड़ डॉलर / चार महीनों | Big counter slams to $100M with a glow flare and screen shake. A 12-month budget bar drains empty by month 4. | $100M in One Month* · Full-Year Budget Gone in 4 Months* |
@@ -70,23 +70,23 @@ Times are targets; each scene is re-timed to the recorded Hindi audio through it
 
 **Act 1 — Hook**
 
-[1] इस साल की शुरुआत में दुनिया की कई बड़ी tech companies अपने developers के बीच एक race चला रही थीं। ये race ज़्यादा **features** बनाने की, या ज़्यादा **bugs fix** करने की, या ज़्यादा से ज़्यादा **code deploy** करने की नहीं, बल्कि ज़्यादा **AI tokens consume** करने की थी।
+[1] इस साल की शुरुआत में दुनिया की कई बड़ी tech companies अपने developers के बीच एक race चला रही थी। ये race ज़्यादा **features** बनाने की, या ज़्यादा **bugs fix** करने की, या ज़्यादा **code deploy** करने की नहीं, बल्कि ज़्यादा **AI tokens consume** करने की थी।
 
-[2] और जो सबसे ऊपर होते, उन्हें मिलते थे titles, जैसे **"Token Legend"**। आज की कहानी है tokenmaxxing की, और उसे कुछ बेहतर में बदलने की: **valuemaxxing**।
+[2] इस race में जो developers सबसे ज़्यादा AI tokens consume करते थे, उन्हें सबसे ज़्यादा **productive** माना जाता था। और जो कम tokens consume करते थे, उन्हें **under-productive** समझा जाता था। [pause] Hi guys, आज की video है **tokenmaxxing** के बारे में: क्यों अब उन्हीं बड़ी tech companies को समझ आया कि tokenmaxxing एक ग़लत **hype** था, और ज़्यादा AI tokens consume करने की race कराना बहुत ही **loss-making** decision था। [pause] और फिर मैं अपने personal developer experience के base पे आपको बताऊँगा कि कैसे हम tokenmaxxing को देखें **valuemaxxing** करने के लिए।
 
 **Act 2 — Tokenmaxxing क्या है?**
 
 [3] चलो, सबसे पहले समझते हैं कि **tokens** होते क्या हैं। जब भी हम AI से chat करते हैं, तो AI हमारे words को छोटे-छोटे parts में बाँटता है, जिन्हें हम **tokens** कहते हैं। एक token, एक English word का लगभग ¾ होता है। हर token: जो हम AI में **input** करते हैं, या AI हमें **output** देता है। उस हर एक token का पैसा लगता है।
 
-[4] **Tokenmaxxing** मतलब, जितने हो सके उतने tokens इस्तेमाल करना, और उस number को सबूत मान लेना कि आप productive हैं, "AI-native" हैं। ये term Silicon Valley में **2026** की शुरुआत में चल पड़ा।
+[4] तो **Tokenmaxxing** का मतलब हुआ कि जितना हो सके, उतने ज़्यादा tokens consume करो। इसमें assumption ये थी कि ज़्यादा tokens use करने से output भी अच्छा आएगा, और ऐसे developers ज़्यादा productive है, ज़्यादा **"AI Native"** है। ये term Silicon Valley में **2026** की शुरुआत में चल पड़ी।
 
 **Act 3 — Companies ने इसे बढ़ावा क्यों दिया**
 
-[5] और कुछ समय तक companies को ये बहुत पसंद आया। Leaders को चाहिए था **एक number**, जिससे साबित हो कि teams सच में AI अपना रही हैं। और token usage गिनना आसान था।
+[5] किसी भी नए trend की तरह, starting में **tokenmaxxing** का trend tech companies में famous हुआ। [pause] Actually, companies को चाहिए था एक simple सा AI **productivity** measure करने का **number**, जिससे leaders समझ पाएँ कि उनकी team कितना काम AI से करवा रही है। [pause] और tokens ज़्यादा use करने को **assume** किया गया कि इससे productivity improve ही होगी।
 
-[6] बड़े-बड़े नाम इसके साथ थे। Nvidia के Jensen Huang ने कहा कि अगर आपका पाँच लाख डॉलर वाला engineer **ढाई लाख डॉलर के tokens** नहीं जला रहा, तो कुछ गड़बड़ है।
+[6] **Tokenmaxxing** को बड़ी tech companies में तेज़ी से adapt किया जाने लगा। [pause] Nvidia के CEO Jensen Huang ने एक famous quote भी दिया कि अगर आपका **पाँच लाख** dollar salary वाला engineer **ढाई लाख** dollars के tokens नहीं consume कर रहा है, तो कुछ गड़बड़ है। [pause] इस quote ने tokenmaxxing को और भी ज़्यादा **hype** दी।
 
-[7] Meta में एक internal leaderboard था, बताया जाता है उसका नाम था **"Claudeonomics"**, जो लोगों को token खपत के हिसाब से rank करता था। जल्द ही **Amazon**, **OpenAI** और बाकियों के पास भी अपने leaderboards थे।
+[7] **हर बड़ी company** जैसे **Meta**, **Amazon**, **OpenAI** में token consumption के leaderboards बन गए थे, जहाँ उनके developers को उनके tokens consume करने के base पे **rank** दी जाती थी। [pause] बताया जाता है कि Meta ने इस leaderboard को नाम भी दिया था: **"Claudeonomics"**।
 
 **Act 4 — अब इसे रोका क्यों जा रहा है**
 

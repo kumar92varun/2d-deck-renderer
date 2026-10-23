@@ -7,12 +7,10 @@ description: Use whenever the user asks to build, edit, fix, re-time or render a
 
 Silent animated clips, one per storyboard beat, rendered frame by frame from HTML + GSAP with Puppeteer
 and ffmpeg. Varun records the Hindi voiceover and adds music himself in his editor; this pipeline makes
-the visuals only, timed to his recording. Every beat is rendered in two sizes from the same scene file:
-**short** (1080×1920 Shorts) and **long** (1920×1080 main video).
+the visuals only, timed to his recording. Scenes support two sizes from the same file, **short** (1080×1920) and **long** (1920×1080 main video),
+but only **long** is rendered for now (see "Formats: desktop only" below).
 
-This is NOT the deck project. The deck rules in `deck-builder` (white background, no design tokens,
-click-to-advance, no npm) apply to `/decks` only. Videos are timeline-driven, dark neon, themed via
-`video/theme/neon.css`, and rendered with npm-installed Puppeteer.
+Videos are timeline-driven, dark neon, themed via `video/theme/neon.css`, and rendered with npm-installed Puppeteer. (The old click-to-advance deck project was scrapped.)
 
 ## Before doing anything
 
@@ -213,3 +211,9 @@ cd video/out/videos/desktop && for f in tokenmaxxing-beat*-long-2x.mp4; do echo 
 Create `video/storyboard/<new-video>.md` with the same sections (specs, build status, storyboard table, Hindi
 script, sources) and a `video/scenes/<new-video>/` folder. The theme and components carry over. If Varun wants a
 different look for a new video, add a second theme file rather than editing `neon.css` in place.
+
+## Formats: desktop only for now
+
+Varun said (2026-10-24) that the Short can't be as long as these beats, so render the **desktop (`--format long`) version only** for every beat,
+and merge audio for that file only. Do not render Shorts until he asks for them again. Scenes may keep their Short layout code; just don't render it.
+

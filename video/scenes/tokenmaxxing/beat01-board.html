@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<title>Beat 1 · Tokenmaxxing</title>
+<link rel="stylesheet" href="../../theme/neon.css">
+<style>
+  .caption { position: absolute; text-align: center; line-height: 1.15; }
+  .caption .l1 { display: block; font-weight: 800; letter-spacing: .02em; white-space: nowrap; }
+  .chips { position: absolute; display: flex; }
+  .chip { position: relative; display: flex; align-items: center; white-space: nowrap; font-weight: 600;
+          border-radius: 999px; border: 3px solid #fff; background: rgba(18,10,38,.7); }
+  .chip .strike { position: absolute; left: 4%; right: 4%; top: 50%; border-radius: 9px; background: #fff;
+                  transform: scaleX(0); transform-origin: 0 50%; }
+</style>
+</head>
+<body>
+<div class="stage"></div>
+
+<script src="../../../engine/gsap.min.js"></script>
+<script src="../../lib/scene-runtime.js"></script>
+<script src="../../lib/backdrop.js"></script>
+<script src="../../lib/components.js"></script>
+<script>
+/* Beat 1 (0:00–0:16): "इस साल की शुरुआत में दुनिया की कई बड़ी tech companies अपने developers के बीच एक race चला रही थी। ये race ज़्यादा
+   features बनाने की, या ज़्यादा bugs fix करने की, या ज़्यादा code deploy करने की नहीं, बल्कि ज़्यादा AI tokens consume करने की थी।"
+   CUES are seconds from the start of this beat, measured from Varun's recording with tools/cue-times.mjs. Scene time 0 is 0.5 s
+   before he starts speaking and the scene ends 0.5 s after he stops. A leaderboard of unnamed numbers ticks up while the race is
+   introduced; three outcome chips are struck through one by one; the numbers are finally named "TOKENS BURNED". */
+const CUES = {
+  board: 1.0,          // "इस साल की शुरुआत में" — the leaderboard slides in, numbers start ticking (their meaning is not named yet)
+  chips: 6.5,          // "ये race" 6.46 — the three outcome chips flicker on
+  features: 7.3,       // "features" 7.28 — chip struck through
+  bugsFixed: 9.3,      // "bugs fix" 9.3 — chip struck through
+  codeDeploy: 11.5,    // "code deploy" 11.46 — chip struck through
+  tokensBurned: 13.8,  // "AI tokens consume" 13.84 — caption slams in, board flares
+};
+const DURATION = 16;
+
+registerScene({
+  duration: DURATION, fps: 30, seed: 1, cues: CUES,
+  build(tl, ctx) {
+    const { W, H, u, format, stage } = ctx;
+    buildBackdrop(ctx, { duration: DURATION, panels: format === "short"
+      ? [{ x: 0.04, y: 0.075, w: 8, color: "m" }, { x: 0.78, y: 0.085, w: 8, color: "c" }, { x: 0.70, y: 0.84, w: 9, color: "c" }]
+      : [{ x: 0.04, y: 0.10, w: 8, color: "m" }, { x: 0.80, y: 0.05, w: 7, color: "c" }, { x: 0.92, y: 0.90, w: 6, color: "c" }] });
+
+    // ---------- Layout per format ----------
+    const L = format === "short"
+      ? { chips: { x: 0.12 * W, y: 0.165 * H, w: 0.76 * W, h: 6.4 * u, gap: 2 * u, dir: "row", justify: "center" },
+          board: { x: 0.12 * W, y: 0.235 * H, w: 0.76 * W, rowH: 10 * u },
+          cap: { cx: 0.5 * W, y: 0.665 * H, w: 0.76 * W, s1: 8.2 * u } }
+      : { chips: { x: 0.2 * W, y: 0.085 * H, w: 0.6 * W, h: 7 * u, gap: 3 * u, dir: "row", justify: "center" },
+          board: { x: 0.2 * W, y: 0.22 * H, w: 0.6 * W, rowH: 8 * u },
+          cap: { cx: 0.5 * W, y: 0.79 * H, w: 0.6 * W, s1: 8.4 * u } };
+
+    // ---------- Panel flare (created first so it sits behind the board) ----------
+    const boardFlare = createFlare(ctx, { x: L.board.x + L.board.w / 2, y: L.board.y + 22 * u, size: 70 * u, color: "magenta" });
+
+    // ---------- Leaderboard ----------
+    const names = ["Dev_07", "Dev_21", "Dev_03", "Dev_14", "Dev_09"];
+    const target = [18400000, 15700000, 12900000, 10300000, 7600000];   // 1,84,00,000 … in Indian grouping
+    const board = createLeaderboard(ctx, { ...L.board, title: "Leaderboard", names, color: "magenta" });
+    tl.fromTo(board.el, { y: 6 * u }, { y: 0, duration: 0.5, ease: "power3.out" }, CUES.board);
+    flickerOn(ctx, board.el, CUES.board);
+    board.rows.forEach((r, i) => flickerOn(ctx, r, CUES.board + 0.35 + i * 0.12));
+
+    // Numbers climb in uneven jumps (seeded), each row at its own pace, never changing rank
+    const state = {};
+    names.forEach((_, i) => {
+      state["r" + i] = 0;
+      const t0 = CUES.board + 0.9, t1 = DURATION - 0.3, steps = 14;
+      let w = [], sum = 0;
+      for (let k = 0; k < steps; k++) { const v = 0.5 + ctx.rng(); w.push(v); sum += v; }
+      let at = t0, acc = 0;
+      w.forEach((v) => {
+        acc += (v / sum) * target[i];
+        tl.to(state, { ["r" + i]: acc, duration: (t1 - t0) / steps * 0.8, ease: "power1.out" }, at);
+        at += (t1 - t0) / steps;
+      });
+    });
+    ctx.onFrame(() => board.nums.forEach((el, i) => { el.textContent = Math.round(state["r" + i]).toLocaleString("en-IN"); }));
+
+    // ---------- Outcome chips: the things nobody ranked, struck through ----------
+    const holder = document.createElement("div");
+    holder.className = "chips";
+    holder.style.cssText = `left:${L.chips.x}px;top:${L.chips.y}px;width:${L.chips.w}px;flex-direction:${L.chips.dir === "row" ? "row" : "column"};
+      gap:${L.chips.gap}px;justify-content:${L.chips.justify};align-items:${L.chips.dir === "row" ? "center" : "flex-start"}`;
+    const chips = ["Features", "Bugs fixed", "Code deployed"].map((text) => {
+      const el = document.createElement("div");
+      el.className = "chip";
+      el.style.cssText = `height:${L.chips.h}px;padding:0 ${L.chips.h * 0.5}px;font-size:${L.chips.h * 0.46}px;
+        box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${1.2 * u}px #B4F7FF, 0 0 ${2.6 * u}px #36D6E7`;
+      el.innerHTML = `<span class="label neon-text-c">${text}</span>
+        <i class="strike" style="height:${0.4 * u}px;margin-top:${-0.2 * u}px;box-shadow:0 0 ${0.4 * u}px #fff, 0 0 ${1 * u}px #E39BFF"></i>`;
+      holder.appendChild(el);
+      return el;
+    });
+    stage.appendChild(holder);
+    chips.forEach((el, i) => flickerOn(ctx, el, CUES.chips + i * 0.2));
+
+    [[chips[0], CUES.features], [chips[1], CUES.bugsFixed], [chips[2], CUES.codeDeploy]].forEach(([el, at]) => {
+      tl.to(el.querySelector(".strike"), { scaleX: 1, duration: 0.22, ease: "power3.out" }, at)
+        .to(el, { scale: 1.07, duration: 0.08, ease: "power2.out" }, at)
+        .to(el, { scale: 1, duration: 0.3, ease: "elastic.out(1,0.4)" }, at + 0.08)
+        .to(el.querySelector(".label"), { opacity: 0.6, duration: 0.3, ease: "power1.out" }, at + 0.15);
+    });
+
+    // ---------- Caption (separate layer, toggle with ?captions=0) ----------
+    const cap = document.createElement("div");
+    cap.className = "layer captions";
+    cap.innerHTML = `
+      <div class="caption" style="left:${L.cap.cx - L.cap.w / 2}px;top:${L.cap.y}px;width:${L.cap.w}px">
+        <span class="l1 neon-text-m" style="font-size:${L.cap.s1}px">TOKENS BURNED</span>
+      </div>`;
+    stage.appendChild(cap);
+    const l1 = cap.querySelector(".l1");
+    const capFlare = createFlare(ctx, { x: L.cap.cx, y: L.cap.y + L.cap.s1 * 0.6, size: 46 * u, color: "magenta" });
+    cap.appendChild(capFlare.el); capFlare.el.style.zIndex = -1;
+    tl.fromTo(l1, { opacity: 0, scale: 1.45 }, { opacity: 1, scale: 1, duration: 0.18, ease: "power4.out" }, CUES.tokensBurned);
+    capFlare.burst(CUES.tokensBurned, 0.8);
+    boardFlare.burst(CUES.tokensBurned, 0.7);
+  },
+});
+</script>
+</body>
+</html>

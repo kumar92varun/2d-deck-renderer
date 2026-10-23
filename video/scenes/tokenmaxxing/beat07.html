@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <title>Beat 7 · Tokenmaxxing</title>
 <link rel="stylesheet" href="../../theme/neon.css">
+<style>
+  .abs { position: absolute; white-space: nowrap; }
+  .board { position: absolute; border-radius: 1.8em; border: 3px solid #fff; background: rgba(12,8,30,.84); will-change: transform, opacity; overflow: hidden; }
+  .row { position: absolute; left: 0; right: 0; display: flex; align-items: center; will-change: transform, opacity; }
+  .tag { position: absolute; padding: .3em .9em; border-radius: 999px; font-weight: 800; letter-spacing: .12em; white-space: nowrap; will-change: transform, opacity; }
+</style>
 </head>
 <body>
 <div class="stage"></div>
@@ -13,102 +19,89 @@
 <script src="../../lib/backdrop.js"></script>
 <script src="../../lib/components.js"></script>
 <script>
-/* Beat 7 (1:00–1:12): "Meta में एक internal leaderboard था, बताया जाता है उसका नाम था "Claudeonomics", जो लोगों को token खपत
-   के हिसाब से rank करता था। जल्द ही Amazon, OpenAI और बाकियों के पास भी अपने leaderboards थे."
-   Company names are plain text (no logos); "Claudeonomics" is labelled "as reported".
-   CUES are seconds from the start of this beat. Placeholder times until the Hindi recording exists. */
+/* Beat 7 (desktop). "हर बड़ी company जैसे Meta, Amazon, OpenAI में token consumption के leaderboards बन गए थे, जहाँ उनके developers को उनके tokens consume करने के base पे
+   rank दी जाती थी। बताया जाता है कि Meta ने इस leaderboard को नाम भी दिया था: "Claudeonomics"।"
+   Three leaderboard windows pop in, one per company (plain text, no logos; the developer names and the numbers are invented, illustrative only). The rows start
+   unranked and snap into rank order at "rank". At "Claudeonomics" Meta's board comes forward, the other two dim, and the name is stamped AS REPORTED.
+   CUES are seconds from the start of this beat, measured from Varun's recording (scene time 0 = 0.5 s before he speaks). */
 const CUES = {
-  main: 0.4,     // "Meta में एक internal leaderboard था" — the first leaderboard window appears
-  name: 2.6,     // "Claudeonomics" — its title lights up, "Meta · as reported" tag
-  amazon: 6.0,   // "Amazon" — a second leaderboard pops up
-  openai: 7.4,   // "OpenAI" — a third one
-  rest: 8.8,     // "बाकियों" — the rest pop up, caption "Leaderboards Everywhere"
+  every: 0.5,          // "हर बड़ी company" — EVERY BIG COMPANY
+  meta: 1.7,           // "Meta" — the first board pops in
+  amazon: 2.4,         // "Amazon"
+  openai: 3.1,         // "OpenAI"
+  boards: 4.96,        // "leaderboards" — TOKEN LEADERBOARDS
+  devs: 7.3,           // "developers" — the rows light up
+  rank: 10.25,         // "rank" — the rows snap into rank order
+  named: 12.2,         // "बताया जाता है कि Meta" — the other boards dim, Meta's comes forward
+  claudeonomics: 15.75,// "Claudeonomics" — the name is stamped
 };
-const DURATION = 12;
+const DURATION = 17.1;
 
 registerScene({
   duration: DURATION, fps: 30, seed: 7, cues: CUES,
   build(tl, ctx) {
-    const { W, H, u, format, stage } = ctx;
-    const isShort = format === "short";
-    buildBackdrop(ctx, { duration: DURATION, panels: isShort
-      ? [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.78, y: 0.07, w: 8, color: "c" }, { x: 0.72, y: 0.86, w: 9, color: "c" }]
-      : [{ x: 0.04, y: 0.06, w: 8, color: "m" }, { x: 0.86, y: 0.07, w: 7, color: "c" }, { x: 0.90, y: 0.88, w: 6, color: "c" }] });
+    const { W, H, u, stage } = ctx;
+    buildBackdrop(ctx, { duration: DURATION, panels: [{ x: 0.04, y: 0.07, w: 8, color: "m" }, { x: 0.87, y: 0.08, w: 7, color: "c" }, { x: 0.90, y: 0.88, w: 6, color: "c" }] });
+    const K = (p, cls, css, html) => { const e = document.createElement("div"); e.className = cls; e.style.cssText = css; if (html != null) e.innerHTML = html; p.appendChild(e); return e; };
+    const cx = W / 2;
 
-    // ---------- Layout per format (centred; the Short stays inside 12%–88% of the width) ----------
-    const gap = 1.6 * u;
-    const L = isShort
-      ? { main: { x: 0.12 * W, y: 0.15 * H, w: 0.76 * W, rowH: 7 * u },
-          small: { cols: 2, x0: 0.12 * W, y0: 0.395 * H, w: (0.76 * W - gap) / 2, rowH: 4.6 * u },
-          cap: { cx: 0.5 * W, y: 0.665 * H, s1: 8.4 * u } }
-      : { main: { x: 0.2 * W, y: 0.08 * H, w: 0.6 * W, rowH: 6 * u },
-          small: { cols: 4, x0: 0.1 * W, y0: 0.47 * H, w: (0.8 * W - 3 * gap) / 4, rowH: 4.6 * u },
-          cap: { cx: 0.5 * W, y: 0.76 * H, s1: 7.4 * u } };
-    L.small.h = L.small.rowH * 0.85 + 3 * L.small.rowH + 1.2 * u;
+    // ---------- Captions ----------
+    const c1 = createCaption(ctx, { cx, y: 0.1 * H, w: 0.9 * W, lines: [{ html: "EVERY BIG COMPANY", size: 5.6 * u, cls: "soft-text", weight: 700 }], flare: "cyan" });
+    c1.reveal(0, CUES.every, 0.8); tl.to(c1.el, { opacity: 0, y: -2 * u, duration: 0.4, ease: "power2.in" }, CUES.boards - 0.3);
+    const c2 = createCaption(ctx, { cx, y: 0.09 * H, w: 0.9 * W, lines: [{ html: "TOKEN LEADERBOARDS", size: 7.6 * u, cls: "neon-text-c" }], flare: "cyan" });
+    c2.reveal(0, CUES.boards, 1); tl.to(c2.el, { opacity: 0, duration: 0.4, ease: "power2.in" }, CUES.named - 0.1);
 
-    // Numbers climb in uneven jumps (seeded) on every board
-    const tick = (board, targets, t0, t1, steps = 12) => {
-      const st = targets.map(() => ({ v: 0 }));
-      targets.forEach((tg, i) => {
-        const w = Array.from({ length: steps }, () => 0.4 + ctx.rng()), sum = w.reduce((a, b) => a + b, 0);
-        let acc = 0;
-        w.forEach((v, k) => {
-          acc += (v / sum) * tg;
-          tl.to(st[i], { v: acc, duration: (t1 - t0) / steps * 0.8, ease: "power1.out" }, t0 + k * (t1 - t0) / steps);
-        });
+    // ---------- Three leaderboard windows ----------
+    const BW = 50 * u, GAP = 4.2 * u, BH = 52 * u, HEAD = 9 * u, RH = 7.4 * u, by = 0.3 * H, bx0 = cx - (3 * BW + 2 * GAP) / 2;
+    const NAMES = ["Dev_07", "Dev_21", "Dev_03", "Dev_14", "Dev_09"];
+    const COMP = [["META", CUES.meta, [3, 1, 4, 0, 2]], ["AMAZON", CUES.amazon, [1, 4, 0, 3, 2]], ["OPENAI", CUES.openai, [2, 0, 3, 1, 4]]];   // starting order (an index into the ranked list)
+    const VAL = [[2840000, 2310000, 1920000, 1480000, 960000], [2610000, 2150000, 1740000, 1330000, 880000], [3050000, 2480000, 2010000, 1560000, 1010000]];
+    const boards = COMP.map(([name, cue, start], b) => {
+      const x = bx0 + b * (BW + GAP);
+      const el = K(stage, "board", `left:${x}px;top:${by}px;width:${BW}px;height:${BH}px;opacity:0;box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px #E39BFF, 0 0 ${4 * u}px #B23BE8, inset 0 0 ${2.5 * u}px rgba(178,59,232,.25)`);
+      K(el, "abs neon-text-m", `left:${3 * u}px;top:${1.6 * u}px;font:800 ${3.8 * u}px Poppins;letter-spacing:.06em`, name);
+      K(el, "abs soft-text", `left:${3 * u}px;top:${5.9 * u}px;font:600 ${1.6 * u}px Poppins;letter-spacing:.3em;opacity:.8`, "TOKENS USED");
+      const rows = [];
+      for (let r = 0; r < 5; r++) {                                              // r = rank (0 = top); slot = where it sits before ranking
+        const row = K(el, "row", `top:${HEAD + start[r] * RH}px;height:${RH}px;padding:0 ${3 * u}px;border-top:1px solid rgba(227,155,255,.25)`,
+          `<span class="rk" style="width:${5 * u}px;font:600 ${1.9 * u}px Poppins;color:#E39BFF;opacity:0">#${r + 1}</span><span class="soft-text" style="flex:1;font:600 ${2.5 * u}px Poppins">${NAMES[r]}</span><span class="nv neon-text-m" style="font:800 ${2.9 * u}px Poppins">0</span>`);
+        rows.push(row);
+      }
+      // pop-in, then the rows light up one by one at "developers"
+      tl.fromTo(el, { opacity: 0, y: 5 * u, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.6)" }, cue);
+      rows.forEach((row, r) => { tl.fromTo(row, { opacity: 0, x: -2 * u }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out" }, cue + 0.3 + r * 0.08); });
+      // rank order: the rows slide to their ranked slot, the rank labels appear, the top row glows
+      rows.forEach((row, r) => {
+        tl.to(row, { top: HEAD + r * RH, duration: 0.7, ease: "power3.inOut" }, CUES.rank + r * 0.05)
+          .to(row.querySelector(".rk"), { opacity: 1, duration: 0.3 }, CUES.rank + 0.5 + r * 0.05);
       });
-      ctx.onFrame(() => board.nums.forEach((el, i) => { el.textContent = Math.round(st[i].v).toLocaleString("en-IN"); }));
-    };
-
-    // ---------- The first leaderboard: "Claudeonomics" ----------
-    const titleFlare = createFlare(ctx, { x: L.main.x + 17 * u, y: L.main.y + L.main.rowH * 0.42, size: 24 * u, color: "magenta" });
-    const main = createLeaderboard(ctx, { ...L.main, title: "Claudeonomics", names: ["Dev_07", "Dev_21", "Dev_03", "Dev_14"], color: "magenta" });
-    const headH = L.main.rowH * 0.85;
-    const title = main.el.firstElementChild;
-    title.style.fontSize = L.main.rowH * 0.5 + "px";
-    // a neon copy of the title fades in on the name cue; a tag says where it was reported
-    const titleNeon = title.cloneNode(true);
-    titleNeon.className = "neon-text-m"; titleNeon.style.opacity = 0; titleNeon.style.fontWeight = 800;
-    main.el.appendChild(titleNeon);
-    const tag = document.createElement("div");
-    tag.className = "soft-text";
-    tag.style.cssText = `position:absolute;right:${2 * u}px;top:0;height:${headH}px;display:flex;align-items:center;font-weight:600;
-      font-size:${L.main.rowH * 0.3}px;opacity:0;white-space:nowrap`;
-    tag.textContent = "Meta · as reported";
-    main.el.appendChild(tag);
-
-    flickerOn(ctx, main.el, CUES.main);
-    tl.fromTo(main.el, { y: 5 * u }, { y: 0, duration: 0.5, ease: "power3.out" }, CUES.main);
-    tick(main, [18400000, 15700000, 12900000, 10300000], CUES.main + 0.9, DURATION - 0.3);
-    tl.to(titleNeon, { opacity: 1, duration: 0.2, ease: "power2.out" }, CUES.name)
-      .to(tag, { opacity: 0.9, duration: 0.4 }, CUES.name + 0.2);
-    titleFlare.burst(CUES.name, 0.9);
-
-    // ---------- The others pop up around it ----------
-    const others = [
-      { name: "Amazon", at: CUES.amazon, targets: [9800000, 7400000, 6100000] },
-      { name: "OpenAI", at: CUES.openai, targets: [11200000, 8300000, 5900000] },
-      { name: "Microsoft", at: CUES.rest, targets: [8600000, 7000000, 5200000] },
-      { name: "Uber", at: CUES.rest + 0.25, targets: [7700000, 6300000, 4800000] },
-    ];
-    others.forEach((o, i) => {
-      const col = i % L.small.cols, row = Math.floor(i / L.small.cols);
-      const x = L.small.x0 + col * (L.small.w + gap), y = L.small.y0 + row * (L.small.h + gap);
-      const b = createLeaderboard(ctx, { x, y, w: L.small.w, rowH: L.small.rowH, title: o.name, names: ["Dev_04", "Dev_18", "Dev_11"], color: "magenta" });
-      b.el.firstElementChild.style.fontSize = L.small.rowH * 0.4 + "px";
-      tl.fromTo(b.el, { scale: 0.6, opacity: 0, transformOrigin: "50% 50%" },
-                      { scale: 1, opacity: 1, duration: 0.4, ease: "back.out(1.8)" }, o.at);
-      const f = createFlare(ctx, { x: x + L.small.w / 2, y: y + L.small.h / 2, size: 18 * u, color: "magenta" });
-      f.burst(o.at + 0.1, 0.6);
-      tick(b, o.targets, o.at + 0.5, DURATION - 0.3, 10);
+      const top = rows[0];
+      tl.to(top, { backgroundColor: "rgba(178,59,232,.28)", duration: 0.4 }, CUES.rank + 0.8);
+      return { el, rows, b, vals: VAL[b].slice() };
     });
+    // the numbers climb slowly all the way through
+    const st = boards.map((bd) => bd.vals.map(() => 0));
+    boards.forEach((bd, b) => bd.vals.forEach((v, r) => {
+      tl.to(st[b], { [r]: v, duration: 3.2, ease: "power2.out" }, COMP[b][1] + 0.3);
+      tl.to(st[b], { [r]: v * 1.35, duration: DURATION - COMP[b][1] - 3.5, ease: "none" }, COMP[b][1] + 3.5);
+    }));
+    ctx.onFrame(() => boards.forEach((bd, b) => bd.rows.forEach((row, r) => { row.querySelector(".nv").textContent = Math.round(st[b][r] || 0).toLocaleString("en-IN"); })));
+    const bar = K(stage, "abs", `left:0;width:${W}px;top:${by + BH + 4.5 * u}px;text-align:center;font:600 ${2.4 * u}px Poppins;letter-spacing:.35em;color:#B4F7FF;opacity:0`, "RANKED BY TOKENS USED");
+    tl.fromTo(bar, { opacity: 0, y: 2 * u }, { opacity: 0.9, y: 0, duration: 0.5, ease: "power3.out" }, CUES.rank + 0.6).to(bar, { opacity: 0, duration: 0.4 }, CUES.named - 0.2);
+    const flares = boards.map((bd, b) => { const f = createFlare(ctx, { x: bx0 + b * (BW + GAP) + BW / 2, y: by + 14 * u, size: 38 * u, color: "magenta" }); f.burst(COMP[b][1] + 0.1, 0.7); f.burst(CUES.rank + 0.8, 0.7); return f; });
 
-    // ---------- Caption (separate layer, toggle with ?captions=0) ----------
-    const cap = createCaption(ctx, { cx: L.cap.cx, y: L.cap.y, w: 0.76 * W, lines: [
-      { html: "Leaderboards", size: L.cap.s1, cls: "neon-text-m" },
-      { html: "Everywhere", size: L.cap.s1 * 0.62, cls: "soft-text", weight: 600 } ] });
-    cap.reveal(0, CUES.rest);
-    cap.reveal(1, CUES.rest + 0.35);
+    // ---------- Claudeonomics ----------
+    // Meta and Amazon swap places so Meta is in the middle; the other two step back
+    const SLOT = BW + GAP;
+    tl.to(boards[1].el, { opacity: 0.12, scale: 0.94, x: -SLOT, duration: 0.8, ease: "power3.inOut" }, CUES.named + 0.2)
+      .to(boards[2].el, { opacity: 0.12, scale: 0.94, duration: 0.7, ease: "power2.inOut" }, CUES.named + 0.2)
+      .to(boards[0].el, { x: SLOT, scale: 1.16, y: 4 * u, duration: 1.0, ease: "power3.inOut" }, CUES.named + 0.3);
+    const ban = createCaption(ctx, { cx, y: 0.08 * H, w: 0.9 * W, lines: [{ html: "CLAUDEONOMICS", size: 10 * u, cls: "neon-text-m" }], flare: "magenta" });
+    ban.reveal(0, CUES.claudeonomics, 1.45);
+    const repWrap = K(stage, "abs", `left:0;width:${W}px;top:${0.08 * H + 12.5 * u}px;text-align:center`);
+    const rep = K(repWrap, "tag neon-text-c", `position:static;display:inline-block;padding:.35em 1.1em;font-size:${2.4 * u}px;border:3px solid #fff;background:rgba(8,28,40,.88);opacity:0;box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.4 * u}px #B4F7FF, 0 0 ${3.2 * u}px #36D6E7`, "META · AS REPORTED");
+    tl.fromTo(rep, { opacity: 0, y: 2 * u, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "back.out(2)" }, CUES.claudeonomics + 0.35);
+    const big = createFlare(ctx, { x: cx, y: 0.17 * H, size: 70 * u, color: "magenta" }); big.burst(CUES.claudeonomics + 0.05, 1);
   },
 });
 </script>

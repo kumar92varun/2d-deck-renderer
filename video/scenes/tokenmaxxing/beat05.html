@@ -5,20 +5,10 @@
 <title>Beat 5 · Tokenmaxxing</title>
 <link rel="stylesheet" href="../../theme/neon.css">
 <style>
-  .caption { position: absolute; text-align: center; line-height: 1.15; }
-  .caption .l1 { display: block; font-weight: 800; letter-spacing: .01em; white-space: nowrap; }
-  .caption .l2 { display: block; font-weight: 600; margin-top: .25em; white-space: nowrap; }
-  .slide .label { position: absolute; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; white-space: nowrap; }
-  .slide .counter { position: absolute; left: 0; right: 0; text-align: center; white-space: nowrap; }
-  .slide .counter .num { display: block; font-weight: 800; line-height: 1.1; }
-  .slide .counter .sub { display: block; font-weight: 600; letter-spacing: .08em; }
-  .slide .card { position: absolute; display: flex; flex-direction: column; justify-content: center; border-radius: 1.2em;
-                 background: rgba(255,255,255,.05); border: 1px solid rgba(180,247,255,.35); white-space: nowrap; }
-  .slide .card .t { font-weight: 600; color: #B4F7FF; }
-  .slide .card .bar { height: .45em; border-radius: 9px; background: linear-gradient(90deg, #36D6E7, rgba(54,214,231,.15)); margin-top: .55em; }
-  .exec .head, .exec .body { position: absolute; background: #0A0518; }
-  .exec .head { border-radius: 50%; transform-origin: 50% 100%; }
-  .exec .body { border-radius: 50% 50% 0 0 / 70% 70% 0 0; }
+  .abs { position: absolute; white-space: nowrap; }
+  .node { position: absolute; border-radius: 50%; border: 2px solid rgba(180,247,255,.55); background: rgba(8,28,40,.7); will-change: transform, opacity; }
+  .panel { position: absolute; border-radius: 1.6em; border: 3px solid #fff; background: rgba(12,8,30,.84); overflow: hidden; will-change: transform, opacity; }
+  .tag { position: absolute; padding: .3em .9em; border-radius: 999px; font-weight: 800; letter-spacing: .12em; white-space: nowrap; will-change: transform, opacity; }
 </style>
 </head>
 <body>
@@ -29,132 +19,146 @@
 <script src="../../lib/backdrop.js"></script>
 <script src="../../lib/components.js"></script>
 <script>
-/* Beat 5 (0:40–0:50): "और कुछ समय तक companies को ये बहुत पसंद आया। Leaders को चाहिए था एक number, जिससे साबित हो कि
-   teams सच में AI अपना रही हैं। और token usage गिनना आसान था।"
-   CUES are seconds from the start of this beat. Placeholder times until the Hindi recording exists. */
+/* Beat 5 (desktop). "किसी भी नए trend की तरह, starting में tokenmaxxing का trend tech companies में famous हुआ। Actually, companies को चाहिए था एक simple सा AI
+   productivity measure करने का number, जिससे leaders समझ पाएँ कि उनकी team कितना काम AI से करवा रही है। और tokens ज़्यादा use करने को assume किया गया कि
+   इससे productivity improve ही होगी।"
+   Part 1: a trend spreads through a network of company nodes (one lights its neighbours, a popularity curve climbs, FAMOUS).
+   Part 2: the boardroom slide: an empty AI-productivity gauge and a blank "one easy number" slot; leaders look on; the answer is the token count,
+   which fills the slot and swings the gauge; then "More tokens → more productivity" is stamped ASSUMED. No mascot.
+   CUES are seconds from the start of this beat, measured from Varun's recording (scene time 0 = 0.5 s before he speaks). */
 const CUES = {
-  slide: 0.3,        // "companies को ये बहुत पसंद आया" — boardroom slide and executives appear, counter starts climbing
-  oneNumber: 4.6,    // "एक number" — other metrics fade, the counter grows, the caption lands
-  easy: 8.2,         // "गिनना आसान" — the counter pops once more
+  trend: 0.9,          // "नए trend" — A NEW TREND label; the first node lights
+  tokenmaxxing: 2.6,   // "tokenmaxxing" — the name lands, the trend starts to spread
+  famous: 4.6,         // "famous हुआ" — every node is lit, FAMOUS stamps
+  slide: 6.4,          // "Actually, companies को चाहिए था" — the network dims, the boardroom slide rises
+  productivity: 8.9,   // "AI productivity" — the empty gauge and "?"
+  number: 10.9,        // "number" — the blank ONE EASY NUMBER slot
+  leaders: 11.8,       // "leaders" — three leaders appear, looking at the slide
+  team: 14.4,          // "team कितना काम AI से करवा रही है" — the hard-to-see TEAM + AI strip
+  tokens: 18.35,       // "tokens" — the slot is filled with the token count, the gauge swings
+  assume: 20.0,        // "assume" — MORE TOKENS → MORE PRODUCTIVITY, dashed
+  improve: 22.3,       // "improve" — the arrow rises, ASSUMED stamps
 };
-const DURATION = 10;
+const DURATION = 23.8;
 
 registerScene({
   duration: DURATION, fps: 30, seed: 5, cues: CUES,
   build(tl, ctx) {
-    const { W, H, u, format, stage } = ctx;
-    buildBackdrop(ctx, { duration: DURATION, panels: format === "short"
-      ? [{ x: 0.04, y: 0.075, w: 8, color: "m" }, { x: 0.78, y: 0.085, w: 8, color: "c" }, { x: 0.70, y: 0.84, w: 9, color: "c" }]
-      : [{ x: 0.04, y: 0.07, w: 8, color: "m" }, { x: 0.87, y: 0.08, w: 7, color: "c" }, { x: 0.90, y: 0.88, w: 6, color: "c" }] });
+    const { W, H, u, stage } = ctx, M = "#E39BFF", C = "#B4F7FF";
+    buildBackdrop(ctx, { duration: DURATION, panels: [{ x: 0.04, y: 0.07, w: 8, color: "m" }, { x: 0.87, y: 0.08, w: 7, color: "c" }, { x: 0.90, y: 0.88, w: 6, color: "c" }] });
+    const K = (p, cls, css, html) => { const e = document.createElement("div"); e.className = cls; e.style.cssText = css; if (html != null) e.innerHTML = html; p.appendChild(e); return e; };
+    const cx = W / 2;
 
-    // ---------- Layout per format (everything centred on the screen) ----------
-    const L = format === "short"
-      ? { slide: { x: 0.12 * W, y: 0.21 * H, w: 0.76 * W, h: 36 * u }, head: 5.6 * u, body: { w: 12.5 * u, h: 6.5 * u },
-          cap: { cx: 0.5 * W, y: 0.56 * H, w: 0.76 * W, s1: 8.4 * u, s2: 5.4 * u } }
-      : { slide: { x: 0.25 * W, y: 0.10 * H, w: 0.5 * W, h: 38 * u }, head: 6.2 * u, body: { w: 13.5 * u, h: 7 * u },
-          cap: { cx: 0.5 * W, y: 0.735 * H, w: 0.6 * W, s1: 8.4 * u, s2: 4.8 * u } };
-    const sl = L.slide, pad = 2.2 * u, scx = sl.x + sl.w / 2;
-    const giant = (sl.w * 0.8) / 6.9, base = giant * 0.66;       // counter font sizes (px)
-
-    // ---------- Flare behind the slide (created first so it sits behind) ----------
-    const flare = createFlare(ctx, { x: scx, y: sl.y + sl.h * 0.5, size: 62 * u, color: "magenta" });
-
-    // ---------- The boardroom slide ----------
-    const slide = document.createElement("div");
-    slide.className = "slide";
-    slide.style.cssText = `position:absolute;left:${sl.x}px;top:${sl.y}px;width:${sl.w}px;height:${sl.h}px;border-radius:${1.6 * u}px;
-      border:${0.4 * u}px solid #fff;background:linear-gradient(160deg, rgba(34,20,70,.92), rgba(14,8,32,.94));
-      box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px #B6B2FF, 0 0 ${4 * u}px #6E6BD6, inset 0 0 ${3 * u}px rgba(110,107,214,.45);
-      will-change:transform,opacity`;
-    const cTop = sl.h * 0.17, cardH = 6.4 * u, cardW = (sl.w - 2 * pad - 2 * 1.4 * u) / 3;
-    const cardsHtml = ["Code shipped", "Bugs fixed", "Hours saved"].map((t, i) =>
-      `<div class="card" style="left:${pad + i * (cardW + 1.4 * u)}px;top:${sl.h - pad - cardH}px;width:${cardW}px;height:${cardH}px;
-         padding:0 ${1.2 * u}px;font-size:${2 * u}px"><span class="t">${t}</span><i class="bar" style="width:${[70, 55, 40][i]}%"></i></div>`).join("");
-    slide.innerHTML = `
-      <div class="label soft-text" style="left:${pad}px;top:${1.6 * u}px;font-size:${2.1 * u}px">AI Usage</div>
-      <div class="counter" style="top:${cTop}px">
-        <span class="num neon-text-m" style="font-size:${base}px">0</span>
-        <span class="sub soft-text" style="font-size:${giant * 0.2}px">tokens this quarter</span>
-      </div>${cardsHtml}`;
-    stage.appendChild(slide);
-    flickerOn(ctx, slide, CUES.slide);
-
-    const num = slide.querySelector(".num"), counter = slide.querySelector(".counter"), cards = slide.querySelectorAll(".card");
-
-    // The counter climbs in uneven jumps (seeded) and always ends on the same total
-    const state = { v: 0 };
-    const target = 48200000, steps = 26, t0 = CUES.slide + 0.6, t1 = DURATION - 0.4;
-    const w = Array.from({ length: steps }, () => 0.4 + ctx.rng()), sum = w.reduce((a, b) => a + b, 0);
-    let acc = 0;
-    w.forEach((v, k) => {
-      acc += (v / sum) * target;
-      tl.to(state, { v: acc, duration: (t1 - t0) / steps * 0.8, ease: "power1.out" }, t0 + k * (t1 - t0) / steps);
+    // ================= Part 1: the trend spreads through the company nodes =================
+    const net = K(stage, "abs", `left:0;top:0;width:${W}px;height:${H}px`);
+    const P = [[0.1, 0.5], [0.2, 0.3], [0.2, 0.7], [0.32, 0.46], [0.33, 0.2], [0.34, 0.76], [0.46, 0.32], [0.47, 0.62], [0.58, 0.46], [0.6, 0.2], [0.6, 0.78], [0.72, 0.34], [0.73, 0.66], [0.84, 0.5], [0.86, 0.25], [0.88, 0.76]];
+    const E = [];                                                                // edges: each node to its two nearest earlier neighbours
+    P.forEach((p, i) => { P.slice(0, i).map((q, j) => [j, Math.hypot(p[0] - q[0], (p[1] - q[1]) * 0.56)]).sort((a, b) => a[1] - b[1]).slice(0, 2).forEach(([j]) => E.push([j, i])); });
+    const dist = P.map(() => Infinity); dist[0] = 0;                              // hop count from the first node
+    for (let k = 0; k < 6; k++) E.forEach(([a, b]) => { dist[b] = Math.min(dist[b], dist[a] + 1); dist[a] = Math.min(dist[a], dist[b] + 1); });
+    const maxD = Math.max(...dist), tAt = (i) => CUES.tokenmaxxing + 0.2 + (dist[i] / maxD) * (CUES.famous - CUES.tokenmaxxing - 0.7);
+    const svg = K(net, "abs", `left:0;top:0;width:${W}px;height:${H}px`);
+    svg.innerHTML = `<svg width="${W}" height="${H}" style="position:absolute;left:0;top:0;overflow:visible">${E.map(([a, b]) =>
+      `<line class="e" data-a="${a}" data-b="${b}" x1="${P[a][0] * W}" y1="${P[a][1] * H}" x2="${P[b][0] * W}" y2="${P[b][1] * H}" stroke="#E39BFF" stroke-width="2.5" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" opacity=".9"/>
+      <line x1="${P[a][0] * W}" y1="${P[a][1] * H}" x2="${P[b][0] * W}" y2="${P[b][1] * H}" stroke="#36D6E7" stroke-opacity=".22" stroke-width="1.5"/>`).join("")}</svg>`;
+    const nodes = P.map(([x, y], i) => {
+      const d = (i === 0 ? 4.4 : 3.1) * u, n = K(net, "node", `left:${x * W - d / 2}px;top:${y * H - d / 2}px;width:${d}px;height:${d}px;opacity:0`);
+      tl.fromTo(n, { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(2)" }, 0.5 + i * 0.05);
+      return n;
     });
-    ctx.onFrame(() => { num.textContent = Math.round(state.v).toLocaleString("en-IN"); });
-
-    // "Just one number": the other metrics fade away and the counter takes the whole slide
-    const shift = (sl.h - giant * 1.45) / 2 - cTop;
-    tl.to(cards, { opacity: 0, y: 2 * u, duration: 0.4, ease: "power2.in", stagger: 0.08 }, CUES.oneNumber - 0.1)
-      .to(num, { fontSize: giant, duration: 0.5, ease: "power3.out" }, CUES.oneNumber)
-      .to(counter, { y: shift, duration: 0.5, ease: "power3.out" }, CUES.oneNumber);
-    flare.burst(CUES.oneNumber, 1);
-    tl.to(num, { scale: 1.06, duration: 0.1, ease: "power2.out" }, CUES.easy)
-      .to(num, { scale: 1, duration: 0.35, ease: "elastic.out(1,0.5)" }, CUES.easy + 0.1);
-    flare.burst(CUES.easy, 0.6);
-
-    // ---------- Executives (silhouettes seen from behind) who nod along ----------
-    const headTop = sl.y + sl.h + 1.5 * u;
-    const execs = [];
-    [0.1, 0.3, 0.5, 0.7, 0.9].forEach((f, i) => {
-      const hd = L.head * (0.92 + ctx.rng() * 0.16), bw = L.body.w * (0.94 + ctx.rng() * 0.12), cx = sl.x + sl.w * f;
-      const rim = `0 -${0.3 * u}px ${0.5 * u}px rgba(190,184,255,.7), 0 -${1.2 * u}px ${3 * u}px rgba(110,107,214,.5)`;
-      const el = document.createElement("div");
-      el.className = "exec";
-      el.style.cssText = `position:absolute;left:${cx - bw / 2}px;top:${headTop}px;width:${bw}px;height:${hd * 0.8 + L.body.h}px;will-change:transform,opacity`;
-      el.innerHTML = `
-        <div class="body" style="left:0;top:${hd * 0.8}px;width:${bw}px;height:${L.body.h}px;box-shadow:${rim}"></div>
-        <div class="head" style="left:${(bw - hd) / 2}px;top:0;width:${hd}px;height:${hd}px;box-shadow:${rim}"></div>`;
-      stage.appendChild(el);
-      execs.push({ el, head: el.querySelector(".head") });
-      tl.fromTo(el, { opacity: 0, y: 2 * u }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, CUES.slide + 0.15 * i);
+    svg.querySelectorAll(".e").forEach((ln) => { const a = +ln.dataset.a, b = +ln.dataset.b; tl.to(ln, { strokeDashoffset: 0, duration: 0.5, ease: "power2.out" }, tAt(b) - 0.35); });
+    nodes.forEach((n, i) => {
+      const t = i === 0 ? CUES.trend : tAt(i);
+      tl.to(n, { borderColor: "#fff", backgroundColor: "rgba(178,59,232,.85)", boxShadow: `0 0 ${0.6 * u}px #fff, 0 0 ${2 * u}px #E39BFF, 0 0 ${4.5 * u}px #B23BE8`, scale: 1.25, duration: 0.2, ease: "power2.out" }, t)
+        .to(n, { scale: 1, duration: 0.4, ease: "elastic.out(1,0.5)" }, t + 0.2);
     });
-    // A glowing table edge under them
-    const table = document.createElement("div");
-    const tableY = headTop + L.head * 0.8 + L.body.h;
-    table.style.cssText = `position:absolute;left:${sl.x}px;width:${sl.w}px;top:${tableY}px;height:${0.5 * u}px;border-radius:9px;background:#fff;
-      box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${1.4 * u}px #B6B2FF, 0 0 ${3.5 * u}px #6E6BD6;opacity:.9`;
-    stage.appendChild(table);
-    flickerOn(ctx, table, CUES.slide + 0.3);
+    const lbl = K(stage, "abs", `left:${0.09 * W}px;top:${0.1 * H}px;font:600 ${2 * u}px Poppins;letter-spacing:.35em;color:${C};opacity:0`, "A NEW TREND");
+    tl.fromTo(lbl, { opacity: 0 }, { opacity: 0.85, duration: 0.5 }, CUES.trend - 0.2).to(lbl, { opacity: 0, duration: 0.4 }, CUES.tokenmaxxing - 0.2);
+    const nm = createCaption(ctx, { cx, y: 0.1 * H, w: 0.8 * W, lines: [{ html: "TOKENMAXXING", size: 9.5 * u, cls: "neon-text-m" }] }); nm.reveal(0, CUES.tokenmaxxing, 1);
+    // popularity curve (bottom right)
+    const cvX = 0.60 * W, cvY = 0.72 * H, cvW = 0.32 * W, cvH = 0.19 * H;
+    const cvEl = K(stage, "abs", `left:${cvX}px;top:${cvY}px;width:${cvW}px;height:${cvH}px;opacity:0`);
+    cvEl.innerHTML = `<svg viewBox="0 0 100 40" style="width:100%;height:100%;overflow:visible"><path d="M1 1 V38 H99" fill="none" stroke="#B4F7FF" stroke-opacity=".4" stroke-width=".5"/>
+      <path class="cp" d="M3 36 C 30 35, 50 30, 66 20 S 88 5, 97 2" pathLength="1" fill="none" stroke="#E39BFF" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="1" stroke-dashoffset="1"/></svg>`;
+    const cvLab = K(stage, "abs", `left:${cvX}px;top:${cvY - 3.2 * u}px;font:600 ${1.7 * u}px Poppins;letter-spacing:.3em;color:${C};opacity:0`, "POPULARITY");
+    tl.to([cvEl, cvLab], { opacity: 1, duration: 0.4 }, CUES.tokenmaxxing + 0.3).to(cvEl.querySelector(".cp"), { strokeDashoffset: 0, duration: CUES.famous - CUES.tokenmaxxing - 0.2, ease: "power2.in" }, CUES.tokenmaxxing + 0.4);
+    const fam = K(stage, "tag neon-text-c", `left:${0.04 * W}px;top:${0.8 * H}px;font-size:${4 * u}px;border:3px solid #fff;background:rgba(8,28,40,.85);opacity:0;box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px #B4F7FF, 0 0 ${3.6 * u}px #36D6E7`, "FAMOUS IN BIG TECH");
+    tl.fromTo(fam, { opacity: 0, scale: 1.6, rotation: -4 }, { opacity: 1, scale: 1, rotation: -2, duration: 0.22, ease: "power4.out" }, CUES.famous);
+    const famFlare = createFlare(ctx, { x: 0.04 * W + 16 * u, y: 0.8 * H + 3 * u, size: 34 * u, color: "cyan" }); famFlare.burst(CUES.famous + 0.1, 0.9);
+    tl.to([nm.el, cvEl, cvLab, fam], { opacity: 0, duration: 0.5, ease: "power2.in" }, CUES.slide - 0.5).to(net, { opacity: 0.1, scale: 1.08, transformOrigin: "50% 50%", duration: 0.9, ease: "power2.inOut" }, CUES.slide - 0.4);
 
-    // Nods: a couple while the numbers climb, a big synchronised wave on "एक number"
-    const nod = (head, at, depth = 1) => {
-      tl.to(head, { y: 0.9 * u * depth, scaleY: 1 - 0.07 * depth, duration: 0.12, ease: "power2.out" }, at)
-        .to(head, { y: 0, scaleY: 1, duration: 0.28, ease: "power2.inOut" }, at + 0.12);
+    // ================= Part 2: the boardroom slide =================
+    const PW = 124 * u, PH = 66 * u, px0 = cx - PW / 2, py0 = 0.43 * H - PH / 2;
+    const pan = K(stage, "panel", `left:${px0}px;top:${py0}px;width:${PW}px;height:${PH}px;opacity:0;box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.6 * u}px #E39BFF, 0 0 ${4 * u}px #B23BE8, inset 0 0 ${3 * u}px rgba(178,59,232,.25)`);
+    tl.fromTo(pan, { opacity: 0, y: 5 * u, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "power3.out" }, CUES.slide);
+    const hd = K(pan, "abs soft-text", `left:${4 * u}px;top:${3.2 * u}px;font:600 ${3.6 * u}px Poppins`, "How much work is our team getting from AI?");
+    tl.fromTo(hd, { opacity: 0 }, { opacity: 1, duration: 0.5 }, CUES.slide + 0.5);
+
+    // gauge (left): empty, with a question mark, then the needle swings
+    const gcx = 30 * u, gcy = 40 * u, gr = 18 * u, arc = (r) => `M ${gcx - r} ${gcy} A ${r} ${r} 0 0 1 ${gcx + r} ${gcy}`;
+    const gz = K(pan, "abs", `left:0;top:0;width:${PW}px;height:${PH}px;opacity:0`);
+    gz.innerHTML = `<svg width="${PW}" height="${PH}" style="position:absolute;left:0;top:0;overflow:visible">
+      <path d="${arc(gr)}" fill="none" stroke="#B4F7FF" stroke-opacity=".28" stroke-width="${2.4 * u}" stroke-linecap="round"/>
+      <path class="gv" d="${arc(gr)}" fill="none" stroke="#E39BFF" stroke-width="${2.4 * u}" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" style="filter:drop-shadow(0 0 ${0.8 * u}px #B23BE8)"/>
+      <g class="nd"><line x1="${gcx}" y1="${gcy}" x2="${gcx}" y2="${gcy - gr * 0.92}" stroke="#fff" stroke-width="${0.5 * u}" stroke-linecap="round"/></g>
+      <circle cx="${gcx}" cy="${gcy}" r="${1.3 * u}" fill="#fff"/></svg>`;
+    gsap.set(gz.querySelector(".nd"), { svgOrigin: `${gcx} ${gcy}`, rotation: -90 });
+    const gl = K(pan, "abs", `left:${gcx - 14 * u}px;top:${gcy + 4 * u}px;width:${28 * u}px;text-align:center;font:600 ${1.9 * u}px Poppins;letter-spacing:.3em;color:${C};opacity:0`, "AI PRODUCTIVITY");
+    const q = K(pan, "abs neon-text-c", `left:${gcx - 6 * u}px;top:${gcy - 13 * u}px;width:${12 * u}px;text-align:center;font:800 ${9 * u}px Poppins;opacity:0`, "?");
+    tl.to([gz, gl], { opacity: 1, duration: 0.5 }, CUES.productivity).fromTo(q, { opacity: 0, scale: 1.6 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power4.out" }, CUES.productivity + 0.2)
+      .to(q, { opacity: 0.4, duration: 0.45, yoyo: true, repeat: 5, ease: "sine.inOut" }, CUES.productivity + 0.8);
+    // the slot (right): dashed, empty, then filled with the token count
+    const sx = 64 * u, sy = 17 * u, sw = 54 * u, sh = 24 * u;
+    const slot = K(pan, "abs", `left:${sx}px;top:${sy}px;width:${sw}px;height:${sh}px;border:3px dashed rgba(180,247,255,.7);border-radius:${2 * u}px;opacity:0`);
+    const sl = K(pan, "abs", `left:${sx}px;top:${sy - 3.4 * u}px;font:600 ${1.9 * u}px Poppins;letter-spacing:.3em;color:${C};opacity:0`, "ONE EASY NUMBER");
+    const dash = K(slot, "abs soft-text", `left:0;top:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font:800 ${9 * u}px Poppins;letter-spacing:.1em;opacity:.5`, "– – –");
+    tl.to([slot, sl], { opacity: 1, duration: 0.5 }, CUES.number).to(dash, { opacity: 0.15, duration: 0.5, yoyo: true, repeat: 7, ease: "sine.inOut" }, CUES.number + 0.4);
+    const big = K(slot, "abs neon-text-m", `left:0;top:${1.5 * u}px;width:100%;text-align:center;font:800 ${9 * u}px Poppins;letter-spacing:-.01em;opacity:0`, "0"), bigL = K(slot, "abs", `left:0;top:${sh - 5.2 * u}px;width:100%;text-align:center;font:600 ${1.9 * u}px Poppins;letter-spacing:.3em;color:${C};opacity:0`, "TOKENS USED");
+    const st = { n: 0, g: 0 };
+
+    // leaders (bottom left): three simple figures looking at the slide
+    const avatar = (x, y, delay) => {
+      const a = K(pan, "abs", `left:${x}px;top:${y}px;width:${7 * u}px;height:${9.5 * u}px;opacity:0`);
+      a.innerHTML = `<div style="position:absolute;left:${2 * u}px;top:0;width:${3 * u}px;height:${3 * u}px;border-radius:50%;border:2px solid #E39BFF;box-shadow:0 0 ${0.8 * u}px #B23BE8"></div>
+        <div style="position:absolute;left:0;top:${3.8 * u}px;width:${7 * u}px;height:${5.5 * u}px;border-radius:${3.5 * u}px ${3.5 * u}px ${0.6 * u}px ${0.6 * u}px;border:2px solid #E39BFF;box-shadow:0 0 ${0.8 * u}px #B23BE8"></div>`;
+      tl.fromTo(a, { opacity: 0, y: 2 * u }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, CUES.leaders + delay);
+      const qq = K(pan, "abs neon-text-c", `left:${x + 5 * u}px;top:${y - 4 * u}px;font:800 ${3.2 * u}px Poppins;opacity:0`, "?");
+      tl.fromTo(qq, { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, CUES.leaders + delay + 0.5).to(qq, { opacity: 0.25, duration: 0.5, yoyo: true, repeat: 7 }, CUES.leaders + delay + 1);
+      return [a, qq];
     };
-    execs.forEach(({ head }, i) => {
-      nod(head, 1.6 + ctx.rng() * 0.7, 0.7);
-      nod(head, 3.2 + ctx.rng() * 0.7, 0.7);
-      nod(head, CUES.oneNumber + 0.2 + i * 0.1, 1.2);
-      nod(head, CUES.oneNumber + 1.1 + i * 0.08, 1);
-      nod(head, 7.0 + ctx.rng() * 0.8, 0.8);
-      nod(head, CUES.easy + 0.2 + i * 0.07, 1.1);
-    });
+    const lv = [...avatar(7 * u, 49 * u, 0), ...avatar(16 * u, 49 * u, 0.2), ...avatar(25 * u, 49 * u, 0.4)];
+    const ll = K(pan, "abs", `left:${7 * u}px;top:${59.5 * u}px;font:600 ${1.9 * u}px Poppins;letter-spacing:.3em;color:${C};opacity:0`, "LEADERS");
+    tl.to(ll, { opacity: 0.85, duration: 0.5 }, CUES.leaders + 0.3);
+    // the team + AI strip (bottom right): work that is hard to see
+    const strip = K(pan, "abs", `left:${64 * u}px;top:${46 * u}px;width:${54 * u}px;opacity:0`,
+      `<div style="font:600 ${1.9 * u}px Poppins;letter-spacing:.3em;color:${C}">TEAM + AI</div>
+       <div class="sq" style="display:flex;gap:${1 * u}px;margin-top:${1.6 * u}px"></div>
+       <div class="hw" style="font:600 ${2.6 * u}px Poppins;margin-top:${2 * u}px;color:#E39BFF;opacity:0">…how much of it is AI?</div>`);
+    const sq = strip.querySelector(".sq");
+    for (let k = 0; k < 12; k++) sq.insertAdjacentHTML("beforeend", `<i style="width:${3 * u}px;height:${3 * u}px;border-radius:${0.6 * u}px;border:2px solid ${k % 3 === 1 ? "#E39BFF" : "#B4F7FF"};opacity:.8;display:block"></i>`);
+    tl.fromTo(strip, { opacity: 0, y: 2 * u }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, CUES.team)
+      .fromTo(sq.children, { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 0.85, duration: 0.25, ease: "back.out(2)", stagger: 0.12 }, CUES.team + 0.2)
+      .to(strip.querySelector(".hw"), { opacity: 1, duration: 0.5 }, CUES.team + 1.8);
 
-    // ---------- Caption (separate layer, toggle with ?captions=0) ----------
-    const cap = document.createElement("div");
-    cap.className = "layer captions";
-    cap.innerHTML = `
-      <div class="caption" style="left:${L.cap.cx - L.cap.w / 2}px;top:${L.cap.y}px;width:${L.cap.w}px">
-        <span class="l1 neon-text-m" style="font-size:${L.cap.s1}px">AI Adoption</span>
-        <span class="l2 soft-text" style="font-size:${L.cap.s2}px">= Just <span class="neon-text-m">1</span> Number</span>
-      </div>`;
-    stage.appendChild(cap);
-    const l1 = cap.querySelector(".l1"), l2 = cap.querySelector(".l2");
-    const capFlare = createFlare(ctx, { x: L.cap.cx, y: L.cap.y + L.cap.s1 * 0.6, size: 46 * u, color: "magenta" });
-    cap.appendChild(capFlare.el); capFlare.el.style.zIndex = -1;
-    tl.fromTo(l1, { opacity: 0, scale: 1.45 }, { opacity: 1, scale: 1, duration: 0.18, ease: "power4.out" }, CUES.oneNumber);
-    capFlare.burst(CUES.oneNumber, 0.8);
-    tl.fromTo(l2, { opacity: 0, y: 3 * u }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, CUES.oneNumber + 0.35);
+    // the token count answers it
+    tl.to([dash], { opacity: 0, duration: 0.2 }, CUES.tokens).fromTo([big, bigL], { opacity: 0, scale: 1.25 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power4.out" }, CUES.tokens)
+      .to(st, { n: 2400000, g: 1, duration: 1.8, ease: "power2.out" }, CUES.tokens)
+      .to(slot, { borderStyle: "solid", borderColor: "#E39BFF", boxShadow: `0 0 ${1.6 * u}px #B23BE8`, duration: 0.3 }, CUES.tokens)
+      .to(q, { opacity: 0, duration: 0.2 }, CUES.tokens).to([strip, ...lv, ll], { opacity: 0.35, duration: 0.5 }, CUES.tokens + 0.3);
+    tl.to(gz.querySelector(".gv"), { strokeDashoffset: 0.12, duration: 1.8, ease: "power2.out" }, CUES.tokens).to(gz.querySelector(".nd"), { rotation: 72, duration: 1.8, ease: "power2.out" }, CUES.tokens);
+    const easy = K(pan, "tag neon-text-c", `left:${sx}px;top:${sy + sh + 2 * u}px;font-size:${2.2 * u}px;border:2px solid #fff;background:rgba(8,28,40,.85);opacity:0;box-shadow:0 0 ${0.5 * u}px #fff, 0 0 ${1.4 * u}px #36D6E7`, "✓ EASY TO COUNT");
+    tl.fromTo(easy, { opacity: 0, scale: 1.4 }, { opacity: 1, scale: 1, duration: 0.25, ease: "power4.out" }, CUES.tokens + 0.5);
+    ctx.onFrame(() => { big.textContent = Math.round(st.n).toLocaleString("en-IN"); });
+
+    // the assumption
+    const asy = 0.865 * H;
+    const as = K(stage, "abs", `left:0;width:${W}px;top:${asy}px;text-align:center;opacity:0;font-weight:800`,
+      `<span class="neon-text-m" style="font-size:${5.4 * u}px">MORE TOKENS</span><span class="soft-text" style="font-size:${5.4 * u}px;margin:0 ${1.6 * u}px"> <span class="ar" style="display:inline-block;border-bottom:${0.5 * u}px dashed #E39BFF;width:${9 * u}px;vertical-align:middle"></span>▸ </span><span class="neon-text-c" style="font-size:${5.4 * u}px">MORE PRODUCTIVITY</span>`);
+    tl.fromTo(as, { opacity: 0, y: 2 * u }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, CUES.assume);
+    const stamp = K(stage, "tag", `left:${cx - 12 * u}px;top:${asy - 9.5 * u}px;font-size:${4.2 * u}px;border:4px solid #FF4A7A;color:#FF9AB5;background:rgba(40,8,22,.88);opacity:0;box-shadow:0 0 ${1.2 * u}px rgba(255,74,122,.7)`, "ASSUMED");
+    tl.fromTo(stamp, { opacity: 0, scale: 2.4, rotation: -14 }, { opacity: 1, scale: 1, rotation: -5, duration: 0.2, ease: "power4.in" }, CUES.improve).to(stamp, { scale: 1.08, duration: 0.07 }, CUES.improve + 0.2).to(stamp, { scale: 1, duration: 0.3, ease: "elastic.out(1,0.4)" }, CUES.improve + 0.27);
+    tl.to(as.querySelector(".ar"), { borderBottomStyle: "solid", duration: 0.3 }, CUES.improve);
+    const aflare = createFlare(ctx, { x: cx, y: asy + 3 * u, size: 46 * u, color: "magenta" }); aflare.burst(CUES.improve + 0.15, 0.8);
   },
 });
 </script>

@@ -14,6 +14,8 @@
   .badge { position: absolute; display: flex; align-items: center; justify-content: center; white-space: nowrap; font-weight: 800;
            letter-spacing: .08em; border-radius: 999px; border: 3px solid #fff; background: rgba(40,25,5,.88); }
   .arrow { position: absolute; overflow: visible; }
+  .tag { position: absolute; display: flex; align-items: center; justify-content: center; white-space: nowrap; font-weight: 800;
+         letter-spacing: .06em; border-radius: 999px; border: 3px solid #fff; background: rgba(18,10,38,.82); opacity: 0; }
 </style>
 </head>
 <body>
@@ -24,76 +26,106 @@
 <script src="../../lib/backdrop.js"></script>
 <script src="../../lib/components.js"></script>
 <script>
-/* Beat 2 (0:08–0:16): "...जो सबसे ऊपर होते, उन्हें मिलते थे titles, जैसे "Token Legend"। आज की कहानी है
-   tokenmaxxing की, और उसे कुछ बेहतर में बदलने की: valuemaxxing।"
-   CUES are seconds from the start of this beat. Placeholder times until the Hindi recording exists. */
+/* Beat 2 (0:16–0:49): "इस race में जो developers सबसे ज़्यादा AI tokens consume करते थे, उन्हें सबसे ज़्यादा productive माना जाता था। और जो
+   कम tokens consume करते थे, उन्हें under-productive समझा जाता था। Hi guys, आज की video है tokenmaxxing के बारे में: क्यों अब उन्हीं
+   बड़ी tech companies को समझ आया कि tokenmaxxing एक ग़लत hype था, और ज़्यादा AI tokens consume करने की race कराना बहुत ही
+   loss-making decision था। और फिर मैं अपने personal developer experience के base पे आपको बताऊँगा कि कैसे हम tokenmaxxing को देखें
+   valuemaxxing करने के लिए।"
+   CUES are seconds from the start of this beat, measured from Varun's recording with tools/cue-times.mjs. Scene time 0 is 0.5 s before
+   he starts speaking and the scene ends 0.5 s after he stops.
+   Three parts: the beat-1 board ranks developers (gold "Productive" on the top row, dimmed "Under-productive" on the bottom rows);
+   the video intro names tokenmaxxing a false hype and a loss-making decision; then it is struck out for "Valuemaxxing". */
 const CUES = {
-  tokenLegend: 2.4,    // "Token Legend" — gold badge stamps onto the top row
-  tokenmaxxing: 4.6,   // "tokenmaxxing" — board leaves, the old word flickers on
-  cross: 5.9,          // "बदलने की" — the old word is struck out, arrow draws
-  valuemaxxing: 6.3,   // "valuemaxxing" — new word slams in, cyan
+  productive: 5.1,       // "productive" 5.06 — gold badge stamps onto the top row
+  under: 9.0,            // "under-productive" 8.97 — the bottom rows dim, a grey tag appears
+  boardLeaves: 12.9,     // "आज की video" 12.5–13.2 — the board fades out (the "Hi guys" intro is spoken over it)
+  tokenmaxxing: 13.7,    // "tokenmaxxing" 13.68 — the old word flickers on
+  hype: 19.2,            // "hype" 19.24 — "False hype" stamps on
+  loss: 23.9,            // "loss-making" 23.94 — "Loss-making" stamps on and the line falls
+  move: 29.4,            // after "race कराना... decision था" and the pause — tags leave, the old word moves to its final place
+  cross: 30.6,           // "देखें" 30.53 — the old word is struck out, arrow draws
+  valuemaxxing: 31.4,    // "valuemaxxing" 31.41 — new word slams in, cyan
 };
-const DURATION = 8;
+const DURATION = 33.2;
 
 registerScene({
   duration: DURATION, fps: 30, seed: 2, cues: CUES,
   build(tl, ctx) {
     const { W, H, u, format, stage } = ctx;
-    buildBackdrop(ctx, { duration: DURATION, panels: format === "short"
+    const isShort = format === "short";
+    buildBackdrop(ctx, { duration: DURATION, panels: isShort
       ? [{ x: 0.04, y: 0.075, w: 8, color: "m" }, { x: 0.78, y: 0.085, w: 8, color: "c" }, { x: 0.70, y: 0.84, w: 9, color: "c" }]
       : [{ x: 0.04, y: 0.10, w: 8, color: "m" }, { x: 0.80, y: 0.05, w: 7, color: "c" }, { x: 0.92, y: 0.90, w: 6, color: "c" }] });
 
     // ---------- Layout per format (board matches beat 1 so the cut is seamless) ----------
-    const L = format === "short"
+    const L = isShort
       ? { board: { x: 0.12 * W, y: 0.235 * H, w: 0.76 * W, rowH: 10 * u },
-          badge: { h: 6.2 * u, s: 3.2 * u },
-          w1: { cx: 0.5 * W, y: 0.31 * H, w: 0.76 * W, s: 9 * u },
+          badge: { h: 6.2 * u, s: 3.2 * u }, under: { s: 2.9 * u },
+          w1: { cx: 0.5 * W, y: 0.2 * H, w: 0.76 * W, s: 9 * u },
+          fin1: { cx: 0.5 * W, y: 0.31 * H },
           w2: { cx: 0.5 * W, y: 0.50 * H, w: 0.76 * W, s: 9 * u },
+          tags: { s: 5.2 * u, y1: 0.34 * H },
+          chart: { cx: 0.5 * W, w: 0.62 * W },
           arrow: { cx: 0.5 * W, cy: 0.445 * H, size: 9 * u, rot: 90 } }
       : { board: { x: 0.2 * W, y: 0.22 * H, w: 0.6 * W, rowH: 8 * u },
-          badge: { h: 6.2 * u, s: 3.4 * u },
-          w1: { cx: 0.25 * W, y: 0.40 * H, w: 0.46 * W, s: 8.4 * u },
+          badge: { h: 6.2 * u, s: 3.4 * u }, under: { s: 2.6 * u },
+          w1: { cx: 0.5 * W, y: 0.14 * H, w: 0.46 * W, s: 8.4 * u },
+          fin1: { cx: 0.25 * W, y: 0.40 * H },
           w2: { cx: 0.75 * W, y: 0.40 * H, w: 0.46 * W, s: 8.4 * u },
+          tags: { s: 4 * u, y1: 0.30 * H },
+          chart: { cx: 0.5 * W, w: 0.2 * W },
           arrow: { cx: 0.5 * W, cy: 0.455 * H, size: 9 * u, rot: 0 } };
 
     // ---------- The board from beat 1, already full (numbers carry on from where beat 1 ended) ----------
     const names = ["Dev_07", "Dev_21", "Dev_03", "Dev_14", "Dev_09"];
     const start = [18400000, 15700000, 12900000, 10300000, 7600000];
-    const board = createLeaderboard(ctx, { ...L.board, title: "Tokens", names, color: "magenta" });
+    const board = createLeaderboard(ctx, { ...L.board, title: "Leaderboard", names, color: "magenta" });
     const state = {};
     names.forEach((_, i) => {
       state["r" + i] = start[i];
-      const steps = 8, span = CUES.tokenmaxxing - 0.6;
+      const steps = 20, span = CUES.boardLeaves - 0.6;
       let acc = start[i];
       for (let k = 0; k < steps; k++) {
-        acc += Math.round(start[i] * 0.012 * (0.5 + ctx.rng()));
+        acc += Math.round(start[i] * 0.01 * (0.5 + ctx.rng()));
         tl.to(state, { ["r" + i]: acc, duration: span / steps * 0.8, ease: "power1.out" }, k * span / steps);
       }
     });
     ctx.onFrame(() => board.nums.forEach((el, i) => { el.textContent = Math.round(state["r" + i]).toLocaleString("en-IN"); }));
 
-    // ---------- Gold "Token Legend" badge, stamped onto the top row ----------
-    // Stamped in the empty header strip (top-right of the board) so no name or number is hidden
-    const bx = L.board.x + L.board.w - 2 * u - L.badge.s * 5.6, rowCy = L.board.y + L.board.rowH * 0.85 * 0.55;
+    // ---------- Gold "Productive" badge, stamped into the empty header strip of the board (no name or number is hidden) ----------
+    const bx = L.board.x + L.board.w - 2 * u - L.badge.s * 5.2, rowCy = L.board.y + L.board.rowH * 0.85 * 0.55;
     const stampFlare = createFlare(ctx, { x: bx, y: rowCy, size: 34 * u, color: "gold" });
     const badge = document.createElement("div");
     badge.className = "badge";
     badge.style.cssText += `left:${bx}px;top:${rowCy}px;height:${L.badge.h}px;padding:0 ${L.badge.h * 0.5}px;font-size:${L.badge.s}px;opacity:0;
       box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${1.4 * u}px #FFE7A3, 0 0 ${3.2 * u}px #F5B82E`;
-    badge.innerHTML = `<span class="neon-text-g">TOKEN LEGEND</span>`;
+    badge.innerHTML = `<span class="neon-text-g">PRODUCTIVE</span>`;
     stage.appendChild(badge);
     gsap.set(badge, { xPercent: -50, yPercent: -50 });
     tl.fromTo(badge, { opacity: 0, scale: 3, rotation: -16 },
-                     { opacity: 1, scale: 1, rotation: -6, duration: 0.16, ease: "power4.in" }, CUES.tokenLegend)
-      .to(badge, { scale: 1.08, duration: 0.07, ease: "power2.out" }, CUES.tokenLegend + 0.16)
-      .to(badge, { scale: 1, duration: 0.3, ease: "elastic.out(1,0.4)" }, CUES.tokenLegend + 0.23);
-    stampFlare.burst(CUES.tokenLegend + 0.16, 1);
-    tl.to(board.el, { keyframes: { y: [0, 1.1 * u, -0.7 * u, 0.4 * u, 0] }, duration: 0.32, ease: "none" }, CUES.tokenLegend + 0.16);
+                     { opacity: 1, scale: 1, rotation: -6, duration: 0.16, ease: "power4.in" }, CUES.productive)
+      .to(badge, { scale: 1.08, duration: 0.07, ease: "power2.out" }, CUES.productive + 0.16)
+      .to(badge, { scale: 1, duration: 0.3, ease: "elastic.out(1,0.4)" }, CUES.productive + 0.23)
+      .to(badge, { scale: 1.04, duration: 0.9, ease: "sine.inOut", yoyo: true, repeat: 3 }, CUES.productive + 0.8);
+    stampFlare.burst(CUES.productive + 0.16, 1);
+    tl.to(board.el, { keyframes: { y: [0, 1.1 * u, -0.7 * u, 0.4 * u, 0] }, duration: 0.32, ease: "none" }, CUES.productive + 0.16);
 
-    // The board and badge leave as the title card begins
-    tl.to([board.el, badge, stampFlare.el], { opacity: 0, duration: 0.4, ease: "power2.in" }, CUES.tokenmaxxing - 0.5);
+    // ---------- "Under-productive": the bottom two rows dim, a grey tag appears below the board ----------
+    const boardH = L.board.rowH * (0.85 + names.length) + 1.2 * u;
+    const underTag = document.createElement("div");
+    underTag.className = "tag soft-text";
+    const th = L.under.s * 2.3;
+    underTag.style.cssText += `left:${L.board.x + L.board.w / 2 - L.under.s * 7.5}px;top:${L.board.y + boardH + 2 * u}px;width:${L.under.s * 15}px;height:${th}px;font-size:${L.under.s}px;
+      border-color:#9aa6c8;box-shadow:0 0 ${0.4 * u}px #fff, 0 0 ${1.4 * u}px #7f8bb3`;
+    underTag.textContent = "UNDER-PRODUCTIVE";
+    stage.appendChild(underTag);
+    tl.to([board.rows[3], board.rows[4]], { opacity: 0.35, duration: 0.5, ease: "power2.out", stagger: 0.12 }, CUES.under)
+      .fromTo(underTag, { opacity: 0, y: -1.5 * u }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, CUES.under + 0.1);
 
-    // ---------- Title card (separate layer, toggle with ?captions=0) ----------
+    // The board and tags leave as the intro begins
+    tl.to([board.el, badge, stampFlare.el, underTag], { opacity: 0, duration: 0.5, ease: "power2.in" }, CUES.boardLeaves);
+
+    // ---------- Title layer (separate layer, toggle with ?captions=0) ----------
     const cap = document.createElement("div");
     cap.className = "layer captions";
     const word = (cls, text, p) =>
@@ -109,7 +141,7 @@ registerScene({
       </svg>`);
     stage.appendChild(cap);
 
-    const oldW = cap.querySelector(".old .wrap"), newW = cap.querySelector(".new .wrap");
+    const oldEl = cap.querySelector(".old"), oldW = cap.querySelector(".old .wrap"), newW = cap.querySelector(".new .wrap");
     const strike = cap.querySelector(".old .strike"), arrows = cap.querySelectorAll(".ag");
     gsap.set(arrows, { strokeDasharray: 1, strokeDashoffset: 1 });
     gsap.set(newW, { opacity: 0 });
@@ -120,6 +152,50 @@ registerScene({
 
     flickerOn(ctx, oldW, CUES.tokenmaxxing);
     oldFlare.burst(CUES.tokenmaxxing, 0.7);
+    // idle life while the intro is spoken: the old word breathes
+    tl.to(oldW, { scale: 1.03, duration: 1.1, ease: "sine.inOut", yoyo: true, repeat: 3 }, CUES.tokenmaxxing + 1.0);
+
+    // ---------- "False hype" and "Loss-making" stamps, and a falling line ----------
+    const mkTag = (text, y, rot) => {
+      const el = document.createElement("div");
+      el.className = "tag neon-text-m";
+      const w = L.tags.s * (text.length * 0.62 + 2.4), h = L.tags.s * 2.1;
+      el.style.cssText += `left:${W / 2 - w / 2}px;top:${y}px;width:${w}px;height:${h}px;font-size:${L.tags.s}px;
+        box-shadow:0 0 ${0.6 * u}px #fff, 0 0 ${1.4 * u}px #E39BFF, 0 0 ${3.2 * u}px #B23BE8`;
+      el.textContent = text; stage.appendChild(el);
+      return { el, cx: W / 2, cy: y + h / 2, rot };
+    };
+    const tagH = L.tags.s * 2.1, y2 = L.tags.y1 + tagH + 1.4 * u;
+    const tagHype = mkTag("FALSE HYPE", L.tags.y1, -4), tagLoss = mkTag("LOSS-MAKING", y2, 3);
+    [[tagHype, CUES.hype], [tagLoss, CUES.loss]].forEach(([t, at]) => {
+      const f = createFlare(ctx, { x: t.cx, y: t.cy, size: 30 * u, color: "magenta" });
+      tl.fromTo(t.el, { opacity: 0, scale: 2.6, rotation: t.rot * 4 }, { opacity: 1, scale: 1, rotation: t.rot, duration: 0.16, ease: "power4.in" }, at)
+        .to(t.el, { scale: 1.08, duration: 0.07, ease: "power2.out" }, at + 0.16)
+        .to(t.el, { scale: 1, duration: 0.3, ease: "elastic.out(1,0.4)" }, at + 0.23);
+      f.burst(at + 0.16, 0.9);
+    });
+
+    const C = { ...L.chart, y: y2 + tagH + 2 * u }, ch = C.w * 0.58;
+    const chart = document.createElement("div");
+    chart.style.cssText = `position:absolute;left:${C.cx - C.w / 2}px;top:${C.y}px;width:${C.w}px;height:${ch}px;opacity:0`;
+    chart.innerHTML = `<svg viewBox="0 0 100 58" style="width:100%;height:100%;overflow:visible">
+      <defs><linearGradient id="fall" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E39BFF"/><stop offset="1" stop-color="#8591b8"/></linearGradient></defs>
+      <path d="M4 4 V54 H98" fill="none" stroke="#B4F7FF" stroke-opacity=".35" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M8 8 C 22 6, 30 10, 42 24 S 70 46, 94 52" pathLength="1" fill="none" stroke="url(#fall)" stroke-width="7" stroke-opacity=".35" stroke-linecap="round" class="fl"/>
+      <path d="M8 8 C 22 6, 30 10, 42 24 S 70 46, 94 52" pathLength="1" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" class="fl"/>
+      <circle cx="94" cy="52" r="3" fill="#fff" class="dot" opacity="0"/>
+    </svg>`;
+    stage.appendChild(chart);
+    const fl = chart.querySelectorAll(".fl"), dot = chart.querySelector(".dot");
+    gsap.set(fl, { strokeDasharray: 1, strokeDashoffset: 1 });
+    tl.to(chart, { opacity: 1, duration: 0.3 }, CUES.loss + 0.4)
+      .to(fl, { strokeDashoffset: 0, duration: 2.6, ease: "power1.inOut" }, CUES.loss + 0.5)
+      .to(dot, { opacity: 1, duration: 0.2 }, CUES.loss + 3.0);
+
+    // ---------- Tags and chart leave; the old word moves to its final place; then struck out for the new word ----------
+    tl.to([tagHype.el, tagLoss.el, chart], { opacity: 0, duration: 0.4, ease: "power2.in" }, CUES.move);
+    tl.to(oldEl, { x: L.fin1.cx - L.w1.cx, y: L.fin1.y - L.w1.y, duration: 0.9, ease: "power2.inOut" }, CUES.move + 0.1);
+    tl.to(oldFlare.el, { x: L.fin1.cx - L.w1.cx, y: L.fin1.y - L.w1.y, duration: 0.9, ease: "power2.inOut" }, CUES.move + 0.1);
 
     tl.to(strike, { scaleX: 1, duration: 0.22, ease: "power3.out" }, CUES.cross)
       .to(oldW, { opacity: 0.55, duration: 0.3, ease: "power1.out" }, CUES.cross + 0.15)
