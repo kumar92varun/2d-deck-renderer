@@ -6,8 +6,8 @@ description: Use whenever the user asks to build, edit, fix, re-time or render a
 # Neon Explainer Videos
 
 Silent animated clips, one per storyboard beat, rendered frame by frame from HTML + GSAP with Puppeteer
-and ffmpeg. Varun records the Hindi voiceover and adds music himself in his editor; this pipeline makes
-the visuals only, timed to his recording. Scenes support two sizes from the same file, **short** (1080×1920) and **long** (1920×1080 main video),
+and ffmpeg. Varun records the Hindi voiceover himself; this pipeline makes
+the visuals only, timed to his recording. Joining beats into one video and adding music is the `stitch-videos` skill's job. Scenes support two sizes from the same file, **short** (1080×1920) and **long** (1920×1080 main video),
 but only **long** is rendered for now (see "Formats: desktop only" below).
 
 Videos are timeline-driven, dark neon, themed via `video/theme/neon.css`, and rendered with npm-installed Puppeteer. (The old click-to-advance deck project was scrapped.)
@@ -191,7 +191,7 @@ confirm the mapping with him if it's ambiguous.
 
 ## Assembling a full cut (optional)
 
-Varun edits audio and the final cut himself. If he wants the beats joined silently in order:
+For a full cut with his voiceover, balanced volume and background music, use the `stitch-videos` skill on the `-audio.mp4` beats instead of this section. Use this only when he wants the beats joined silently in order:
 
 ```bash
 # run from video/out/videos/desktop (or .../short); match the suffix you rendered with, e.g. -2x
