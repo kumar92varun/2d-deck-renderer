@@ -145,10 +145,13 @@ in that one scene, then go through these steps in order, stopping as soon as the
 
 ## Syncing to the recording
 
-**Silence at the ends of a recording is not part of the scene.** Varun leaves silence before and after each take and trims it
-in the editor, keeping about 0.5 s at each end. So scene time 0 is 0.5 s before the first speech and the scene ends 0.5 s after
-the last speech; never add gaps or stretch `DURATION` for extra silence. `tools/cue-times.mjs` does this: it prints scene times
-(audio time minus an offset), the scene length, and the offset to trim off the start when muxing (`ffmpeg -ss OFFSET -t LENGTH`).
+**Silence at the ends of a recording is not part of the scene. Standing rule: never ask Varun about this.** He deliberately leaves a long
+silence before and after every take. Keep exactly **0.5 s** of it at each end and cut the rest, in the scene *and* in the audio he gets back:
+scene time 0 is 0.5 s before the first spoken word, and the scene ends 0.5 s after the last spoken word. Never add gaps, hold frames or stretch
+`DURATION` for the extra silence. The delivered `-audio.mp4` is trimmed the same way (`-ss OFFSET -t SCENE_LENGTH` below), so it starts and ends
+with 0.5 s of silence, no more and no less. Silence between sentences inside the take is real and stays as recorded. `tools/cue-times.mjs` works
+this out: it prints scene times (audio time minus an offset), the scene length, and the offset to trim off the start when muxing.
+If you ever time a take by hand: OFFSET = first speech start - 0.5 (not below 0); SCENE_LENGTH = last speech end + 0.5 - OFFSET (not past the file end).
 It recognises each speech run separately, because whisper's own word times drift after pauses.
 
 **Every beat built from a recording is delivered with his audio merged in.** The renderer makes silent picture only, so after

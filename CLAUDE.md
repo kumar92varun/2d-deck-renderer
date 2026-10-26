@@ -72,7 +72,10 @@ which one applies, ask Varun rather than guessing.
 
 - On-screen text is English only. Hindi appears only in the voiceover and in the storyboard's script and cue columns.
 - Keep the navy-black backdrop and the neon look. No 3D or depth effects, and no new looks; Varun rejected those.
-- Scene time 0 is 0.5 s before his first spoken word and the scene ends 0.5 s after his last. Never add gaps for extra silence; he trims in his editor.
+- **Silence at the start and end of a recording.** He deliberately leaves long silences before and after each take. Keep exactly 0.5 s at each end and cut the
+  rest: scene time 0 is 0.5 s before his first spoken word, and the scene ends 0.5 s after his last. The same trim applies to the audio merged into the
+  `-audio.mp4` (`-ss OFFSET -t SCENE_LENGTH`; `cue-times.mjs` prints both numbers). Never add gaps or stretch the scene for the extra silence, and don't ask
+  him about it; this is a standing rule. Silence between sentences inside the take stays.
 - Don't change his script wording without showing the proposed text (with doubtful spots) and getting his approval.
 - Deliver beats as the `-audio.mp4` render (his recording merged in) and report the full output path.
 - Never commit rendered video or recordings. `video/out/` has no loose files, only the sorted subfolders.
