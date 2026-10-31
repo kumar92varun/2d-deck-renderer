@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Beat 2 · Fuel race · Tokenmaxxing</title>
+<link rel="stylesheet" href="../components/kit.css"></head>
+<body>
+<script type="module">
+/* Beat 2, concept A "The Fuel Race". The leaderboard ranks fuel burned: the top burner gets a gold PRODUCTIVE trophy,
+   the bottom gets UNDER-PRODUCTIVE although its DISTANCE bar is the longest (the irony, unspoken). Then TOKENMAXXING,
+   a fuel gauge swinging into HYPE, a fuel bill stamped LOSS-MAKING, and word surgery: the letters of TOKEN fall out
+   (real physics) and VALUE drops into the gap. Cue times from the recording (offset 0.66). */
+import { scene } from "/video/core/scene.js";
+import { T, box, panel, appear, hide, grow, stamp, strike, counter } from "../components/kit.js";
+
+const CUES = {
+  board: 0.6,           // "इस race में जो developers…"
+  productive: 5.1,      // "productive" 5.06
+  under: 9.0,           // "under-productive" 8.97
+  boardLeaves: 12.9,    // "आज की video"
+  tokenmaxxing: 13.7,   // "tokenmaxxing" 13.68
+  gauge: 15.6,          // "क्यों अब उन्हीं बड़ी tech companies…"
+  hype: 19.2,           // "hype" 19.24
+  bill: 21.4,           // "…AI tokens consume करने की race कराना"
+  loss: 23.9,           // "loss-making" 23.94
+  clear: 29.4,          // pause before "और फिर मैं…"
+  out: 30.4,            // "देखें" 30.53: TOKEN falls out
+  valuemaxxing: 31.4,   // "valuemaxxing" 31.41
+};
+const DURATION = 33.2;
+
+scene({
+  duration: DURATION, fps: 30, seed: 102, cues: CUES,
+  motionBlur: { samples: 6, shutter: 0.5 },
+  background: [{ name: "neon-haze", panels: [], branches: false }, { name: "dust-field", count: 90, size: [2, 6], alpha: [0.06, 0.25] }],
+  moments: [{ type: "custom", at: 0, rect: [0, 0, 1, 1], enter: "none", build }],
+});
+
+async function build(api) {
+  const { W, H, u, tl, el } = api;
+  const C = CUES;
+
+  // ---------- 1 · leaderboard ranked by fuel burned ----------
+  const lb = box(api, `left:0;top:0;width:${W}px;height:${H}px`);
+  const title = T(api, "LEADERBOARD <span style='color:var(--muted)'>·</span> RANKED BY <span style='color:#fff'>FUEL BURNED</span>",
+    { parent: lb, x: 0.08, y: 0.09, size: 3, w: 600, ls: 0.18, cls: "neon slot-1" });
+  api.effect({ name: "chars", from: "below", stagger: 0.012, duration: 0.25 }, title, C.board);
+  const hdrF = T(api, "AI TOKENS (FUEL)", { parent: lb, x: 0.3, y: 0.168, size: 2.3, w: 600, ls: 0.2, cls: "col slot-1" });
+  const hdrD = T(api, "DISTANCE", { parent: lb, x: 0.74, y: 0.168, size: 2.3, w: 600, ls: 0.2, cls: "dim" });
+  appear(api, [hdrF, hdrD], C.board + 0.4);
+  const rows = [["COMPANY D", 0.98, 0.18], ["COMPANY A", 0.86, 0.3], ["COMPANY F", 0.71, 0.41], ["COMPANY B", 0.55, 0.55], ["COMPANY E", 0.37, 0.83], ["COMPANY C", 0.22, 0.97]];
+  const rowY = (i) => 0.235 * H + i * 0.105 * H, fw = 0.4 * W, dw = 0.16 * W;
+  const R = rows.map(([name, fuel, dist], i) => {
+    const g = box(api, `left:0;top:${rowY(i)}px;width:${W}px;height:${0.09 * H}px`, lb);
+    const rk = T(api, `#${i + 1}`, { parent: g, x: 0.08, yp: 0.045 * H, middle: true, size: 3, cls: "neon slot-2" });
+    const nm = T(api, name, { parent: g, x: 0.125, yp: 0.045 * H, middle: true, size: 2.9, w: 700, cls: "soft" });
+    const fb = box(api, `left:${0.3 * W}px;top:${0.025 * H}px;width:${fuel * fw}px;height:${0.04 * H}px;border-radius:99px;
+      background:linear-gradient(90deg,#B23BE8,#E39BFF 80%,#fff);box-shadow:0 0 ${0.5 * u}px #fff,0 0 ${1.6 * u}px #E39BFF,0 0 ${3.4 * u}px #B23BE8`, g);
+    const db = box(api, `left:${0.74 * W}px;top:${0.034 * H}px;width:${dist * dw}px;height:${0.022 * H}px;border-radius:99px;background:rgba(200,205,230,.35)`, g);
+    const t0 = C.board + 0.6 + i * 0.22;
+    api.effect({ name: "slide-left", distance: 6, duration: 0.4 }, [rk, nm], t0);
+    grow(api, fb, t0 + 0.1, 0.7); grow(api, db, t0 + 0.2, 0.6);
+    return { g, rk, nm, fb, db };
+  });
+
+  // productive: a gold trophy lands on row 1
+  const trophy = T(api, "🏆 PRODUCTIVE", { parent: R[0].g, x: 0.3 + 0.98 * 0.4 + 0.015, yp: 0.045 * H, middle: true, size: 2.8, w: 800, cls: "neon slot-a kstamp", css: "color:#FFE7A3" });
+  stamp(api, trophy, C.productive, { rot: -4, shake: R[0].g });
+  api.effect(["glow-burst", { name: "sparks", count: 60, size: [12, 28] }], trophy, C.productive + 0.12);
+
+  // under-productive: the bottom two dim, a grey tag — and their DISTANCE bars quietly glint cyan (they went furthest)
+  [R[4], R[5]].forEach((r, k) => {
+    tl.to([r.rk, r.nm, r.fb], { opacity: 0.35, duration: 0.35 }, C.under + k * 0.1);
+    const tag = T(api, "UNDER-PRODUCTIVE", { parent: r.g, x: 0.3 + rows[4 + k][1] * 0.4 + 0.015, yp: 0.045 * H, middle: true, size: 2.1, w: 700, cls: "dim kstamp", css: "color:#9AA0BC" });
+    stamp(api, tag, C.under + 0.15 + k * 0.15, { rot: 3 });
+    tl.to(r.db, { background: "#36D6E7", boxShadow: `0 0 ${0.5 * u}px #fff, 0 0 ${2 * u}px #36D6E7`, duration: 0.3 }, C.under + 1.2 + k * 0.15)
+      .to(r.db, { background: "rgba(54,214,231,.55)", boxShadow: "0 0 0 transparent", duration: 0.8 }, C.under + 2.2 + k * 0.15);
+  });
+  tl.to(lb, { x: -W, duration: 0.45, ease: "power3.in" }, C.boardLeaves);
+
+  // ---------- 2 · TOKENMAXXING, the gauge and the bill ----------
+  const word = box(api, `left:0;top:0;width:${W}px;height:${H}px`);
+  const tk = T(api, "TOKEN", { parent: word, x: 0, y: 0, size: 14, cls: "neon slot-1" });
+  const mx = T(api, "MAXXING", { parent: word, x: 0, y: 0, size: 14, cls: "neon slot-1" });
+  const total = tk.offsetWidth + mx.offsetWidth, x0 = (W - total) / 2, wy = 0.3 * H;
+  tk.style.left = x0 + "px"; mx.style.left = x0 + tk.offsetWidth + "px"; tk.style.top = mx.style.top = wy - tk.offsetHeight / 2 + "px";
+  api.effect({ name: "letters-fly", stagger: 0.04, spread: 34 }, [tk, mx], C.tokenmaxxing);
+  api.effect("glow-burst", mx, C.tokenmaxxing + 0.5);
+  // the whole word rises a little to make room below
+  tl.to(word, { y: -0.1 * H, duration: 0.6, ease: "power2.inOut" }, C.gauge - 0.3);
+
+  // fuel gauge (SVG semicircle) with a HYPE zone; the needle creeps, then swings into HYPE
+  const gw = 0.46 * W, gh = gw * 0.56, gx = (W - gw) / 2, gy = 0.36 * H;
+  const gauge = box(api, `left:${gx}px;top:${gy}px;width:${gw}px;height:${gh}px`);
+  const arc = (a0, a1, r) => { const p = (a) => [gw / 2 + r * Math.cos(a), gh * 0.92 - r * Math.sin(a)]; const [x1, y1] = p(a0), [x2, y2] = p(a1); return `M${x1} ${y1} A${r} ${r} 0 0 1 ${x2} ${y2}`; };
+  const r = gw * 0.42;
+  gauge.innerHTML = `<svg width="${gw}" height="${gh}" style="overflow:visible">
+    <path d="${arc(Math.PI, 0.55, r)}" fill="none" stroke="rgba(180,247,255,.5)" stroke-width="${1.4 * u}" stroke-linecap="round"/>
+    <path d="${arc(0.55, 0.02, r)}" fill="none" stroke="#ff2d78" stroke-width="${1.4 * u}" stroke-linecap="round" style="filter:drop-shadow(0 0 ${u}px #ff2d78)"/>
+    ${Array.from({ length: 11 }, (_, k) => { const a = Math.PI - (k * Math.PI) / 10; return `<line x1="${gw / 2 + (r - 2.2 * u) * Math.cos(a)}" y1="${gh * 0.92 - (r - 2.2 * u) * Math.sin(a)}" x2="${gw / 2 + (r - 3.6 * u) * Math.cos(a)}" y2="${gh * 0.92 - (r - 3.6 * u) * Math.sin(a)}" stroke="#fff" stroke-width="3" opacity=".6"/>`; }).join("")}
+    <g class="needle"><line x1="${gw / 2}" y1="${gh * 0.92}" x2="${gw / 2 - r * 0.88}" y2="${gh * 0.92}" stroke="#fff" stroke-width="${0.6 * u}" stroke-linecap="round" style="filter:drop-shadow(0 0 ${0.6 * u}px #E39BFF)"/>
+    <circle cx="${gw / 2}" cy="${gh * 0.92}" r="${1.4 * u}" fill="#fff"/></g></svg>`;
+  const lblF = T(api, "FUEL GAUGE", { parent: gauge, xp: gw / 2, yp: gh * 0.62, anchor: "center", size: 2.4, w: 600, ls: 0.3, cls: "soft" });
+  const lblH = T(api, "HYPE", { parent: gauge, xp: gw * 0.97, yp: gh * 0.08, anchor: "center", size: 3.6, w: 800, cls: "neon slot-1", css: "color:#ffd6e4" });
+  appear(api, gauge, C.gauge, 0.4);
+  const nd = gauge.querySelector(".needle");
+  gsap.set(nd, { svgOrigin: `${gw / 2} ${gh * 0.92}` });
+  tl.fromTo(nd, { rotation: 0 }, { rotation: 95, duration: C.hype - C.gauge - 0.2, ease: "sine.inOut" }, C.gauge + 0.2)
+    .to(nd, { rotation: 168, duration: 0.5, ease: "back.out(2.5)" }, C.hype)
+    .to(nd, { rotation: 162, duration: 0.25, yoyo: true, repeat: 7, ease: "sine.inOut" }, C.hype + 0.5);
+  tl.fromTo(lblH, { scale: 1 }, { scale: 1.3, duration: 0.2, yoyo: true, repeat: 1 }, C.hype + 0.2);
+  const fh = T(api, "FALSE HYPE", { x: 0.5, y: 0.9, anchor: "center", middle: true, size: 6, cls: "neon slot-1 kstamp", css: "color:#ff8fb8" });
+  stamp(api, fh, C.hype + 0.35, { rot: -8, shake: gauge });
+
+  // the bill: gauge + stamp slide away, a fuel bill prints up; a profit line falls behind it
+  tl.to([gauge, fh], { x: -0.35 * W, opacity: 0, duration: 0.45, ease: "power3.in", immediateRender: false }, C.bill - 0.2);
+  const chart = box(api, `left:${0.08 * W}px;top:${0.46 * H}px;width:${0.5 * W}px;height:${0.42 * H}px`);
+  chart.innerHTML = `<svg width="${0.5 * W}" height="${0.42 * H}" style="overflow:visible"><polyline points="0,${0.08 * H} ${0.12 * W},${0.1 * H} ${0.24 * W},${0.06 * H} ${0.33 * W},${0.12 * H} ${0.4 * W},${0.3 * H} ${0.5 * W},${0.41 * H}"
+    fill="none" stroke="#ff2d78" stroke-width="${0.6 * u}" stroke-linejoin="round" style="filter:drop-shadow(0 0 ${u}px #ff2d78)"/></svg>`;
+  const cl = T(api, "PROFIT", { parent: chart, xp: 0, yp: 0, size: 1.8, w: 600, ls: 0.3, cls: "soft" });
+  tl.fromTo(chart.querySelector("polyline"), { drawSVG: "0%" }, { drawSVG: "100%", duration: 2.2, ease: "power2.in" }, C.bill + 0.3);
+  appear(api, cl, C.bill + 0.3);
+  const bw = 0.24 * W, bx = 0.66 * W;
+  const bill = box(api, `left:${bx}px;top:${H}px;width:${bw}px;height:${0.5 * H};padding:${2.4 * u}px;background:#F4F1FF;color:#160c2a;border-radius:4px;
+    box-shadow:0 0 ${2 * u}px rgba(178,59,232,.6);-webkit-mask:linear-gradient(#000 calc(100% - 14px), transparent 0), conic-gradient(from -45deg at bottom, #000 90deg, transparent 0) 50% 100%/22px 14px repeat-x`);
+  bill.style.height = 0.5 * H + "px";
+  const lines = [["FUEL BILL · Q1", "", true], ["AI tokens", "$1,240,000"], ["More AI tokens", "$2,980,000"], ["Even more tokens", "$6,410,000"], ["Features shipped", "—"], ["", ""], ["TOTAL", "$10,630,000", true]];
+  lines.forEach(([a, b, bold], i) => {
+    const row = box(api, `position:relative;display:flex;justify-content:space-between;font:${bold ? 800 : 600} ${2.1 * u}px "Courier New", monospace;margin-bottom:${1.3 * u}px;${i === 0 || i === 6 ? `border-bottom:2px dashed #160c2a;padding-bottom:${0.8 * u}px` : ""}`, bill);
+    row.style.position = "relative"; row.innerHTML = `<span>${a}</span><span>${b}</span>`;
+    appear(api, row, C.bill + 0.5 + i * 0.28, 0.08);
+  });
+  tl.to(bill, { y: -0.56 * H, duration: 2.4, ease: "power1.out" }, C.bill + 0.2);
+  const lm = T(api, "LOSS-MAKING", { x: 0.78, y: 0.83, anchor: "center", middle: true, size: 5.4, cls: "neon slot-1 kstamp", css: "color:#ff6b9a" });
+  stamp(api, lm, C.loss, { rot: -12, shake: bill });
+  api.effect({ name: "shockwave", size: 1.1 }, lm, C.loss + 0.15);
+
+  // ---------- 3 · clear, then word surgery ----------
+  tl.to([chart, bill, lm], { opacity: 0, y: "+=" + 0.1 * H, duration: 0.5, ease: "power2.in", immediateRender: false }, C.clear);
+  tl.to(word, { y: 0, duration: 0.6, ease: "power2.inOut" }, C.clear);
+  await api.effect({ name: "physics-fall", split: "chars", kick: 900, pop: 700, spin: 10 }, tk, C.out);
+  // VALUE lands in the gap, right-aligned to MAXXING, then the word re-centres
+  const va = T(api, "VALUE", { parent: word, x: 0, y: 0, size: 14, cls: "neon slot-2" });
+  va.style.left = x0 + tk.offsetWidth - va.offsetWidth + "px"; va.style.top = tk.style.top;
+  tl.fromTo(va, { opacity: 0, y: -0.5 * H }, { opacity: 1, y: 0, duration: 0.55, ease: "bounce.out" }, C.valuemaxxing - 0.25);
+  tl.to(mx, { "--c": "#36D6E7", "--c-hi": "#B4F7FF", duration: 0.3 }, C.valuemaxxing + 0.2);
+  const shift = (tk.offsetWidth - va.offsetWidth) / 2;
+  tl.to([va, mx], { x: "+=" + shift, duration: 0.5, ease: "power3.inOut" }, C.valuemaxxing + 0.45);
+  api.effect(["glow-burst", { name: "sparks", count: 110 }], va, C.valuemaxxing + 0.3);
+  return { reveals: [] };
+}
+</script>
+</body>
+</html>

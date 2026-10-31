@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Beat 2 · The bill · Tokenmaxxing</title>
+<link rel="stylesheet" href="../components/kit.css"></head>
+<body>
+<script type="module">
+/* Beat 2, concept C "The Bill". The receipt ranks companies by TOKENS BILLED: the top line gets a gold PRODUCTIVE
+   stamp, the bottom lines a grey UNDER-PRODUCTIVE one, although their VALUE column is the highest. The receipt is
+   torn off and drops; a new one prints the bill for TOKENMAXXING: VALUE RECEIVED ??? (FALSE HYPE), TOTAL in red
+   (LOSS-MAKING). It crumples away; the caption TOKEN is struck and VALUE takes its place; a short clean receipt prints
+   VALUE PER TOKEN ✓. */
+import { scene } from "/video/core/scene.js";
+import { T, box, appear, hide, stamp, strike, counter } from "../components/kit.js";
+import { receipt, meter } from "../components/receipt.js";
+
+const CUES = { rank: 0.6, productive: 5.1, under: 9.0, tear: 12.9, tokenmaxxing: 13.7, value: 17.6, hype: 19.2,
+  lines: 20.6, loss: 23.9, crumple: 29.4, out: 30.4, valuemaxxing: 31.4 };
+const DURATION = 33.2;
+
+scene({
+  duration: DURATION, fps: 30, seed: 302, cues: CUES,
+  motionBlur: { samples: 6, shutter: 0.5 },
+  background: [{ name: "neon-haze", panels: [], branches: false }, { name: "dust-field", count: 70, size: [2, 6], alpha: [0.06, 0.22] }],
+  moments: [{ type: "custom", at: 0, rect: [0, 0, 1, 1], enter: "none", build }],
+});
+
+async function build(api) {
+  const { W, H, u, tl } = api;
+  const C = CUES;
+  const bold = "font-weight:900;font-size:1.15em";
+  const cap = (html, at, until, o = {}) => {
+    const e = T(api, html, { x: 0.05, y: o.y ?? 0.5, middle: true, size: o.size ?? 7.5, cls: o.cls ?? "neon slot-2", css: "line-height:1.05;white-space:normal;width:" + 0.34 * W + "px" });
+    api.effect(o.enter ?? { name: "chars", from: "below", stagger: 0.03, duration: 0.3 }, e, at);
+    if (until) tl.to(e, { opacity: 0, y: -3 * u, duration: 0.25, immediateRender: false }, until);
+    return e;
+  };
+
+  // ---------- 1 · the ranking receipt ----------
+  const rx = 0.42 * W, rw = 0.27 * W, ry = 0.9 * H;
+  const r1 = receipt(api, { x: rx, y: ry, w: rw, maxH: 0.86 * H, lineH: 3.6, fontSize: 2.2 });
+  cap("RANKED BY<br>TOKENS", C.rank, C.productive - 0.15, { size: 7 });
+  r1.print("<span style='margin:auto'>*** RANKING ***</span>", C.rank);
+  r1.print("<span>COMPANY</span><span>TOKENS · VALUE</span>", C.rank + 0.3, { css: "opacity:.6" });
+  const data = [["D", "48.2M", "★"], ["A", "39.8M", "★"], ["F", "31.1M", "★★"], ["B", "22.1M", "★★"], ["E", "9.9M", "★★★★"], ["C", "4.1M", "★★★★★"]];
+  const rows = data.map(([c, t, v], i) => r1.print(`<span>${i + 1}. COMPANY ${c}</span><span>${t} · <b class='val'>${v}</b></span>`, C.rank + 0.7 + i * 0.35));
+  const prod = T(api, "← PRODUCTIVE", { x: (rx + rw) / W + 0.012, y: 0.672, size: 3.6, cls: "neon slot-a kstamp", css: "color:#FFE7A3" });
+  stamp(api, prod, C.productive, { rot: -4, shake: r1.clip });
+  cap("MOST TOKENS =<br><span style='color:#FFE7A3'>PRODUCTIVE</span>", C.productive, C.under - 0.15, { size: 6.4, cls: "neon slot-a" });
+  const und = T(api, "← UNDER-PRODUCTIVE", { x: (rx + rw) / W + 0.012, y: 0.83, size: 3, cls: "dim kstamp", css: "color:#B5BAD6;background:rgba(20,22,40,.85)" });
+  stamp(api, und, C.under, { rot: 3, shake: r1.clip });
+  cap("FEWER TOKENS =<br><span style='color:#B5BAD6'>UNDER-<br>PRODUCTIVE</span>", C.under, C.tear - 0.2, { size: 6.4, cls: "neon slot-2" });
+  // the irony: their VALUE stars glow cyan
+  rows.slice(4).forEach((row, k) => tl.to(row.querySelector(".val"), { color: "#0aa9c0", textShadow: "0 0 8px #36D6E7", scale: 1.2, duration: 0.3 }, C.under + 1.4 + k * 0.15));
+  // tear off: the strip drops away
+  tl.to([r1.clip, prod, und], { y: 1.2 * H, rotation: 8, duration: 0.6, ease: "power2.in", immediateRender: false }, C.tear);
+  tl.to(r1.head, { opacity: 0, duration: 0.3, immediateRender: false }, C.tear + 0.3);
+
+  // ---------- 2 · the bill for TOKENMAXXING ----------
+  const word = box(api, `left:${0.05 * W}px;top:${0.36 * H}px;width:${0.36 * W}px;height:${0.3 * H}px`);
+  const tk = T(api, "TOKEN", { parent: word, xp: 0, yp: 0, size: 9, cls: "neon slot-1" });
+  const mx = T(api, "MAXXING", { parent: word, xp: 0, yp: 9.8 * u, size: 9, cls: "neon slot-1" });
+  api.effect({ name: "letters-fly", stagger: 0.04, spread: 28 }, [tk, mx], C.tokenmaxxing);
+  const r2 = receipt(api, { x: rx, y: ry, w: rw, maxH: 0.86 * H, lineH: 3.8, fontSize: 2.3 });
+  appear(api, r2.head, C.tokenmaxxing - 0.2);
+  tl.set(r2.clip, { visibility: "hidden" }, 0).set(r2.clip, { visibility: "visible" }, C.tokenmaxxing);
+  r2.print(`<span style='margin:auto;${bold};color:#9b1fd1'>TOKENMAXXING</span>`, C.tokenmaxxing + 0.2);
+  r2.print("<span style='margin:auto'>Q1 · AI SPEND</span>", C.tokenmaxxing + 0.5);
+  [["AI tokens", "$1,240,000"], ["More AI tokens", "$2,980,000"], ["Even more tokens", "$6,410,000"]].forEach(([a, b], i) => r2.print(r2.dots(a, b), C.tokenmaxxing + 1 + i * 0.45));
+  r2.print("<span style='margin:auto'>--------------------</span>", C.value - 0.4);
+  const vr = r2.print(r2.dots("VALUE RECEIVED", "<b>???</b>"), C.value);
+  const fh = T(api, "← FALSE HYPE", { x: (rx + rw) / W + 0.012, y: 0.86, size: 4.2, cls: "neon slot-1 kstamp", css: "color:#ff6b9a" });
+  stamp(api, fh, C.hype, { rot: -5, shake: r2.clip });
+  tl.to(fh, { opacity: 0, duration: 0.3, immediateRender: false }, C.lines);
+  [["Features shipped", "—"], ["Bugs fixed", "—"]].forEach(([a, b], i) => r2.print(r2.dots(a, b), C.lines + i * 0.4));
+  r2.print("<span style='margin:auto'>====================</span>", C.loss - 0.6);
+  r2.print(`<span style='${bold}'>TOTAL</span><span style='${bold};color:#d1144f'>−$10,630,000</span>`, C.loss - 0.3);
+  const lm = T(api, "LOSS-MAKING", { x: 0.73, y: 0.64, size: 4.6, cls: "neon slot-1 kstamp", css: "color:#ff6b9a" });
+  stamp(api, lm, C.loss, { rot: -8, shake: r2.clip });
+  api.effect({ name: "shockwave", size: 1 }, lm, C.loss + 0.12);
+  // a meter on the right says the same thing, in red
+  const m = meter(api, { x: 0.72 * W, y: 0.4 * H, w: 0.26 * W, h: 0.18 * H, label: "PROFIT" });
+  appear(api, m.p, C.lines - 0.3, 0.3);
+  const pv = { v: 2400000 };
+  tl.to(pv, { v: -10630000, duration: C.loss - C.lines, ease: "power2.in" }, C.lines);
+  api.onFrame(() => { m.d.textContent = (pv.v < 0 ? "−$" : "$") + Math.abs(Math.round(pv.v)).toLocaleString("en-US"); });
+  // crumple: receipt and meter go
+  tl.to([r2.clip, lm], { scale: 0.15, rotation: 200, opacity: 0, transformOrigin: "50% 90%", duration: 0.6, ease: "back.in(1.6)", immediateRender: false }, C.crumple);
+  tl.to([m.p, r2.head], { opacity: 0, duration: 0.4, immediateRender: false }, C.crumple);
+
+  // ---------- 3 · TOKEN struck, VALUE takes its place; a clean receipt ----------
+  strike(api, tk, C.out, { slot: 2, thick: 0.6 });
+  tl.to(tk, { opacity: 0.25, duration: 0.3, immediateRender: false }, C.out + 0.25);
+  tl.to(tk, { y: -10 * u, scale: 0.55, transformOrigin: "0% 50%", duration: 0.4, ease: "power2.inOut", immediateRender: false }, C.valuemaxxing - 0.3);
+  const va = T(api, "VALUE", { parent: word, xp: 0, yp: 0, size: 9, cls: "neon slot-2" });
+  api.effect("slam", va, C.valuemaxxing);
+  tl.to(mx, { "--c": "#36D6E7", "--c-hi": "#B4F7FF", duration: 0.25 }, C.valuemaxxing + 0.15);
+  api.effect(["glow-burst", { name: "sparks", count: 90 }], va, C.valuemaxxing + 0.1);
+  const r3 = receipt(api, { x: rx + 0.03 * W, y: 0.62 * H, w: 0.21 * W, maxH: 0.5 * H, lineH: 4.2, fontSize: 2.5 });
+  appear(api, r3.head, C.valuemaxxing - 0.1);
+  tl.set(r3.clip, { visibility: "hidden" }, 0).set(r3.clip, { visibility: "visible" }, C.valuemaxxing);
+  r3.print(`<span style='margin:auto;${bold};color:#0a8fa3'>VALUEMAXXING</span>`, C.valuemaxxing + 0.2);
+  r3.print(r3.dots("VALUE PER TOKEN", "<b style='color:#0a8fa3'>✓</b>"), C.valuemaxxing + 0.7);
+  r3.print(r3.dots("TOTAL VALUE", "<b style='color:#0a8fa3'>↑</b>"), C.valuemaxxing + 1.1);
+  return { reveals: [] };
+}
+</script>
+</body>
+</html>

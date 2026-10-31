@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Beat 2 · Arcade · Tokenmaxxing</title>
+<link rel="stylesheet" href="../components/kit.css">
+<style>
+  @font-face { font-family: "Press Start 2P"; font-weight: 400; font-display: block; src: url("../assets/fonts/press-start-2p-latin-400-normal.woff2") format("woff2"); }
+  .px { font-family: "Press Start 2P", monospace; font-weight: 400 !important; letter-spacing: .02em; line-height: 1.25; }
+  .scr { overflow: hidden; background: radial-gradient(ellipse at 50% 40%, rgba(40,20,80,.85), rgba(6,6,20,.95) 75%); }
+  .scr::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(to bottom, rgba(0,0,0,.28) 0 2px, transparent 2px 5px); }
+</style></head>
+<body>
+<script type="module">
+/* Beat 2, concept B "The Arcade". HIGH SCORES ranked by TOKENS: the top player is crowned PRODUCTIVE, the bottom
+   players are UNDER-PRODUCTIVE although they cleared the most LEVELS (the irony). The screen glitches off; the title
+   screen says TOKENMAXXING / INSERT TOKEN TO CONTINUE, which flips to FALSE HYPE; the credits go negative: LOSS-MAKING.
+   Finally TOKEN shatters and VALUE decodes in: VALUEMAXXING · NEW GAME. */
+import { scene } from "/video/core/scene.js";
+import { T, box, panel, appear, hide, grow, stamp, strike, counter } from "../components/kit.js";
+
+const CUES = { table: 0.6, productive: 5.1, under: 9.0, off: 12.9, tokenmaxxing: 13.7, hype: 19.2, credits: 21.4,
+  loss: 23.9, clear: 29.4, out: 30.4, valuemaxxing: 31.4 };
+const DURATION = 33.2;
+
+scene({
+  duration: DURATION, fps: 30, seed: 202, cues: CUES, setup: () => document.fonts.load("16px 'Press Start 2P'"),
+  motionBlur: { samples: 6, shutter: 0.5 },
+  background: [{ name: "neon-haze", panels: [{ x: 0.04, y: 0.1, w: 6, color: 1 }, { x: 0.9, y: 0.82, w: 6, color: 2 }], branches: false }],
+  moments: [{ type: "custom", at: 0, rect: [0, 0, 1, 1], enter: "none", build }],
+});
+
+async function build(api) {
+  const { W, H, u, tl } = api;
+  const C = CUES;
+  const sx = 0.14 * W, sw = 0.72 * W, sy = 0.08 * H, sh = 0.84 * H;
+  const screen = panel(api, { x: sx, y: sy, w: sw, h: sh, slot: 2, r: 1.2 });
+  screen.classList.add("scr");
+
+  // ---------- 1 · HIGH SCORES ----------
+  const hs = box(api, `left:0;top:0;width:${sw}px;height:${sh}px`, screen);
+  const tt = T(api, "HIGH SCORES", { parent: hs, xp: sw / 2, yp: sh * 0.07, anchor: "center", size: 4.6, cls: "neon slot-a px", css: "color:#FFE7A3" });
+  api.effect("flicker", tt, C.table);
+  const cols = [[0.04, "RANK"], [0.14, "PLAYER"], [0.4, "TOKENS"], [0.62, "LEVELS"]];
+  cols.forEach(([x, t]) => appear(api, T(api, t, { parent: hs, x: 0, xp: sw * x, yp: sh * 0.2, size: 2, cls: t === "LEVELS" ? "dim px" : "neon slot-1 px" }), C.table + 0.3));
+  const data = [["COMPANY D", "48,250,000", "02"], ["COMPANY A", "39,800,500", "03"], ["COMPANY F", "31,060,200", "05"], ["COMPANY B", "22,145,900", "08"], ["COMPANY E", "9,870,300", "17"], ["COMPANY C", "4,120,000", "24"]];
+  const rows = data.map(([n, tk, lv], i) => {
+    const y = sh * (0.29 + i * 0.1);
+    const r = box(api, `left:0;top:${y}px;width:${sw}px;height:${sh * 0.08}px`, hs);
+    const cells = [T(api, `${i + 1}${["ST", "ND", "RD", "TH", "TH", "TH"][i]}`, { parent: r, xp: sw * 0.04, yp: 0, size: 2.5, cls: "neon slot-2 px" }),
+      T(api, n, { parent: r, xp: sw * 0.14, yp: 0, size: 2.5, cls: "neon slot-2 px" }),
+      T(api, tk, { parent: r, xp: sw * 0.4, yp: 0, size: 2.5, cls: "neon slot-1 px" }),
+      T(api, lv, { parent: r, xp: sw * 0.64, yp: 0, size: 2.5, cls: "dim px" })];
+    api.effect({ name: "typewriter", speed: 0.012 }, cells, C.table + 0.8 + i * 0.3);
+    return { r, cells };
+  });
+  const crown = T(api, "PRODUCTIVE", { parent: rows[0].r, xp: sw * 0.74, yp: -sh * 0.012, size: 2.2, cls: "neon slot-a kstamp px", css: "color:#FFE7A3" });
+  stamp(api, crown, C.productive, { rot: -4, shake: rows[0].r });
+  api.effect(["glow-burst", { name: "sparks", count: 60, size: [12, 28] }], rows[0].cells[1], C.productive + 0.12);
+  tl.fromTo(rows[0].r, { opacity: 1 }, { opacity: 0.4, duration: 0.16, repeat: 9, yoyo: true, ease: "steps(1)", immediateRender: false }, C.productive + 0.4);
+  [4, 5].forEach((i, k) => {
+    tl.to(rows[i].cells.slice(0, 3), { opacity: 0.35, duration: 0.3 }, C.under + k * 0.1);
+    const tag = T(api, "UNDER-PROD.", { parent: rows[i].r, xp: sw * 0.74, yp: -sh * 0.012, size: 2, cls: "dim kstamp px", css: "color:#9AA0BC;background:rgba(6,6,20,.85)" });
+    stamp(api, tag, C.under + 0.15 + k * 0.15, { rot: 3 });
+    // they cleared the most levels: the LEVELS cells light up cyan
+    tl.to(rows[i].cells[3], { color: "#B4F7FF", textShadow: `0 0 ${0.5 * u}px #fff, 0 0 ${2 * u}px #36D6E7`, scale: 1.25, duration: 0.3 }, C.under + 1.3 + k * 0.15);
+  });
+  // ---------- glitch off ----------
+  api.effect({ name: "glitch", amount: 2, duration: 0.45 }, hs, C.off);
+  tl.to(hs, { opacity: 0, scaleY: 0.02, duration: 0.18, ease: "power4.in", immediateRender: false }, C.off + 0.35);
+
+  // ---------- 2 · title screen ----------
+  const ts = box(api, `left:0;top:0;width:${sw}px;height:${sh}px`, screen);
+  const word = box(api, `left:0;top:0;width:${sw}px;height:${sh}px`, ts);
+  const tk = T(api, "TOKEN", { parent: word, xp: 0, yp: 0, size: 8.2, cls: "neon slot-1 px" });
+  const mx = T(api, "MAXXING", { parent: word, xp: 0, yp: 0, size: 8.2, cls: "neon slot-1 px" });
+  const x0 = (sw - tk.offsetWidth - mx.offsetWidth) / 2, wy = sh * 0.3;
+  tk.style.left = x0 + "px"; mx.style.left = x0 + tk.offsetWidth + "px"; tk.style.top = mx.style.top = wy + "px";
+  api.effect({ name: "scramble", chars: "XO#@$%&01", duration: 0.9 }, [tk, mx], C.tokenmaxxing);
+  const ins = T(api, "INSERT TOKEN TO CONTINUE", { parent: ts, xp: sw / 2, yp: sh * 0.56, anchor: "center", size: 2.8, cls: "neon slot-a px", css: "color:#FFE7A3" });
+  tl.fromTo(ins, { opacity: 0 }, { opacity: 1, duration: 0.3, repeat: 7, yoyo: true, ease: "steps(1)" }, C.tokenmaxxing + 1.2);
+  // hype: the blinking line glitches into FALSE HYPE
+  api.effect({ name: "glitch", amount: 1.4, duration: 0.3 }, ins, C.hype - 0.1);
+  tl.to(ins, { opacity: 0, duration: 0.05, immediateRender: false }, C.hype + 0.2);
+  const fh = T(api, "FALSE HYPE", { parent: ts, xp: sw / 2, yp: sh * 0.53, anchor: "center", size: 5.4, cls: "neon slot-1 kstamp px", css: "color:#ff8fb8" });
+  stamp(api, fh, C.hype + 0.2, { rot: -6, shake: screen });
+  // credits go negative
+  tl.to(fh, { y: sh * 0.18, scale: 0.6, opacity: 0.0, duration: 0.4, immediateRender: false }, C.credits - 0.3);
+  const crl = T(api, "CREDITS", { parent: ts, xp: sw / 2, yp: sh * 0.55, anchor: "center", size: 2.4, cls: "dim px" });
+  const cr = T(api, "$0", { parent: ts, xp: sw / 2, yp: sh * 0.62, anchor: "center", size: 5.6, cls: "neon slot-1 px", css: `width:${sw * 0.8}px;text-align:center;left:${sw * 0.1}px` });
+  cr.style.left = sw * 0.1 + "px";
+  appear(api, [crl, cr], C.credits, 0.1);
+  counter(api, cr, { from: 0, to: -10630000, at: C.credits + 0.1, dur: 2.3, ease: "power2.in", fmt: (v) => (v < -0.5 ? "-$" : "$") + Math.abs(Math.round(v)).toLocaleString("en-US") });
+  tl.to(cr, { color: "#ff6b9a", duration: 0.3 }, C.credits + 1.2);
+  const lm = T(api, "LOSS-MAKING", { parent: ts, xp: sw / 2, yp: sh * 0.76, anchor: "center", size: 5.4, cls: "neon slot-1 kstamp px", css: "color:#ff6b9a" });
+  stamp(api, lm, C.loss, { rot: -8, shake: screen });
+  api.effect({ name: "shockwave", size: 1 }, lm, C.loss + 0.12);
+  tl.to([crl, cr, lm], { opacity: 0, duration: 0.4, immediateRender: false }, C.clear);
+
+  // ---------- 3 · TOKEN shatters, VALUE decodes in ----------
+  const tk2 = T(api, "TOKEN", { parent: word, xp: x0, yp: wy, size: 8.2, cls: "neon slot-1 px" });   // fresh copy (the scramble emptied tk's text at build time)
+  tl.set(tk2, { opacity: 0 }, 0).set(tk2, { opacity: 1 }, C.out - 0.02).set(tk, { opacity: 0 }, C.out - 0.02);
+  await api.effect({ name: "shatter", kick: 1100, pop: 800 }, tk2, C.out);
+  const va = T(api, "VALUE", { parent: word, xp: 0, yp: 0, size: 8.2, cls: "neon slot-2 px" });
+  va.style.left = x0 + tk.offsetWidth - va.offsetWidth + "px"; va.style.top = wy + "px";
+  api.effect({ name: "scramble", chars: "XO#@$%&01", duration: 0.55 }, va, C.valuemaxxing - 0.25);
+  tl.to(mx, { "--c": "#36D6E7", "--c-hi": "#B4F7FF", duration: 0.25 }, C.valuemaxxing + 0.2);
+  const shift = (tk.offsetWidth - va.offsetWidth) / 2;
+  tl.to([va, mx], { x: "+=" + shift, duration: 0.45, ease: "power3.inOut" }, C.valuemaxxing + 0.45);
+  api.effect({ name: "sparks", count: 100 }, va, C.valuemaxxing + 0.35);
+  const ng = T(api, "▶ NEW GAME", { parent: ts, xp: sw / 2, yp: sh * 0.56, anchor: "center", size: 3.2, cls: "neon slot-2 px" });
+  tl.fromTo(ng, { opacity: 0 }, { opacity: 1, duration: 0.25, repeat: 3, yoyo: true, ease: "steps(1)" }, C.valuemaxxing + 0.6);
+  tl.set(ng, { opacity: 1 }, DURATION - 0.3);
+  return { reveals: [] };
+}
+</script>
+</body>
+</html>

@@ -23,6 +23,8 @@ converted to the theme system (next step); the statuses describe the old builds,
 
 | Beat | Scene file | Status |
 | --- | --- | --- |
+| 1 (concepts) | `scenes/beat01-fuel.html`, `-arcade.html`, `-bill.html` | three creative directions built on the theme system, timed to the recording (16.0 s), rendered with audio; Varun to pick (see creative-pass.md) |
+| 2 (concepts) | `scenes/beat02-fuel.html`, `-arcade.html`, `-bill.html` | same, 33.2 s |
 | 1 | `scenes/beat01.html` | rebuilt as the neon race opening (desktop only), timed to the recording (16 s); the old leaderboard version is `beat01-board.html` |
 | 2 | `scenes/beat02.html` | built, timed to the recording (33.2 s) |
 | 3 | `scenes/beat03.html` | built, timed to Take 2 recording (22.3 s) |

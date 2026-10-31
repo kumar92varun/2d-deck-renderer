@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Beat 1 · Fuel race · Tokenmaxxing</title>
+<link rel="stylesheet" href="../components/kit.css"></head>
+<body>
+<script type="module">
+/* Beat 1, concept A "The Fuel Race" (creative-pass.md). Night race, top-down and flat: six company cars, F1 start
+   lights, a scoring board whose options (features / bugs / code) all get struck; the real score is AI tokens burned,
+   and the cars turn out to be doing donuts in place, burning fuel and going nowhere.
+   VO "इस साल की शुरुआत में ... ज़्यादा AI tokens consume करने की थी।" Cue times from the recording (offset 0.66). */
+import { scene } from "/video/core/scene.js";
+import { T, box, panel, appear, hide, grow, stamp, strike, counter, car } from "../components/kit.js";
+
+const CUES = {
+  lanes: 0.5,          // the track lights up
+  companies: 1.7,      // "कई बड़ी tech companies"
+  three: 1.9, two: 2.9, one: 3.9,   // start lights
+  developers: 3.6,     // "developers"
+  go: 4.85,            // "race" 4.87: lights out
+  board: 6.5,          // "ये race": the scoring board drops in
+  features: 7.3,       // "features"
+  bugs: 9.3,           // "bugs fix"
+  code: 11.5,          // "code deploy"
+  not: 12.55,          // "...की नहीं": all three struck
+  tokens: 13.8,        // "AI tokens consume": the real score, donuts
+};
+const DURATION = 16.0;
+
+scene({
+  duration: DURATION, fps: 30, seed: 101, cues: CUES,
+  motionBlur: { samples: 6, shutter: 0.5 },
+  background: [{ name: "neon-haze", panels: [], branches: false }, { name: "god-rays", x: 0.5, y: -0.25, alpha: 0.16, slot: 2, gain: 0.35 },
+               { name: "dust-field", count: 90, size: [2, 6], alpha: [0.06, 0.25] }],
+  moments: [{ type: "custom", at: 0, rect: [0, 0, 1, 1], enter: "none", build }],
+});
+
+async function build(api) {
+  const { W, H, u, tl, el } = api;
+  const C = CUES;
+  // ---------- track: 6 lanes in the lower 60 % ----------
+  const top = 0.35 * H, laneH = 0.105 * H, N = 6, startX = 0.2 * W;
+  const laneY = (i) => top + laneH * (i + 0.5);
+  const lines = [];
+  for (let i = 0; i <= N; i++) {
+    const ln = box(api, `left:${0.03 * W}px;top:${top + i * laneH}px;width:${0.94 * W}px;height:2px;background:${i === 0 || i === N ? "rgba(180,247,255,.55)" : "repeating-linear-gradient(90deg, rgba(180,247,255,.28) 0 28px, transparent 28px 52px)"}`, el, "lane");
+    grow(api, ln, C.lanes + i * 0.05, 0.6);
+    lines.push(ln);
+  }
+  const startLine = box(api, `left:${startX - 6}px;top:${top}px;width:12px;height:${N * laneH}px;background:repeating-linear-gradient(0deg,#fff 0 12px,#111 12px 24px);opacity:.85`);
+  grow(api, startLine, C.lanes + 0.3, 0.4, "50% 0%", "scaleY");
+
+  // ---------- team plates + cars ----------
+  const holders = [], cars = [];
+  const finishX = [1130, 1380, 1010, 1260, 1520, 900];     // where each car is when the truth comes out
+  for (let i = 0; i < N; i++) {
+    const plate = T(api, `COMPANY ${"ABCDEF"[i]}`, { x: 0.035, yp: laneY(i), middle: true, size: 2.7, w: 600, ls: 0.1, cls: "soft" });
+    api.effect({ name: "chars", from: "below", stagger: 0.02, duration: 0.25 }, plate, C.companies + i * 0.08);
+    const h = box(api, `left:0;top:${laneY(i)}px;width:0;height:0`);
+    const c = car(api, { w: 15.5, slot: 2, parent: h });
+    holders.push(h); cars.push(c);
+    tl.fromTo(h, { x: -0.12 * W }, { x: startX + 0.075 * W, duration: 0.55, ease: "back.out(1.6)" }, C.companies + 0.1 + i * 0.08);
+    tl.fromTo(c.querySelector(".helmet"), { opacity: 0.25 }, { opacity: 1, duration: 0.15 }, C.developers + i * 0.05);
+    // GO: launch, then cruise
+    const lx = startX + 0.075 * W;
+    tl.to(h, { x: lx + 0.62 * (finishX[i] - lx), duration: 1.4 + i * 0.07, ease: "power2.in" }, C.go + i * 0.03)
+      .to(h, { x: finishX[i], duration: C.tokens - (C.go + 1.5 + i * 0.07), ease: "none" }, C.go + 1.45 + i * 0.1);
+  }
+
+  // ---------- hook: "इस साल की शुरुआत में" ----------
+  const yr = T(api, "EARLY <span style='color:#fff'>2026</span>", { x: 0.5, y: 0.155, anchor: "center", middle: true, size: 7.5, ls: 0.06, cls: "neon slot-2" });
+  api.effect({ name: "chars", from: "blur", stagger: 0.04, duration: 0.35 }, yr, 0.25);
+  tl.to(yr, { opacity: 0, y: -3 * u, duration: 0.3, ease: "power2.in" }, C.three - 0.55);
+
+  // ---------- start lights ----------
+  const gW = 0.3 * W, gH = 0.15 * H, gx = (W - gW) / 2, gy = 0.08 * H;
+  const gantry = panel(api, { x: gx, y: gy, w: gW, h: gH, slot: 1 });
+  appear(api, gantry, C.three - 0.4, 0.3);
+  const lights = [0, 1, 2].map((k) => {
+    const d = box(api, `left:${gW * (0.2 + k * 0.3) - 3.2 * u}px;top:${gH / 2 - 3.2 * u}px;width:${6.4 * u}px;height:${6.4 * u}px;border-radius:50%;
+      background:radial-gradient(circle, #fff 0 20%, #ff4d6d 45%, #8a0f2a 100%);box-shadow:0 0 ${1 * u}px #fff, 0 0 ${3 * u}px #ff2d55, 0 0 ${6 * u}px rgba(255,45,85,.6)`, gantry);
+    const off = box(api, `left:${gW * (0.2 + k * 0.3) - 3.2 * u}px;top:${gH / 2 - 3.2 * u}px;width:${6.4 * u}px;height:${6.4 * u}px;border-radius:50%;border:2px solid rgba(255,255,255,.25);background:#1a0d18`, gantry);
+    gantry.insertBefore(off, d);
+    tl.fromTo(d, { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.12, ease: "back.out(3)" }, [C.three, C.two, C.one][k]);
+    tl.to(d, { opacity: 0, duration: 0.06 }, C.go);
+    return d;
+  });
+  const go = T(api, "GO", { x: 0.5, y: gy / H + 0.5 * gH / H, anchor: "center", middle: true, size: 9, cls: "neon slot-2" });
+  tl.fromTo(go, { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1.15, duration: 0.18, ease: "power4.out" }, C.go)
+    .to(go, { opacity: 0, scale: 1.6, duration: 0.35, ease: "power2.in" }, C.go + 0.5);
+  tl.to(gantry, { y: -0.3 * H, duration: 0.45, ease: "power3.in" }, C.go + 0.9);
+
+  // launch dust
+  const dust = await api.particles({ layer: "front", texture: "dot", blend: "add" });
+  for (let i = 0; i < N; i++) dust.burst({ at: C.go + i * 0.03, x: startX + 0.03 * W, y: laneY(i), jitter: 12, count: 26, speed: [120, 420], angle: [150, 210],
+    gravity: -40, drag: 2.5, life: [0.5, 1.1], size: [10, 26], alpha: 0.35, colors: ["#ffffff", "#B4F7FF"] });
+
+  // ---------- scoring board ----------
+  const bx = 0.13 * W, bw = 0.74 * W, by = 0.045 * H, bh = 0.26 * H;
+  const board = panel(api, { x: bx, y: by, w: bw, h: bh, slot: 2 });
+  tl.fromTo(board, { y: -0.4 * H, rotation: -3 }, { y: 0, rotation: 0, duration: 0.7, ease: "elastic.out(1, 0.6)" }, C.board);
+  const kick = T(api, "POINTS FOR", { parent: board, xp: 3 * u, yp: 2.4 * u, size: 2.2, w: 600, ls: 0.3, cls: "soft" });
+  const opts = [["MORE FEATURES", C.features], ["BUGS FIXED", C.bugs], ["CODE SHIPPED", C.code]];
+  const chips = opts.map(([t, at], k) => {
+    const ch = T(api, t, { parent: board, xp: bw * (0.2 + k * 0.29), yp: 6.6 * u, anchor: "center", size: 4.1, w: 800, cls: "neon slot-2 kchip" });
+    api.effect("flicker", ch, at);
+    return ch;
+  });
+  chips.forEach((ch, k) => {
+    strike(api, ch, C.not + k * 0.1, { slot: 1, thick: 0.45 });
+    tl.to(ch, { opacity: 0.35, duration: 0.25, immediateRender: false }, C.not + k * 0.1 + 0.15);
+  });
+  
+
+  // the real score
+  const real = T(api, "MORE AI TOKENS ✓", { parent: board, xp: 3 * u, yp: 15.4 * u, size: 6.2, w: 800, cls: "neon slot-1" });
+  stamp(api, real, C.tokens, { rot: -2, shake: board });
+  api.effect(["glow-burst"], real, C.tokens + 0.1);
+  const lbl = T(api, "TOKENS BURNED", { parent: board, xp: bw - 3 * u, yp: 15.8 * u, size: 1.8, w: 600, ls: 0.25, cls: "soft", anchor: "right" });
+  lbl.style.left = bw - 3 * u - lbl.offsetWidth + "px";
+  const num = T(api, "48,250,000", { parent: board, xp: bw - 3 * u, yp: 18.2 * u, size: 4.2, cls: "neon slot-1", css: "font-variant-numeric:tabular-nums" });
+  num.style.left = bw - 3 * u - num.offsetWidth + "px";
+  appear(api, [lbl, num], C.tokens + 0.45, 0.2);
+  counter(api, num, { from: 0, to: 48250000, at: C.tokens + 0.45, dur: DURATION - C.tokens - 0.6, ease: "power2.in" });
+
+  // ---------- the truth: everyone is doing donuts, burning fuel in place ----------
+  lines.forEach((ln) => tl.to(ln, { filter: "hue-rotate(95deg) saturate(1.6)", duration: 0.3, immediateRender: false }, C.tokens));
+  cars.forEach((c, i) => tl.to(c, { "--c": "#B23BE8", "--c-hi": "#E39BFF", duration: 0.25 }, C.tokens + i * 0.04));
+  const R = 0.034 * H, spin = [1.45, 1.6, 1.35, 1.7, 1.5, 1.4];
+  api.onFrame((t) => {
+    cars.forEach((c, i) => {
+      if (t < C.tokens) { c.style.transform = ""; return; }
+      const a = (t - C.tokens) * (t - C.tokens < 0.6 ? (t - C.tokens) / 0.6 : 1) * spin[i] * 6.283;   // spin up over 0.6 s
+      c.style.transform = `translate(${R * Math.sin(a)}px, ${R * (1 - Math.cos(a)) * 0.9}px) rotate(${(a * 180) / Math.PI}deg)`;
+    });
+  });
+  const smoke = await api.particles({ layer: "front", texture: "dot", blend: "add" });
+  for (let i = 0; i < N; i++) smoke.stream({ from: C.tokens + 0.15, to: DURATION, rate: 42, x: finishX[i], y: laneY(i) + R * 0.9, jitter: R * 1.1,
+    angle: [0, 360], speed: [40, 160], gravity: -60, drag: 1.4, life: [0.6, 1.3], size: [16, 42], alpha: 0.5, colors: ["#E39BFF", "#B23BE8", "#ffffff"] });
+  tl.to(el, { keyframes: { x: [0, -1 * u, 0.8 * u, -0.5 * u, 0.3 * u, 0] }, duration: 0.35, ease: "none" }, C.tokens + 0.18);
+  return { reveals: [] };
+}
+</script>
+</body>
+</html>

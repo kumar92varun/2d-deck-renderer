@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Beat 1 · Arcade · Tokenmaxxing</title>
+<link rel="stylesheet" href="../components/kit.css">
+<style>
+  .scr { overflow: hidden; background: radial-gradient(ellipse at 50% 40%, rgba(40,20,80,.85), rgba(6,6,20,.95) 75%); }
+  .scr::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(to bottom, rgba(0,0,0,.28) 0 2px, transparent 2px 5px); }
+  @font-face { font-family: "Press Start 2P"; font-weight: 400; font-display: block; src: url("../assets/fonts/press-start-2p-latin-400-normal.woff2") format("woff2"); }
+  .px { font-family: "Press Start 2P", monospace; font-weight: 400 !important; letter-spacing: .02em; line-height: 1.25; }
+  .coin { position: absolute; border-radius: 50%; display: grid; place-items: center; font: 800 calc(var(--u)*3.4) var(--font);
+    color: #2a0b3a; background: radial-gradient(circle at 35% 30%, #fff, #E39BFF 40%, #B23BE8 85%);
+    box-shadow: 0 0 calc(var(--u)*.6) #fff, 0 0 calc(var(--u)*2) #B23BE8; }
+</style></head>
+<body>
+<script type="module">
+/* Beat 1, concept B "The Arcade". A neon arcade cabinet: the 2026 tournament, six company players, READY 3-2-1-GO;
+   the score menu offers features / bugs / code, all LOCKED; the real score is TOKENS INSERTED, and coins pour into
+   the slot nonstop while the hi-score spins. Same VO and cues as beat01-fuel. */
+import { scene } from "/video/core/scene.js";
+import { T, box, panel, appear, hide, grow, stamp, strike, counter } from "../components/kit.js";
+
+const CUES = { cab: 0.3, companies: 1.7, three: 1.9, two: 2.9, one: 3.9, developers: 3.6, go: 4.85, menu: 6.5,
+  features: 7.3, bugs: 9.3, code: 11.5, not: 12.55, tokens: 13.8 };
+const DURATION = 16.0;
+
+scene({
+  duration: DURATION, fps: 30, seed: 201, cues: CUES, setup: () => document.fonts.load("16px 'Press Start 2P'"),
+  motionBlur: { samples: 6, shutter: 0.5 },
+  background: [{ name: "neon-haze", panels: [{ x: 0.04, y: 0.1, w: 6, color: 1 }, { x: 0.9, y: 0.82, w: 6, color: 2 }], branches: false }],
+  moments: [{ type: "custom", at: 0, rect: [0, 0, 1, 1], enter: "none", build }],
+});
+
+async function build(api) {
+  const { W, H, u, tl } = api;
+  const C = CUES;
+  // ---------- the cabinet: marquee, screen, coin slot ----------
+  const sx = 0.22 * W, sw = 0.56 * W, sy = 0.17 * H, sh = 0.6 * H;
+  const marquee = panel(api, { x: sx, y: 0.035 * H, w: sw, h: 0.1 * H, slot: 1, r: 1 });
+  T(api, "TECH ARCADE · <span style='color:#fff'>2026</span> TOURNAMENT", { parent: marquee, xp: sw / 2, yp: 0.05 * H, anchor: "center", middle: true, size: 3.6, ls: 0.08, cls: "neon slot-1" });
+  const screen = panel(api, { x: sx, y: sy, w: sw, h: sh, slot: 2, r: 1.2 });
+  screen.classList.add("scr");
+  const slot = panel(api, { x: 0.44 * W, y: 0.83 * H, w: 0.12 * W, h: 0.12 * H, slot: 1, r: 0.8 });
+  T(api, "INSERT<br>TOKENS", { parent: slot, xp: 0.06 * W, yp: 0.05 * H, anchor: "center", middle: true, size: 1.5, cls: "neon slot-1 px", css: "text-align:center;line-height:1.2" });
+  box(api, `left:${0.05 * W}px;top:${0.085 * H}px;width:${0.02 * W}px;height:${0.008 * H}px;background:#000;border:2px solid #E39BFF`, slot);
+  api.effect("flicker", [marquee, screen, slot], C.cab);
+
+  // ---------- hook: PRESS START · 2026 ----------
+  const ps0 = T(api, "PRESS START<br><span style='font-size:.7em'>EARLY 2026</span>", { parent: screen, xp: sw / 2, yp: sh * 0.45, anchor: "center", middle: true, size: 4.4, cls: "neon slot-a px", css: "text-align:center;color:#FFE7A3;line-height:1.6" });
+  tl.fromTo(ps0, { opacity: 0 }, { opacity: 1, duration: 0.18, repeat: 5, yoyo: true, ease: "steps(1)" }, 0.35);
+  tl.set(ps0, { opacity: 0 }, C.companies - 0.05);
+
+  // ---------- player select ----------
+  const grid = box(api, `left:0;top:0;width:${sw}px;height:${sh}px`, screen);
+  const ps = Array.from({ length: 6 }, (_, i) => {
+    const cw = sw * 0.27, ch = sh * 0.22, cx = sw * (0.08 + (i % 3) * 0.3), cy = sh * (0.1 + Math.floor(i / 3) * 0.28);
+    const card = box(api, `left:${cx}px;top:${cy}px;width:${cw}px;height:${ch}px;border:3px solid #B4F7FF;border-radius:${0.8 * u}px;box-shadow:0 0 ${u}px #36D6E7;background:rgba(54,214,231,.08)`, grid);
+    T(api, `COMPANY ${"ABCDEF"[i]}`, { parent: card, xp: cw / 2, yp: ch * 0.36, anchor: "center", middle: true, size: 2.3, cls: "neon slot-2 px", fitW: cw * 0.9 });
+    const rdy = T(api, `P${i + 1} READY`, { parent: card, xp: cw / 2, yp: ch * 0.72, anchor: "center", middle: true, size: 1.9, cls: "neon slot-a px", css: "color:#FFE7A3" });
+    api.effect("pop", card, C.companies + i * 0.07);
+    tl.fromTo(rdy, { opacity: 0 }, { opacity: 1, duration: 0.05, repeat: 3, yoyo: true }, C.developers + i * 0.06);
+    tl.set(rdy, { opacity: 1 }, C.developers + i * 0.06 + 0.3);
+    return card;
+  });
+  // countdown along the bottom of the screen, then GO
+  const cd = ["3", "2", "1"].map((n, k) => {
+    const e = T(api, n, { parent: screen, xp: sw / 2, yp: sh * 0.82, anchor: "center", middle: true, size: 9, cls: "neon slot-a px", css: "color:#FFE7A3" });
+    tl.fromTo(e, { opacity: 0, scale: 1.8 }, { opacity: 1, scale: 1, duration: 0.15, ease: "power4.out" }, [C.three, C.two, C.one][k])
+      .to(e, { opacity: 0, duration: 0.1 }, [C.two, C.one, C.go][k] - 0.05);
+    return e;
+  });
+  const go = T(api, "GO!", { parent: screen, xp: sw / 2, yp: sh * 0.82, anchor: "center", middle: true, size: 11, cls: "neon slot-2 px" });
+  tl.fromTo(go, { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1.1, duration: 0.18, ease: "back.out(3)" }, C.go)
+    .to(go, { opacity: 0, duration: 0.25 }, C.go + 0.9);
+  tl.to(grid, { y: -sh, duration: 0.45, ease: "power3.in" }, C.go + 1.1);
+
+  // ---------- score menu: every honest option is LOCKED ----------
+  const menu = box(api, `left:0;top:0;width:${sw}px;height:${sh}px`, screen);
+  const mt = T(api, "SCORE POINTS FOR:", { parent: menu, xp: sw * 0.07, yp: sh * 0.09, size: 3, cls: "neon slot-2 px" });
+  api.effect({ name: "typewriter", speed: 0.03 }, mt, C.menu);
+  const items = [["MORE FEATURES", C.features], ["BUGS FIXED", C.bugs], ["CODE SHIPPED", C.code]].map(([t, at], k) => {
+    const e = T(api, t, { parent: menu, xp: sw * 0.14, yp: sh * (0.25 + k * 0.14), size: 3.6, cls: "neon slot-2 px" });
+    api.effect({ name: "typewriter", speed: 0.025 }, e, at - 0.2);
+    return e;
+  });
+  const cur = T(api, "▶", { parent: menu, xp: sw * 0.07, yp: sh * 0.25, size: 3.6, cls: "neon slot-a px", css: "color:#FFE7A3" });
+  appear(api, cur, C.features - 0.1, 0.05);
+  [C.bugs, C.code].forEach((at, k) => tl.to(cur, { y: sh * 0.14 * (k + 1), duration: 0.2, ease: "power3.out" }, at - 0.15));
+  tl.fromTo(cur, { opacity: 1 }, { opacity: 0.2, duration: 0.18, repeat: 26, yoyo: true, ease: "steps(1)", immediateRender: false }, C.features + 0.2);
+  items.forEach((e, k) => {
+    strike(api, e, C.not + k * 0.1, { slot: 1, thick: 0.4 });
+    tl.to(e, { opacity: 0.35, duration: 0.2, immediateRender: false }, C.not + k * 0.1 + 0.1);
+    const lk = T(api, "LOCKED", { parent: menu, xp: sw * 0.74, yp: sh * (0.25 + k * 0.14), size: 2.6, cls: "neon slot-1 px" });
+    stamp(api, lk, C.not + 0.2 + k * 0.1, { rot: -5 });
+  });
+  tl.to(cur, { y: sh * 0.41, duration: 0.2 }, C.tokens - 0.2);
+  // the real option
+  const real = T(api, "INSERT<br>MORE TOKENS", { parent: menu, xp: sw * 0.14, yp: sh * 0.66, size: 4.6, cls: "neon slot-1 px" });
+  stamp(api, real, C.tokens, { rot: 0, shake: screen });
+  api.effect("glow-burst", real, C.tokens + 0.1);
+  const hi = T(api, "HI-SCORE 0", { parent: screen, xp: sw - 2.5 * u, yp: 2.2 * u, size: 2.4, cls: "neon slot-1 px", anchor: "right" });
+  hi.style.left = sw - 2.5 * u - 0.45 * W + "px"; hi.style.width = 0.45 * W + "px"; hi.style.textAlign = "right";
+  appear(api, hi, C.tokens + 0.3, 0.1);
+  const st = counter(api, hi, { from: 0, to: 48250000, at: C.tokens + 0.3, dur: DURATION - C.tokens - 0.5, fmt: (v) => "HI-SCORE " + Math.round(v).toLocaleString("en-US") });
+
+  // coins pour into the slot, faster and faster
+  let t0 = C.tokens + 0.05, gap = 0.13, k = 0;
+  while (t0 < DURATION - 0.5) {
+    const c = box(api, `left:0;top:0;width:${6.4 * u}px;height:${6.4 * u}px`, null, "coin");
+    c.textContent = "T";
+    const fromX = 0.3 * W + api.rng() * 0.4 * W;
+    tl.fromTo(c, { x: fromX, y: -0.1 * H, rotation: api.rng() * 360, opacity: 1 },
+      { x: 0.5 * W - 3.2 * u, y: 0.84 * H, rotation: "+=540", duration: 0.9, ease: "power2.in", immediateRender: false }, t0)
+      .set(c, { opacity: 0 }, t0 + 0.9);
+    tl.set(c, { opacity: 0 }, 0);
+    tl.to(slot, { scale: 1.05, duration: 0.05, yoyo: true, repeat: 1 }, t0 + 0.9);
+    t0 += gap; gap = Math.max(0.035, gap * 0.92); k++;
+  }
+  return { reveals: [] };
+}
+</script>
+</body>
+</html>

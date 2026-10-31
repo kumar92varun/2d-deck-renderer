@@ -1,0 +1,19 @@
+/* Tokenmaxxing kit styles. Glow and colours come from the theme (neon: --glow / --box-glow per slot). */
+.kt { position: absolute; white-space: nowrap; line-height: 1.05; }
+.kt.neon { color: #fff; text-shadow: var(--glow, none); }
+.kt.soft { color: var(--text); text-shadow: var(--soft, none); }
+.kt.dim { color: var(--muted); }
+.kt.col { color: var(--c); }
+.kt.caps { text-transform: uppercase; }
+.kpanel { border: calc(var(--u)*.32) solid #fff; box-shadow: var(--box-glow, 0 0 0 transparent); background: var(--surface, rgba(0,0,0,.4)); }
+.kpanel.flat { box-shadow: none; border-color: color-mix(in srgb, var(--c) 60%, transparent); }
+.kstrike { position: absolute; box-shadow: 0 0 calc(var(--u)*.6) var(--c); }
+.kcar svg { filter: drop-shadow(0 0 calc(var(--u)*.25) #fff) drop-shadow(0 0 calc(var(--u)*1) var(--c)); }
+.kcar .body { fill: color-mix(in srgb, var(--c) 22%, #0a0f24); stroke: #fff; stroke-width: 3; }
+.kcar .whl { fill: #111; stroke: color-mix(in srgb, var(--c) 70%, #fff); stroke-width: 2; }
+.kcar .cockpit { fill: #050914; stroke: var(--c-hi); stroke-width: 2; }
+.kcar .helmet { fill: var(--c-hi); opacity: .25; }
+.kstamp { padding: .15em .5em; border: calc(var(--u)*.45) solid currentColor; border-radius: calc(var(--u)*.8); font-weight: 800; letter-spacing: .06em;
+  text-transform: uppercase; box-shadow: 0 0 calc(var(--u)*1.4) color-mix(in srgb, currentColor 60%, transparent), inset 0 0 calc(var(--u)*1) color-mix(in srgb, currentColor 40%, transparent); }
+.kchip { padding: .35em .8em; border-radius: calc(var(--u)*1); border: calc(var(--u)*.25) solid color-mix(in srgb, var(--c) 70%, #fff); background: rgba(10,14,36,.7); }
+.kmono { font-family: "Courier New", ui-monospace, monospace; font-weight: 700; }

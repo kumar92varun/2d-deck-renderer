@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Beat 1 · The bill · Tokenmaxxing</title>
+<link rel="stylesheet" href="../components/kit.css"></head>
+<body>
+<script type="module">
+/* Beat 1, concept C "The Bill". The race told as a bill: a receipt prints the entrants and the start, a taxi meter
+   starts running; "billed for" features / bugs / code each print and are VOIDed; then AI TOKENS × 48,250,000 prints
+   and the printer runs away while the meter spins. A big caption on the left carries each idea for phone viewers. */
+import { scene } from "/video/core/scene.js";
+import { T, box, appear, hide, stamp, strike, counter } from "../components/kit.js";
+import { receipt, meter } from "../components/receipt.js";
+
+const CUES = { open: 0.35, companies: 1.7, three: 1.9, two: 2.9, one: 3.9, go: 4.85, billed: 6.5,
+  features: 7.3, bugs: 9.3, code: 11.5, not: 12.55, tokens: 13.8 };
+const DURATION = 16.0;
+
+scene({
+  duration: DURATION, fps: 30, seed: 301, cues: CUES,
+  motionBlur: { samples: 6, shutter: 0.5 },
+  background: [{ name: "neon-haze", panels: [], branches: false }, { name: "dust-field", count: 70, size: [2, 6], alpha: [0.06, 0.22] }],
+  moments: [{ type: "custom", at: 0, rect: [0, 0, 1, 1], enter: "none", build }],
+});
+
+async function build(api) {
+  const { W, H, u, tl } = api;
+  const C = CUES;
+  // ---------- big caption on the left: one idea at a time ----------
+  const caps = [];
+  const cap = (html, at, until, o = {}) => {
+    const e = T(api, html, { x: 0.06, y: 0.5, middle: true, size: o.size ?? 8, cls: o.cls ?? "neon slot-2", css: "line-height:1.05;white-space:normal;width:" + 0.3 * W + "px" });
+    api.effect(o.enter ?? { name: "chars", from: "below", stagger: 0.03, duration: 0.3 }, e, at);
+    if (until) tl.to(e, { opacity: 0, y: -3 * u, duration: 0.25, immediateRender: false }, until);
+    caps.push(e);
+    return e;
+  };
+  cap("EARLY 2026", C.open, C.companies - 0.15);
+  cap("6 TECH<br>COMPANIES", C.companies, C.go - 0.2, { size: 7 });
+  cap("THE RACE", C.go, C.billed - 0.1, { enter: "slam" });
+  cap("POINTS FOR…", C.billed, C.not - 0.1, { size: 7 });
+  cap("NOT<br>THESE", C.not, C.tokens - 0.15, { size: 8.5, cls: "neon slot-1", enter: "slam" });
+  const mt = cap("MORE<br>TOKENS", C.tokens, null, { size: 10, cls: "neon slot-1", enter: "slam" });
+  api.effect(["glow-burst"], mt, C.tokens + 0.1);
+
+  // ---------- receipt + meter ----------
+  const rx = 0.42 * W, rw = 0.25 * W, ry = 0.9 * H;
+  const r = receipt(api, { x: rx, y: ry, w: rw, maxH: 0.88 * H });
+  api.effect("flicker", r.head, 0.1);
+  const bold = "font-weight:900;font-size:1.15em";
+  r.print("<span style='margin:auto'>*** TECH RACE ***</span>", C.open);
+  r.print("<span style='margin:auto'>EARLY 2026</span>", C.open + 0.3);
+  "ABCDEF".split("").forEach((c, i) => r.print(r.dots(`COMPANY ${c}`, "ENTERED"), C.companies + 0.1 + i * 0.12));
+  r.print("<span style='margin:auto'>--------------------</span>", C.go - 0.3);
+  r.print(`<span style='margin:auto;${bold}'>RACE START  00:00</span>`, C.go);
+  r.print("<span>BILLED FOR:</span>", C.billed);
+  const items = [["FEATURES", C.features], ["BUGS FIXED", C.bugs], ["CODE SHIPPED", C.code]].map(([t, at]) => r.print(r.dots(t, "$ —"), at));
+  items.forEach((row, k) => {
+    strike(api, row, C.not + k * 0.12, { slot: 1, thick: 0.3 });
+    tl.to(row, { opacity: 0.4, duration: 0.2, immediateRender: false }, C.not + k * 0.12 + 0.1);
+  });
+  const voids = T(api, "VOID", { x: (rx + rw * 0.5) / W, y: 0.79, size: 6, cls: "neon slot-1 kstamp", css: "color:#ff6b9a" });
+  stamp(api, voids, C.not + 0.4, { rot: -14 });
+  tl.to(voids, { opacity: 0, duration: 0.3, immediateRender: false }, C.tokens - 0.2);
+  r.print(`<span style='${bold};color:#9b1fd1'>AI TOKENS</span><span style='${bold};color:#9b1fd1'>× 48,250,000</span>`, C.tokens);
+  r.stream((i) => r.dots("AI TOKENS", "$" + (1840 + i * 137).toLocaleString("en-US")), C.tokens + 0.4, DURATION, 0.075);
+
+  // the meter: creeps during the race, explodes on tokens
+  const m = meter(api, { x: 0.7 * W, y: 0.38 * H, w: 0.27 * W, h: 0.2 * H, label: "METER" });
+  appear(api, m.p, 0.2, 0.3);
+  const cd = { v: 0 };
+  tl.fromTo(cd, { v: 0 }, { v: 1240, duration: C.tokens - C.go, ease: "none" }, C.go);
+  tl.to(cd, { v: 10630000, duration: DURATION - C.tokens - 0.2, ease: "power3.in" }, C.tokens);
+  api.onFrame((t) => {
+    m.lb.textContent = t >= C.go ? "METER · RUNNING" : "METER";
+    m.d.textContent = t >= C.go ? "$" + cd.v.toLocaleString("en-US", { minimumFractionDigits: cd.v < 1e5 ? 2 : 0, maximumFractionDigits: cd.v < 1e5 ? 2 : 0 })
+      : t >= C.one ? "1" : t >= C.two ? "2" : t >= C.three ? "3" : "$0.00";
+  });
+  tl.to(m.p, { keyframes: { x: [0, -0.8 * u, 0.6 * u, -0.4 * u, 0] }, duration: 0.3, ease: "none" }, C.tokens + 0.1);
+  return { reveals: [] };
+}
+</script>
+</body>
+</html>
