@@ -3,11 +3,16 @@
 @font-face { font-family: "Montserrat"; font-weight: 600; font-display: block; src: url("fonts/montserrat-latin-600-normal.woff2") format("woff2"); }
 @font-face { font-family: "Montserrat"; font-weight: 700; font-display: block; src: url("fonts/montserrat-latin-700-normal.woff2") format("woff2"); }
 @font-face { font-family: "Montserrat"; font-weight: 800; font-display: block; src: url("fonts/montserrat-latin-800-normal.woff2") format("woff2"); }
+@font-face { font-family: "League Spartan"; font-weight: 800; font-display: block; src: url("fonts/league-spartan-latin-800-normal.woff2") format("woff2"); }
+@font-face { font-family: "League Spartan"; font-weight: 900; font-display: block; src: url("fonts/league-spartan-latin-900-normal.woff2") format("woff2"); }
 @font-face { font-family: "Montserrat"; font-weight: 900; font-display: block; src: url("fonts/montserrat-latin-900-normal.woff2") format("woff2"); }
 
 .theme-kinetic .m { align-items: flex-start; text-align: left; }
 .theme-kinetic .m-end, .theme-kinetic .m-section.centered { align-items: center; text-align: center; }
 .theme-kinetic .hl { color: var(--c); }
+/* big words: the heavy, tight display face (League Spartan, matched to the reference reel); small text stays Montserrat */
+.theme-kinetic .t-main, .theme-kinetic .t-sub, .theme-kinetic .t-item, .theme-kinetic .t-number, .theme-kinetic .t-head, .theme-kinetic .t-quote,
+.theme-kinetic .m-chart .t-title, .theme-kinetic .t-blabel, .theme-kinetic .t-bvalue, .theme-kinetic .fx-ghost-word, .theme-kinetic .t-row-label { font-family: var(--display); }
 .theme-kinetic strong { font-weight: 900; }
 
 /* kicker: the small line that sets up the big word */

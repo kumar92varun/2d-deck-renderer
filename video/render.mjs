@@ -19,6 +19,7 @@
      --workers N         parallel browsers, default 6
      --from S --to S     only part of the scene (seconds) → drafts/
      --stills a,b,c      PNG stills at these times instead of a video
+     --stills-dir DIR    write the stills there instead of out/<video>/stills (used by tools/review.mjs)
      --audio FILE        merge this recording into the render (→ final/…-audio.mp4)
      --offset S          seconds to cut from the start of the recording (from tools/cue-times.mjs); default 0
      --no-captions       hide text moments (clean plate)
@@ -174,6 +175,7 @@ try {
   const mb = mbN > 1 ? { samples: mbN, shutter: info.motionBlur?.shutter ?? 0.5 } : null;
 
   if (stills) {
+    if (opt("stills-dir")) dirs.stills = path.resolve(opt("stills-dir"));
     await mkdir(dirs.stills, { recursive: true });
     for (const t of stills) {
       const file = path.join(dirs.stills, `${base}${compare ? "-" + theme : ""}${query ? "-" + query.replace(/[^\w=-]+/g, "_") : ""}-t${t}.png`);

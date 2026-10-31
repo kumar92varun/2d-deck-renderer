@@ -137,6 +137,23 @@ export default {
     });
     return d;
   },
+  // kinetic type: the word arrives as a chain of letters along a curve (x and y use different eases, so the path
+  // bends), each letter tilted along it and settling in turn: a ribbon of letters. opts: from "up-right" |
+  // "down-right" | "up-left" | "down-left", dx / dy (u), spin (deg), stagger, duration
+  "letters-ribbon"(api, t, at, o) {
+    let d = 0;
+    const dir = o.from ?? "up-right", sx = dir.includes("left") ? -1 : 1, sy = dir.startsWith("up") ? -1 : 1;
+    els(t).forEach((el) => {
+      const cs = split(el, "chars"), dx = sx * (o.dx ?? 34) * api.u, dy = sy * (o.dy ?? 30) * api.u, rot = -sy * sx * (o.spin ?? 28);
+      const dur = o.duration ?? 0.5, st = o.stagger ?? 0.045;
+      api.tl.fromTo(cs, { opacity: 0 }, { opacity: 1, duration: 0.06, stagger: st }, at)
+        .fromTo(cs, { x: dx }, { x: 0, duration: dur, ease: "power2.out", stagger: st }, at)
+        .fromTo(cs, { y: dy }, { y: 0, duration: dur, ease: "power4.out", stagger: st }, at)
+        .fromTo(cs, { rotation: rot }, { rotation: 0, duration: dur, ease: "power3.out", stagger: st }, at);
+      d = Math.max(d, dur + cs.length * st);
+    });
+    return d;
+  },
   // big and soft → sharp in place (a fast push-in)
   "zoom-in"(api, t, at, o) {
     api.tl.fromTo(els(t), { opacity: 0, scale: o.from ?? 2.6, filter: `blur(${(o.blur ?? 1.2) * api.u}px)` },

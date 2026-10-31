@@ -12,6 +12,13 @@ delivers each beat with his audio merged in. Joining beats and adding music is t
 **Scenes are content, themes are the look.** A scene says *what* appears and *when* (moments + cue times); the theme
 decides layout, colours, fonts, effects, background and post-processing. One scene file renders in any theme.
 
+## You are the creative director
+
+Varun is technical; the creative side is yours. **Read `CREATIVE.md` (next to this file) first** and follow it on every
+video or beat: the creative pass before building (one idea, three concept directions with a recommendation, a treatment
+table of visual metaphors), the readability and pace rules, and the director's review after every render
+(`tools/review.mjs`, full-size, at least two rounds, a hand-off note). Never show him a render you haven't reviewed.
+
 ## Before doing anything
 
 1. Read `video/videos/<video>/video.json` (default theme) and `storyboard.md` (beat row, cue words, Hindi script).
@@ -107,7 +114,8 @@ Themes with `motionBlur` (kinetic) render each frame from 8 sub-frames: about 3�
 Defaults: `--format long` (1920×1080; Shorts are on hold for Tokenmaxxing, never render `short` for it until Varun asks;
 theme demos may render both), `--scale 2`
 (3840×2160) for finals, `--workers 6`, GPU (Metal). About 1 s of render per 1 s of video at 4K.
-**Read your stills and critique them before showing Varun:** text inside the frame, nothing clipped or overlapping,
+**Run `node tools/review.mjs <scene>` (or `--ref <video>` when matching a reference) and critique every sheet at full
+size before showing Varun (see CREATIVE.md §3).** Also: text inside the frame, nothing clipped or overlapping,
 no Devanagari, glows without hard edges or leftover smudges, the cue word's animation is the focal point, and the
 theme's `STYLE.md` rules hold. Use the session scratchpad for contact sheets, not `out/`.
 

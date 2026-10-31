@@ -197,7 +197,8 @@ async function build(def, resolveReady) {
 
   await document.fonts.ready;
   seek(Number(P.get("t") || 0));
-  Object.assign(window.__scene, { duration, fps, width: W, height: H, format, theme: theme.name, seek,
+  Object.assign(window.__scene, { duration, fps, width: W, height: H, format, theme: theme.name, seek, cues,
+    moments: moments.map((m) => ({ type: m.type, start: m.start, end: Math.min(m.end, duration), text: m.text || m.title || "" })),
     motionBlur: def.motionBlur ?? theme.motionBlur ?? null });
   if (!isRender) stageScale = mountPreview({ stage, W, H, duration, fps, seek, theme: theme.name });
   resolveReady();

@@ -10,11 +10,12 @@ const DARK = { muted: "#7E9A98", c1: "#2FB386", "c1-hi": "#55D3A6", accent: "#2F
 export default {
   name: "kinetic",
   css: ["theme.css"],
-  fonts: ["500 20px Montserrat", "600 20px Montserrat", "700 20px Montserrat", "800 20px Montserrat", "900 20px Montserrat"],
+  fonts: ["900 20px 'League Spartan'", "800 20px 'League Spartan'", "500 20px Montserrat", "600 20px Montserrat", "700 20px Montserrat", "800 20px Montserrat", "900 20px Montserrat"],
   palette: {
     bg: "#EFECE2", ...LIGHT, kicker: "#67665F",
     paper: "#FAF8F4", ink: "#113A3F", surface: "#FAF8F4",
     font: '"Montserrat", system-ui, sans-serif',
+    display: '"League Spartan", "Montserrat", sans-serif',
   },
   // whole-screen colour sections; a moment switches with `scheme: "teal"` (transition: schemeTransition)
   schemes: {

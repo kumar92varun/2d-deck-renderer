@@ -7,18 +7,18 @@
   /* the reel's notebook lines are wider apart than the theme default */
   .theme-kinetic .scheme-plate.scheme-notes { background: repeating-linear-gradient(to bottom, transparent 0 calc(var(--u)*6.6 - 2px), rgba(17,58,63,.075) calc(var(--u)*6.6 - 2px) calc(var(--u)*6.6)), #FAF7F4 !important; }
   .rt { position: absolute; white-space: nowrap; line-height: 1; }
-  .ghost-out { color: transparent !important; -webkit-text-stroke: 2.5px #C9C5B9; }
+  .ghost-out { color: transparent !important; -webkit-text-stroke: 1.6px #CDC9BD; }
   .prop { position: absolute; left: 0; top: 0; }
   .sheet { position: absolute; background: #FAF8F4; color: #113A3F; border-radius: 4px;
     box-shadow: 0 18px 40px rgba(0,0,0,.18), 0 3px 6px rgba(0,0,0,.12);
     background-image: linear-gradient(90deg, transparent 76px, rgba(40,160,122,.35) 76px 78px, transparent 78px),
       repeating-linear-gradient(to bottom, transparent 0 36px, rgba(17,58,63,.07) 36px 37px); }
   .sheet .hd { position: absolute; top: 58px; font-weight: 600; font-size: 22px; letter-spacing: .32em; text-transform: uppercase; color: #3E4B4C; }
-  .sheet .lb { position: absolute; font-weight: 900; font-size: 42px; text-transform: uppercase; color: #113A3F; }
-  .sheet .vl { position: absolute; right: 48px; font-weight: 800; font-size: 40px; color: #28A07A; }
-  .sheet .nt { position: absolute; font-weight: 500; font-size: 22px; color: #4F5656; white-space: nowrap; }
+  .sheet .lb { position: absolute; font-family: "League Spartan"; font-weight: 900; font-size: 37px; text-transform: uppercase; color: #113A3F; }
+  .sheet .vl { position: absolute; right: 48px; font-family: "League Spartan"; font-weight: 800; font-size: 36px; color: #28A07A; }
+  .sheet .nt { position: absolute; font-weight: 500; font-size: 20px; color: #4F5656; white-space: nowrap; }
   .sheet .mk { position: absolute; left: 70px; right: 30px; height: 112px; background: rgba(40,160,122,.22); transform-origin: 0 50%; }
-  .sheet svg.ck { position: absolute; right: 52px; width: 46px; height: 46px; fill: none; stroke: #28A07A; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .sheet svg.ck { visibility: hidden; position: absolute; right: 52px; width: 46px; height: 46px; fill: none; stroke: #28A07A; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
 </style>
 </head>
 <body>
@@ -32,17 +32,30 @@ import { scene } from "/video/core/scene.js";
 const DURATION = 40.5;
 
 /* ---------- helpers: absolutely placed text, sized to a measured width, top given as the capital-letter top ---------- */
+// where the capital letters start inside a line-height:1 box, as a fraction of the font size (measured per font)
+const capCache = {};
+function capOff(fam, w) {
+  const k = fam + w;
+  if (capCache[k] == null) {
+    const c = document.createElement("canvas").getContext("2d");
+    c.font = `${w} 100px ${fam}`;
+    const m = c.measureText("H");
+    capCache[k] = ((100 - (m.fontBoundingBoxAscent + m.fontBoundingBoxDescent)) / 2 + m.fontBoundingBoxAscent - m.actualBoundingBoxAscent) / 100;
+  }
+  return capCache[k];
+}
 function T(api, text, o) {
   const { W, H, u } = api;
   const e = document.createElement("div");
   e.className = "rt" + (o.cls ? " " + o.cls : "");
   e.innerHTML = o.raw ? text : api.html(text);
-  e.style.cssText = `font-size:${(o.size ?? 3) * u}px;font-weight:${o.w ?? 900};letter-spacing:${o.ls ?? 0}em;color:${o.color ?? "var(--text)"};` +
+  const fam = o.font ?? ((o.w ?? 900) >= 800 ? '"League Spartan"' : '"Montserrat"');
+  e.style.cssText = `font-family:${fam};font-size:${(o.size ?? 3) * u}px;font-weight:${o.w ?? 900};letter-spacing:${o.ls ?? 0}em;color:${o.color ?? "var(--text)"};` +
     `${o.upper === false ? "" : "text-transform:uppercase;"}${o.css ?? ""}`;
   (o.parent ?? api.el).appendChild(e);
   let fs = (o.size ?? 3) * u;
   if (o.fitW) { fs *= o.fitW / e.offsetWidth; e.style.fontSize = fs + "px"; }
-  const left = o.x * W, top = o.capTop != null ? o.capTop * H - 0.158 * fs : (o.y ?? 0) * H;
+  const left = o.x * W, top = o.capTop != null ? o.capTop * H - capOff(fam, o.w ?? 900) * fs : (o.y ?? 0) * H;
   e.style.left = (o.center ? left - e.offsetWidth / 2 : left) + "px";
   e.style.top = top + "px";
   return e;
@@ -51,6 +64,7 @@ const K = (api, text, o) => T(api, text, { size: 3.3, w: 600, ls: 0.3, color: "v
 const box = (api, css, parent) => { const d = document.createElement("div"); d.style.cssText = "position:absolute;" + css; (parent ?? api.el).appendChild(d); return d; };
 const typeIn = (api, el, at, st = 0.024) => api.effect({ name: "chars", from: "below", stagger: st, duration: 0.2 }, el, at);
 const fly = (api, el, at, o = {}) => api.effect({ name: "letters-fly", stagger: 0.04, duration: 0.42, spread: 38, ...o }, el, at);
+const rib = (api, el, at, o = {}) => api.effect({ name: "letters-ribbon", ...o }, el, at);
 const zoom = (api, el, at, o = {}) => api.effect({ name: "zoom-in", from: 1.6, blur: 0.8, duration: 0.4, ...o }, el, at);
 const appear = (api, el, at, d = 0.2) => api.tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: d }, at);
 const fade = (api, el, at, d = 0.25) => api.tl.fromTo(el, { opacity: 1 }, { opacity: 0, duration: d, immediateRender: false }, at);
@@ -67,12 +81,15 @@ function s1(api) {
   fly(api, T(api, "Create", { x: 0.086, capTop: 0.359, fitW: 860 }), 1.3);
   zoom(api, T(api, "a", { x: 0.081, capTop: 0.44, size: 3.4, w: 800, color: "var(--c1)" }), 2.18, { from: 2 });
   zoom(api, T(api, "Budget", { x: 0.086, capTop: 0.469, fitW: 865, color: "var(--c1)" }), 2.27, { from: 2.4, blur: 1.5, duration: 0.35 });
-  grow(api, box(api, "left:48px;top:1222px;width:400px;height:2px;background:#C9C5BA"), 2.55);
+  grow(api, box(api, "left:35px;top:1222px;width:780px;height:2px;background:#C9C5BA"), 2.5, "x", 0.5);
+  const dotG = box(api, "left:58px;top:1215px;width:16px;height:16px;border-radius:50%;background:var(--c1)");
+  api.tl.fromTo(dotG, { scale: 0 }, { scale: 1, duration: 0.25, ease: "back.out(3)" }, 2.62);
+  const mg = box(api, "left:0;top:0;width:100%;height:100%");
   ["Oct", "Nov", "Dec", "Jan"].forEach((m, i) => {
-    const e = T(api, m, { x: [0.083, 0.244, 0.47, 0.72][i], capTop: 0.607, size: 3.6, w: 800, color: i ? "#9C9A92" : "var(--text)" });
-    typeIn(api, e, 2.72 + i * 0.07, 0.03);
-    appear(api, box(api, `left:${[0.083, 0.244, 0.47, 0.72][i] * api.W + 4}px;top:1216px;width:2px;height:14px;background:#B9B5AA`), 2.72 + i * 0.07);
+    T(api, m, { parent: mg, x: [0.083, 0.244, 0.47, 0.72][i], capTop: 0.607, size: 3.6, w: 800, color: i ? "#9C9A92" : "var(--text)" });
+    box(api, `left:${[0.083, 0.244, 0.47, 0.72][i] * api.W + 4}px;top:1222px;width:2px;height:14px;background:#B9B5AA`, mg);
   });
+  api.tl.fromTo(mg, { x: 0.45 * api.W, opacity: 0 }, { x: 0, opacity: 1, duration: 0.55, ease: "power3.out" }, 2.66);
   typeIn(api, K(api, "In the next few months", { x: 0.083, capTop: 0.672, size: 3, w: 700, color: "var(--text)" }), 2.96, 0.02);
 }
 
@@ -96,14 +113,14 @@ function s2(api) {
   api.tl.fromTo(b, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 4.89);
   api.tl.fromTo(track, { x: 0 }, { x: -480, duration: 2.3, ease: "power1.inOut" }, 3.9);
   typeIn(api, K(api, "In the next", { x: 0.09, capTop: 0.711, color: "var(--text)" }), 5.26);
-  fly(api, T(api, "Few months", { x: 0.088, capTop: 0.745, fitW: 861, color: "var(--text)" }), 5.83, { stagger: 0.03 });
+  fly(api, T(api, "Few months", { x: 0.088, capTop: 0.745, fitW: 861, color: "var(--text)" }), 5.45, { stagger: 0.03 });
 }
 
 /* ---------- 3 · lined notes: "You need to understand what delivered the results that this month delivered" ---------- */
 function s3(api) {
   box(api, `left:123px;top:0;width:2px;height:${api.H}px;background:rgba(40,160,122,.3)`);
   typeIn(api, K(api, "You need to", { x: 0.092, capTop: 0.238 }), 6.37);
-  fly(api, T(api, "Understand", { x: 0.092, capTop: 0.287, fitW: 847 }), 6.72, { spread: 30, stagger: 0.035 });
+  rib(api, T(api, "Understand", { x: 0.092, capTop: 0.287, fitW: 847 }), 6.62, { from: "up-right", dx: 30, dy: 34, stagger: 0.04 });
   api.effect({ name: "slide-right", distance: 14, duration: 0.35 }, T(api, "What delivered", { x: 0.09, capTop: 0.37, fitW: 605 }), 7.53);
   api.effect({ name: "slide-right", distance: 14, duration: 0.35 }, T(api, "The results", { x: 0.09, capTop: 0.432, fitW: 450, color: "var(--c1)" }), 8.34);
   typeIn(api, K(api, "This month", { x: 0.095, capTop: 0.607, size: 2.6 }), 9.45);
@@ -128,12 +145,16 @@ function s3(api) {
 function s4(api) {
   const g = box(api, "left:0;top:0;width:100%;height:100%");
   K(api, "This month", { parent: g, x: 0.088, capTop: 0.138, size: 1.8, color: "#8A8A8A" });
-  zoom(api, T(api, "1,486,000", { parent: g, x: 0.088, capTop: 0.156, fitW: 240, color: "#CFCFCF" }), 11.7, { from: 2.5, blur: 1 });
+  // the counter from the notes section travels up to the corner (same element, as in the reel)
+  const cnt = T(api, "1,486,000", { parent: g, x: 0.088, capTop: 0.156, fitW: 240, color: "#CFCFCF" });
+  const big = 878 / 240, dx = (0.093 - 0.088) * api.W, dy = (0.637 - 0.156) * api.H;
+  api.tl.fromTo(cnt, { x: dx, y: dy, scale: big, transformOrigin: "0% 0%", color: "#113A3F" },
+    { x: 0, y: 0, scale: 1, color: "#CFCFCF", duration: 0.32, ease: "power3.inOut" }, 11.45);
   typeIn(api, K(api, "If there was a variance in", { parent: g, x: 0.088, capTop: 0.212, size: 3.1, color: "var(--text)" }), 11.85, 0.02);
   appear(api, K(api, "Expected", { parent: g, x: 0.088, capTop: 0.325, size: 1.4, color: "#777" }), 12.4);
   grow(api, box(api, "left:73px;top:670px;width:0;height:972px;border-left:2px dashed #3A3A3A", g), 12.3, "y", 0.6);
   const dot = box(api, "left:67px;top:0;width:14px;height:14px;border-radius:50%;background:var(--c1);opacity:0", g);
-  const items = [["Rooms", 12.96], ["F&B", 13.37], ["Banquets", 14.61], ["Segment", 15.26], ["Channel", 16.16]];
+  const items = [["Rooms", 12.6], ["F&B", 13.0], ["Banquets", 14.25], ["Segment", 14.9], ["Channel", 15.8]];
   const size = 12.1;
   const els = items.map(([t, at], i) => {
     const capTop = 0.358 + i * 0.098, e = T(api, t, { parent: g, x: 0.088, capTop, size, color: "var(--text)" });
@@ -146,14 +167,15 @@ function s4(api) {
   // the variance: BANQUETS slides out of its own outline in green, with its number
   const ban = els[2];
   ban.classList.add("slot-1");
-  api.effect({ name: "ghost-shift", shift: 0.3, color: "#2FB386", ghostOpacity: 0.55, stroke: 0.14 }, ban, 16.55);
-  const pct = T(api, "+14.2%", { parent: g, x: 0.69, capTop: 0.358 + 2 * 0.098 + 0.062, size: 2.4, w: 800, color: "var(--c1)" });
-  api.tl.fromTo(pct, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.25 }, 16.85);
+  api.effect({ name: "ghost-shift", shift: 0.1, color: "#2FB386", ghostOpacity: 0.32, stroke: 0.1 }, ban, 16.2);
+  const pct = T(api, "+14.2%", { parent: g, x: 0.745, capTop: 0.358 + 2 * 0.098 + 0.075, size: 2.4, w: 700, color: "var(--c1)", font: '"Montserrat"' });
+  const brk = box(api, `left:${0.71 * api.W}px;top:${(0.358 + 2 * 0.098 + 0.058) * api.H}px;width:${0.12 * api.W}px;height:10px;border:2px solid var(--c1);border-top:0`, g);
+  api.tl.fromTo([pct, brk], { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.25 }, 16.45);
   typeIn(api, K(api, "You need to know", { parent: g, x: 0.088, capTop: 0.243, color: "var(--text)" }), 17.43);
   // the camera drops: "THE REASON" flies in, the list falls away
-  api.tl.fromTo(g, { y: 0 }, { y: 0.07 * api.H, duration: 0.35, ease: "power2.inOut", immediateRender: false }, 17.95);
-  fly(api, T(api, "The reason", { parent: g, x: 0.088, capTop: 0.268, fitW: 690, color: "#B9B9B9" }), 18.05, { stagger: 0.02, spread: 24, duration: 0.3 });
-  els.forEach((e, i) => api.tl.to(e, { y: 0.12 * api.H, opacity: 0, skewX: -10, duration: 0.2, ease: "power2.in" }, 18.4 + i * 0.03));
+  api.tl.fromTo(els, { y: 0 }, { y: 0.03 * api.H, duration: 0.35, ease: "power2.inOut", immediateRender: false }, 17.45);
+  api.tl.fromTo(T(api, "The reason", { parent: g, x: 0.088, capTop: 0.31, fitW: 690, color: "#E6E6E6" }), { x: 0.6 * api.W, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, ease: "expo.out" }, 17.82);
+  els.forEach((e, i) => api.tl.to(e, { y: 0.12 * api.H, opacity: 0, skewX: -10, duration: 0.2, ease: "power2.in" }, 18.3 + i * 0.03));
 }
 
 /* ---------- 5 · cream: WHY? (the camera pans; a navy circle swallows it) ---------- */
@@ -177,7 +199,7 @@ function s6(api) {
   fly(api, th, 21.04, { stagger: 0.035 });
   typeIn(api, K(api, "In your head", { x: 0.097, capTop: 0.505, color: "var(--c1)" }), 21.64, 0.03);
   // the cream wipe rises over this section: clip it at the same edge, same curve
-  api.tl.fromTo(api.el, { clipPath: "inset(0% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 100% 0%)", duration: 1.2, ease: "reelWipe", immediateRender: false }, 22.33);
+  api.tl.fromTo(api.el, { clipPath: "inset(0% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 100% 0%)", duration: 1.3, ease: "reelWipe", immediateRender: false }, 22.33);
   api.tl.fromTo(T(api, "≠", { x: 0.515, capTop: 0.62, size: 28, color: "var(--c1)", upper: false }), { opacity: 0, scale: 0.3, rotation: -20 },
     { opacity: 1, scale: 1, rotation: 0, duration: 0.4, ease: "back.out(2)" }, 21.95);
 }
@@ -188,11 +210,11 @@ function s7(api) {
   ghost.style.left = 900 - ghost.offsetWidth / 2 + "px"; ghost.style.top = 590 - ghost.offsetHeight / 2 + "px"; ghost.style.rotate = "-90deg";
   appear(api, ghost, 22.6, 0.6);
   api.tl.fromTo(ghost, { y: 80 }, { y: -40, duration: 3.3, ease: "none" }, 22.4);
-  fly(api, T(api, "Recorded", { x: 0.09, capTop: 0.25, fitW: 853 }), 23.3, { spread: 34 });
+  rib(api, T(api, "Recorded", { x: 0.09, capTop: 0.25, fitW: 853 }), 23.2, { from: "up-right", dx: 36, dy: 30 });
   grow(api, box(api, "left:97px;top:616px;width:860px;height:3px;background:var(--text)"), 23.95, "x", 0.4);
   const iw = T(api, "In writing", { x: 0.09, capTop: 0.343, fitW: 493, color: "var(--c1)", cls: "slot-1" });
   typeIn(api, iw, 24.48, 0.07);
-  api.effect({ name: "squiggle", width: 0.45, wavelength: 3.6, height: 1, gap: 0.6 }, iw, 25.1);
+  api.effect({ name: "squiggle", width: 0.62, wavelength: 3.6, height: 1.1, gap: 0.6, duration: 0.4 }, iw, 24.85);
 }
 
 /* ---------- 8 · teal (circle): the log becomes a document on a tablet, reviewed again in the budget meeting ---------- */
@@ -218,12 +240,13 @@ function s8(api) {
   typeIn(api, K(api, "When we discuss the", { x: 0.089, capTop: 0.303, color: "var(--text)" }), 29.6, 0.025);
   const b = T(api, "Budget", { x: 0.095, capTop: 0.335, fitW: 843 });
   const m = T(api, "Meeting", { x: 0.105, capTop: 0.43, fitW: 833, color: "var(--c1)" });
-  fly(api, b, 30.76, { stagger: 0.045 });
-  fly(api, m, 31.24, { stagger: 0.04, duration: 0.35 });
+  fly(api, b, 30.95, { stagger: 0.045, duration: 0.3 });
+  rib(api, m, 31.28, { from: "down-right", dx: 30, dy: 28, stagger: 0.025, duration: 0.3 });
 }
 
 /* ---------- 9 · lined notes: BUDGET → ACHIEVED → EXCEEDED on a dashed baseline ---------- */
 function s9(api) {
+  fade(api, T(api, "Meeting", { x: 0.105, capTop: 0.43, fitW: 833, color: "var(--c1)" }), 31.9, 0.35);   // carried over the cut, fading
   grow(api, box(api, `left:0;top:1093px;width:${api.W}px;height:0;border-top:2px dashed rgba(17,58,63,.4)`), 31.7, "x", 0.5);
   const k1 = K(api, "It could have been", { x: 0.088, capTop: 0.467, size: 2.8 });
   typeIn(api, k1, 31.7, 0.02); fade(api, k1, 33.1, 0.15);
@@ -233,9 +256,9 @@ function s9(api) {
   fly(api, bud, 32.38, { spread: 16, stagger: 0.03, duration: 0.3 });
   api.tl.to(bud, { y: 0.107 * api.H, scale: 0.666, transformOrigin: "0% 0%", color: "#9B9A94", duration: 0.35, ease: "power3.out" }, 33.45);
   const ach = T(api, "Achieved", { x: 0.084, capTop: 0.508, fitW: 833 });
-  fly(api, ach, 33.45, { spread: 34 });
+  rib(api, ach, 33.35, { from: "down-right", dx: 32, dy: 30, stagger: 0.03, duration: 0.4 });
   recolor(api, ach, 34.95, "#A4A39D", 0.35);
-  fly(api, T(api, "Exceeded", { x: 0.084, capTop: 0.325, fitW: 874, color: "var(--c1)" }), 34.9, { spread: 34 });
+  rib(api, T(api, "Exceeded", { x: 0.084, capTop: 0.325, fitW: 874, color: "var(--c1)" }), 34.72, { from: "down-right", dx: 32, dy: 30, stagger: 0.03, duration: 0.4 });
   grow(api, box(api, "left:92px;top:800px;width:4px;height:293px;background:var(--c1)"), 35.3, "y", 0.35);
   typeIn(api, K(api, "Your budgets", { x: 0.105, capTop: 0.468, size: 2.4, w: 700, color: "var(--text)" }), 35.76, 0.03);
 }
@@ -285,19 +308,19 @@ function sheet(api, w, h, rot, rows = []) {
 }
 
 // the reel's cream wipe: a quick rise to ~60 %, a near pause, then the rest
-const reelWipe = () => CustomEase.create("reelWipe", "M0,0 C0.08,0.42 0.16,0.58 0.26,0.6 0.36,0.62 0.42,0.66 0.5,0.74 0.62,0.86 0.74,1 1,1");
+const reelWipe = () => CustomEase.create("reelWipe", "M0,0 C0.06,0.45 0.12,0.56 0.2,0.57 0.35,0.585 0.5,0.595 0.62,0.61 0.75,0.7 0.85,0.95 1,1");
 scene({
-  duration: DURATION, setup: reelWipe, fps: 30, seed: 5, cues: {},
+  duration: DURATION, setup: reelWipe, post: [], fps: 30, seed: 5, cues: {},
   moments: [
     { type: "custom", at: 0, until: 3.6, area: "screen", enter: "none", exit: "push-left", build: s1 },
     { type: "custom", at: 3.85, until: 6.17, area: "screen", enter: "none", exit: "none", scheme: "teal", schemeTransition: "whip", schemeLead: 0.25, build: s2 },
     { type: "custom", at: 6.17, until: 11.45, area: "screen", enter: "none", exit: { name: "fade-out", duration: 0.1 }, scheme: "notes", schemeTransition: "cut", schemeLead: 0, build: s3 },
-    { type: "custom", at: 11.62, until: 18.62, area: "screen", enter: "none", exit: "none", scheme: "black", schemeTransition: "circle", schemeFrom: [0.5, 0.42], schemeDuration: 0.22, schemeLead: 0.17, build: s4 },
+    { type: "custom", at: 11.62, until: 18.62, area: "screen", enter: "none", exit: "none", scheme: "black", schemeTransition: "circle", schemeFrom: [0.5, 0.64], schemeDuration: 0.22, schemeLead: 0.17, build: s4 },
     { type: "custom", at: 18.62, until: 19.36, area: "screen", enter: "none", exit: "none", scheme: "base", schemeTransition: "cut", schemeLead: 0, build: s5 },
-    { type: "custom", at: 19.3, until: 23.55, area: "screen", enter: "none", exit: "none", scheme: "navy", schemeTransition: "circle", schemeFrom: [1.15, 0.62], schemeDuration: 0.2, schemeLead: 0.1, build: s6 },
-    { type: "custom", at: 22.33, until: 25.55, area: "screen", enter: "none", exit: { name: "fade-out", duration: 0.12 }, scheme: "base", schemeTransition: "wipe", schemeDuration: 1.2, schemeEase: "reelWipe", schemeLead: 0, build: s7 },
-    { type: "custom", at: 25.55, until: 31.62, area: "screen", enter: "none", exit: "none", scheme: "teal", schemeTransition: "circle", schemeFrom: [0.5, 0.64], schemeDuration: 0.22, schemeLead: 0, build: s8 },
-    { type: "custom", at: 31.62, until: 36.9, area: "screen", enter: "none", exit: { name: "fade-out", duration: 0.35 }, scheme: "notes", schemeTransition: "cut", schemeLead: 0, build: s9 },
+    { type: "custom", at: 19.3, until: 23.55, area: "screen", enter: "none", exit: "none", scheme: "navy", schemeTransition: "circle", schemeFrom: [0.78, 0.62], schemeDuration: 0.24, schemeLead: 0.07, build: s6 },
+    { type: "custom", at: 22.33, until: 25.55, area: "screen", enter: "none", exit: { name: "fade-out", duration: 0.12 }, scheme: "base", schemeTransition: "wipe", schemeDuration: 1.3, schemeEase: "reelWipe", schemeLead: 0, build: s7 },
+    { type: "custom", at: 25.55, until: 31.65, area: "screen", enter: "none", exit: "none", scheme: "teal", schemeTransition: "circle", schemeFrom: [0.5, 0.64], schemeDuration: 0.22, schemeLead: 0, build: s8 },
+    { type: "custom", at: 31.65, until: 36.9, area: "screen", enter: "none", exit: { name: "fade-out", duration: 0.35 }, scheme: "notes", schemeTransition: "cut", schemeLead: 0, build: s9 },
     { type: "custom", at: 37.3, area: "screen", enter: "none", scheme: "paper", schemeTransition: "cut", schemeLead: 0, build: s10 },
   ],
   async build(api) {
@@ -307,7 +330,8 @@ scene({
     tl.set(a.p, { x: 850, y: 1510 }, 0);
     tl.fromTo(a.p, { y: 1510 + 800, rotation: 8 }, { y: 1510, rotation: 0, duration: 0.6, ease: "expo.out" }, 0.05);
     tl.to(a.p, { x: 439, y: 863, scale: 0.56, rotation: -10, duration: 0.42, ease: "power3.inOut" }, 3.6);
-    tl.to(a.p, { x: 400, duration: 2.1, ease: "none" }, 4.05);
+    tl.to(a.p, { x: 400, duration: 1.75, ease: "none" }, 4.05);
+    tl.to(a.p, { x: 380, y: 960, scale: 2.4, rotation: -4, duration: 0.37, ease: "power2.in" }, 5.8);
     tl.set(a.p, { visibility: "hidden" }, 6.17);
 
     // the variance log: rises with the cream wipe, fills in, becomes a document on a tablet, then zooms away
@@ -338,11 +362,12 @@ scene({
     tl.set([frame, file], { visibility: "visible" }, 26.85);
     d.r.forEach((r, i) => {
       tl.fromTo(r.mk, { scaleX: 0 }, { scaleX: 1, duration: 0.3, ease: "power2.out" }, 28.35 + i * 0.18);
+      tl.set(r.ck, { visibility: "visible" }, 28.5 + i * 0.18);
       tl.fromTo(r.ck.querySelector("path"), { drawSVG: "0%" }, { drawSVG: "100%", duration: 0.25 }, 28.5 + i * 0.18);
     });
     tl.to(d.p, { y: 1400, scale: 0.843 * 0.59, duration: 0.5, ease: "power3.inOut" }, 29.85);
-    tl.to(d.p, { y: 960, scale: 3, opacity: 0, duration: 0.32, ease: "power2.in" }, 31.3);
-    tl.set(d.p, { visibility: "hidden" }, 31.62);
+    tl.to(d.p, { y: 960, scale: 3, opacity: 0, duration: 0.25, ease: "power2.in" }, 31.42);
+    tl.set(d.p, { visibility: "hidden" }, 31.65);
   },
 });
 </script>

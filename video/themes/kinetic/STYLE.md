@@ -16,10 +16,12 @@ frame. Style only: never copy the reel's script, logo or brand. Works in 16:9 an
 `#2FB386`. Default switch is a **whip pan** (`schemeTransition: "whip"`); also `circle` (grows from `schemeFrom`),
 `wipe` (from the bottom) and `cut`. The outgoing moment pushes left (`push-left`) so the whole screen whips.
 
-- **Type:** Montserrat. Big words 900 weight, capitals, tight leading, left-aligned; a small kicker above in 600 weight
+- **Type:** big words in League Spartan 900 (matched to the reference reel's proportions, 2026-10-31); kickers and small
+  text in Montserrat. Big words 900 weight, capitals, tight leading, left-aligned; a small kicker above in 600 weight
   capitals with ~0.32em tracking in grey. Usually two big lines, the second in green (`text: "Save\n{1|more}"`).
   9:16 sizes are larger so the big word spans most of the width.
-- **Motion:** letters fly in one by one from random directions, spinning and scaling, and land hard (`letters-fly`);
+- **Motion:** letters fly in one by one from random directions, spinning and scaling, and land hard (`letters-fly`),
+  or arrive as a curved ribbon of letters (`letters-ribbon`, the reel's UNDERSTAND/RECORDED/ACHIEVED);
   kickers rise letter by letter; numbers zoom in and roll; lists scroll up and away (`push-up`). **Motion blur is on**
   (8 samples, 0.6 shutter): fast moves must streak. It costs ~3× render time; `--motion-blur 0` for quick checks.
 - **Ghost words:** a giant outlined word behind the text (`ghost: "2027"`, faint, drifting); filled and very faint on dark schemes.
@@ -29,4 +31,5 @@ frame. Style only: never copy the reel's script, logo or brand. Works in 16:9 an
 - **Emphasis:** focus lists (earlier items step back to grey), `ghost-shift` (a word slides right in green, leaving its
   outline), `squiggle` and `underline` in green. One green thing per screen.
 - **End card:** centred title, small grey line, a `cta` pill that flips to "✓ Following".
-- No glow, no gradients, no 3D. Light grain only.
+- No glow, no gradients, no 3D. Light grain only (none on Shorts that match the reel: it reads as noise on black).
+- Ghost outlines are hairlines (~1.6 px at 1080 wide), light warm grey; heavier outlines compete with the words.
