@@ -13,7 +13,7 @@
 
    Options
      --theme NAME        theme (default: the video's video.json theme)
-     --format long|short default long (1920x1080). short = 1080x1920 (Shorts are on hold)
+     --format long|short default: the video's video.json "format", else long (1920x1080). short = 1080x1920
      --scale N           default 2 (3840x2160) for finals, 1 for --draft
      --draft             JPEG frames + fast encode, scale 1 → drafts/
      --workers N         parallel browsers, default 6
@@ -48,8 +48,6 @@ const scene = argv.find((a) => !a.startsWith("--") && /\.html$/.test(a));
 if (!scene) { console.error("Usage: node render.mjs <scene.html> [options]   (see the top of render.mjs)"); process.exit(1); }
 const opt = (name, def) => { const i = argv.indexOf("--" + name); return i >= 0 ? argv[i + 1] : def; };
 const flag = (name) => argv.includes("--" + name);
-const format = opt("format", "long");
-if (!["long", "short"].includes(format)) { console.error("--format must be long or short"); process.exit(1); }
 const draft = flag("draft");
 const workers = Math.max(1, Number(opt("workers", 6)));
 const stills = opt("stills", null)?.split(",").map(Number);
@@ -68,6 +66,8 @@ const video = isVideo ? rel[1] : null;
 const cfgFile = isVideo ? path.join(ROOT, "video", "videos", video, "video.json") : path.join(path.dirname(scenePath), "video.json");
 const cfg = existsSync(cfgFile) ? JSON.parse(await readFile(cfgFile, "utf8")) : {};
 const defaultTheme = cfg.theme || "neon";
+const format = opt("format", cfg.format || "long");                 // a video can default to Shorts in its video.json
+if (!["long", "short"].includes(format)) { console.error("--format must be long or short"); process.exit(1); }
 const theme = opt("theme", defaultTheme);
 const compare = isVideo && theme !== defaultTheme;          // demos already sit in their theme's folder
 

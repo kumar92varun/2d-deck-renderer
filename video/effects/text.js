@@ -151,8 +151,9 @@ export default {
     return 0.42;
   },
   // scroll up and away (a list making room for the next thought)
+  // opts: distance (screen heights), duration, ease, fade (default true)
   "push-up"(api, t, at, o) {
-    api.tl.fromTo(els(t), { y: 0, opacity: 1 }, { y: -(o.distance ?? 0.35) * api.H, opacity: 0, duration: o.duration ?? 0.45, ease: "power3.in", immediateRender: false }, at);
+    api.tl.fromTo(els(t), { y: 0, opacity: 1 }, { y: -(o.distance ?? 0.35) * api.H, opacity: o.fade === false ? 1 : 0, duration: o.duration ?? 0.45, ease: o.ease ?? "power3.in", immediateRender: false }, at);
     return 0.45;
   },
   "fade-out"(api, t, at, o) {

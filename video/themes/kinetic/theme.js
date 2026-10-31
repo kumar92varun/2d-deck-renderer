@@ -20,6 +20,7 @@ export default {
   schemes: {
     notes: { bg: "#FAF7F4", ...LIGHT, kicker: "#67665F",
       plate: "repeating-linear-gradient(to bottom, transparent 0 calc(var(--u)*5.2 - 2px), rgba(17,58,63,.07) calc(var(--u)*5.2 - 2px) calc(var(--u)*5.2)) , #FAF7F4" },
+    paper: { bg: "#FAF8F5", ...LIGHT, kicker: "#67665F" },
     teal: { bg: "#08383C", text: "#F3F0E7", c2: "#F3F0E7", "c2-hi": "#FFFFFF", kicker: "#B9CBC8", ...DARK },
     navy: { bg: "#051E43", text: "#EEF1F6", c2: "#EEF1F6", "c2-hi": "#FFFFFF", kicker: "#B4BFD3", ...DARK, muted: "#7F8DA8" },
     black: { bg: "#030303", text: "#FFFFFF", c2: "#FFFFFF", "c2-hi": "#FFFFFF", kicker: "#A5A5A5", ...DARK, muted: "#8C8C8C" },
@@ -29,12 +30,12 @@ export default {
   particleBlend: "normal",
   areas: {
     long: {
-      full: [0.07, 0.1, 0.86, 0.8], main: [0.07, 0.14, 0.52, 0.72], left: [0.07, 0.14, 0.52, 0.72],
+      screen: [0, 0, 1, 1], full: [0.07, 0.1, 0.86, 0.8], main: [0.07, 0.14, 0.52, 0.72], left: [0.07, 0.14, 0.52, 0.72],
       right: [0.62, 0.1, 0.31, 0.8], wide: [0.07, 0.14, 0.86, 0.72],
       top: [0.07, 0.07, 0.6, 0.18], bottom: [0.07, 0.74, 0.86, 0.2], center: [0.2, 0.3, 0.6, 0.4],
     },
     short: {
-      full: [0.08, 0.12, 0.84, 0.66], main: [0.08, 0.14, 0.84, 0.38], left: [0.08, 0.14, 0.84, 0.38],
+      screen: [0, 0, 1, 1], full: [0.08, 0.12, 0.84, 0.66], main: [0.08, 0.14, 0.84, 0.38], left: [0.08, 0.14, 0.84, 0.38],
       right: [0.18, 0.5, 0.74, 0.38], wide: [0.08, 0.14, 0.84, 0.5],
       top: [0.08, 0.06, 0.84, 0.1], bottom: [0.08, 0.58, 0.84, 0.14], center: [0.1, 0.3, 0.8, 0.3],
     },

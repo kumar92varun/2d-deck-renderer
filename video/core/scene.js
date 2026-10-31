@@ -48,6 +48,7 @@ export async function scene(def) {
 async function build(def, resolveReady) {
   await loadCoreLibs();
   const video = await loadVideoConfig();
+  if (def.setup) await def.setup();               // scene-level setup that needs the libraries (e.g. CustomEase.create)
   const format = FORMATS[P.get("format")] ? P.get("format") : "long";
   const [W, H] = FORMATS[format];
   const isRender = P.get("render") === "1";
@@ -149,14 +150,15 @@ async function build(def, resolveReady) {
     m.areaName = m.area || m.cfg.area || COMPONENTS[m.type]?.area || "main";
   }
   // a moment without `until` ends when the next moment that overlaps its space on screen starts (or with the scene)
-  const overlap = (a, b) => {
-    const A = api.area(a), B = api.area(b);
+  const rectOf = (m) => m.rect ? { x: m.rect[0] * W, y: m.rect[1] * H, w: m.rect[2] * W, h: m.rect[3] * H } : api.area(m.areaName);
+  const overlap = (ma, mb) => {
+    const A = rectOf(ma), B = rectOf(mb);
     const ix = Math.max(0, Math.min(A.x + A.w, B.x + B.w) - Math.max(A.x, B.x)), iy = Math.max(0, Math.min(A.y + A.h, B.y + B.h) - Math.max(A.y, B.y));
     return ix * iy > 0.1 * Math.min(A.w * A.h, B.w * B.h);
   };
   for (const m of moments) {
     if (m.until != null) { m.end = api.at(m.until); continue; }
-    const next = moments.filter((n) => n.start > m.start && overlap(m.areaName, n.areaName)).sort((a, b) => a.start - b.start)[0];
+    const next = moments.filter((n) => n.start > m.start && overlap(m, n)).sort((a, b) => a.start - b.start)[0];
     m.end = next ? next.start - (m.cfg.handoff ?? 0.25) : duration + 1;
   }
   // colour schemes: a moment may switch the whole screen to another scheme (theme.schemes); later moments inherit it
@@ -164,7 +166,7 @@ async function build(def, resolveReady) {
   if (cur !== "base") addPlate(api, cur, 0, "cut");
   for (const m of [...moments].sort((a, b) => a.start - b.start)) {
     if (m.scheme && m.scheme !== cur &&
-        addPlate(api, m.scheme, m.start - (m.schemeLead ?? m.cfg.schemeLead ?? 0.2), m.schemeTransition || m.cfg.schemeTransition || theme.schemeTransition || "cut", m.schemeFrom)) {
+        addPlate(api, m.scheme, m.start - (m.schemeLead ?? m.cfg.schemeLead ?? 0.2), m.schemeTransition || m.cfg.schemeTransition || theme.schemeTransition || "cut", m.schemeFrom, m.schemeDuration, m.schemeEase)) {
       cur = m.scheme;
     }
     m.schemeName = cur;
@@ -203,7 +205,7 @@ async function build(def, resolveReady) {
 
 /* Scheme plates: a full-screen layer in the scheme's background (theme.schemes[name].plate CSS, else its bg colour)
    brought in at `at` by a transition: cut | whip (slides in from the right) | circle (grows from `from` [x, y] 0–1) | wipe (from the bottom). */
-function addPlate(api, name, at, how, from) {
+function addPlate(api, name, at, how, from, dur, ease) {
   const sc = api.theme.schemes?.[name] || (name === "base" ? { bg: api.theme.palette.bg, plate: api.theme.basePlate } : null);
   if (!sc) {   // a scene written for another theme still renders: this theme just keeps its own background
     console.warn(`[scheme] "${name}" not in theme ${api.theme.name} (has: ${Object.keys(api.theme.schemes || {}).join(", ") || "none"}); ignored`);
@@ -215,9 +217,9 @@ function addPlate(api, name, at, how, from) {
   api.layers.bg.appendChild(d);
   const tl = api.tl, [fx, fy] = from || [0.5, 0.5];
   tl.fromTo(d, { visibility: "hidden" }, { visibility: "visible", duration: 0.001, immediateRender: false }, Math.max(0, at - 0.001));
-  if (how === "whip") tl.fromTo(d, { xPercent: 100 }, { xPercent: 0, duration: 0.42, ease: "power3.inOut", immediateRender: false }, at);
-  else if (how === "circle") tl.fromTo(d, { clipPath: `circle(0% at ${fx * 100}% ${fy * 100}%)` }, { clipPath: `circle(150% at ${fx * 100}% ${fy * 100}%)`, duration: 0.6, ease: "power2.in", immediateRender: false }, at);
-  else if (how === "wipe") tl.fromTo(d, { yPercent: 100 }, { yPercent: 0, duration: 0.5, ease: "power3.inOut", immediateRender: false }, at);
+  if (how === "whip") tl.fromTo(d, { xPercent: 100 }, { xPercent: 0, duration: dur ?? 0.42, ease: ease ?? "power3.inOut", immediateRender: false }, at);
+  else if (how === "circle") tl.fromTo(d, { clipPath: `circle(0% at ${fx * 100}% ${fy * 100}%)` }, { clipPath: `circle(150% at ${fx * 100}% ${fy * 100}%)`, duration: dur ?? 0.6, ease: ease ?? "power2.in", immediateRender: false }, at);
+  else if (how === "wipe") tl.fromTo(d, { yPercent: 100 }, { yPercent: 0, duration: dur ?? 0.5, ease: ease ?? "power3.inOut", immediateRender: false }, at);
   return true;
 }
 
@@ -231,7 +233,8 @@ function schemeVars(api, name) {
 async function buildMoment(api, m) {
   const comp = api.theme.components?.[m.type] || COMPONENTS[m.type];
   if (!comp) throw new Error(`unknown moment type "${m.type}" (known: ${Object.keys(COMPONENTS).join(", ")})`);
-  const rect = api.area(m.areaName);
+  // m.rect = [x, y, w, h] (fractions of the frame) places a moment exactly; otherwise its theme area
+  const rect = m.rect ? { x: m.rect[0] * api.W, y: m.rect[1] * api.H, w: m.rect[2] * api.W, h: m.rect[3] * api.H, name: "rect" } : api.area(m.areaName);
   const slot = m.color ?? m.cfg.color ?? 1;
   const el = document.createElement("div");
   el.className = `m m-${m.type} slot-${slot} area-${m.areaName}` + (comp.caption ? " is-caption" : "") + (m.className ? " " + m.className : "");
@@ -279,7 +282,7 @@ async function buildMoment(api, m) {
 /* A scene may ask for an effect the theme doesn't have: fall back to the theme's own choice for that role. */
 async function pickEffect(api, spec, fallback, targets, at, mapi) {
   const name = typeof spec === "string" ? spec : spec?.name;
-  if (name && !hasEffect(api, name)) {
+  if (name && name !== "none" && !hasEffect(api, name)) {
     console.warn(`[effects] "${name}" not available in theme ${api.theme.name}; using "${typeof fallback === "string" ? fallback : fallback?.name}"`);
     spec = fallback;
   }

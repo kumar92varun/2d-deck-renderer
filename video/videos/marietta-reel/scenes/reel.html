@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Marietta budget reel · recreation</title>
+<style>
+  /* the reel's notebook lines are wider apart than the theme default */
+  .theme-kinetic .scheme-plate.scheme-notes { background: repeating-linear-gradient(to bottom, transparent 0 calc(var(--u)*6.6 - 2px), rgba(17,58,63,.075) calc(var(--u)*6.6 - 2px) calc(var(--u)*6.6)), #FAF7F4 !important; }
+  .rt { position: absolute; white-space: nowrap; line-height: 1; }
+  .ghost-out { color: transparent !important; -webkit-text-stroke: 2.5px #C9C5B9; }
+  .prop { position: absolute; left: 0; top: 0; }
+  .sheet { position: absolute; background: #FAF8F4; color: #113A3F; border-radius: 4px;
+    box-shadow: 0 18px 40px rgba(0,0,0,.18), 0 3px 6px rgba(0,0,0,.12);
+    background-image: linear-gradient(90deg, transparent 76px, rgba(40,160,122,.35) 76px 78px, transparent 78px),
+      repeating-linear-gradient(to bottom, transparent 0 36px, rgba(17,58,63,.07) 36px 37px); }
+  .sheet .hd { position: absolute; top: 58px; font-weight: 600; font-size: 22px; letter-spacing: .32em; text-transform: uppercase; color: #3E4B4C; }
+  .sheet .lb { position: absolute; font-weight: 900; font-size: 42px; text-transform: uppercase; color: #113A3F; }
+  .sheet .vl { position: absolute; right: 48px; font-weight: 800; font-size: 40px; color: #28A07A; }
+  .sheet .nt { position: absolute; font-weight: 500; font-size: 22px; color: #4F5656; white-space: nowrap; }
+  .sheet .mk { position: absolute; left: 70px; right: 30px; height: 112px; background: rgba(40,160,122,.22); transform-origin: 0 50%; }
+  .sheet svg.ck { position: absolute; right: 52px; width: 46px; height: 46px; fill: none; stroke: #28A07A; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+</head>
+<body>
+<script type="module">
+/* Frame-by-frame recreation of the reference reel ~/Downloads/Marietta budget reel.mp4 (9:16, 40.5 s) in the kinetic
+   theme, timed to its own voiceover (word times from whisper, cuts from scene detection). Positions and big-word widths
+   are measured from the reel's frames. For internal comparison; the brand mark at the end is plain text.
+     node render.mjs videos/marietta-reel/scenes/reel.html --format short --audio ../recordings/marietta-reel/reel.m4a */
+import { scene } from "/video/core/scene.js";
+
+const DURATION = 40.5;
+
+/* ---------- helpers: absolutely placed text, sized to a measured width, top given as the capital-letter top ---------- */
+function T(api, text, o) {
+  const { W, H, u } = api;
+  const e = document.createElement("div");
+  e.className = "rt" + (o.cls ? " " + o.cls : "");
+  e.innerHTML = o.raw ? text : api.html(text);
+  e.style.cssText = `font-size:${(o.size ?? 3) * u}px;font-weight:${o.w ?? 900};letter-spacing:${o.ls ?? 0}em;color:${o.color ?? "var(--text)"};` +
+    `${o.upper === false ? "" : "text-transform:uppercase;"}${o.css ?? ""}`;
+  (o.parent ?? api.el).appendChild(e);
+  let fs = (o.size ?? 3) * u;
+  if (o.fitW) { fs *= o.fitW / e.offsetWidth; e.style.fontSize = fs + "px"; }
+  const left = o.x * W, top = o.capTop != null ? o.capTop * H - 0.158 * fs : (o.y ?? 0) * H;
+  e.style.left = (o.center ? left - e.offsetWidth / 2 : left) + "px";
+  e.style.top = top + "px";
+  return e;
+}
+const K = (api, text, o) => T(api, text, { size: 3.3, w: 600, ls: 0.3, color: "var(--kicker)", ...o });
+const box = (api, css, parent) => { const d = document.createElement("div"); d.style.cssText = "position:absolute;" + css; (parent ?? api.el).appendChild(d); return d; };
+const typeIn = (api, el, at, st = 0.024) => api.effect({ name: "chars", from: "below", stagger: st, duration: 0.2 }, el, at);
+const fly = (api, el, at, o = {}) => api.effect({ name: "letters-fly", stagger: 0.04, duration: 0.42, spread: 38, ...o }, el, at);
+const zoom = (api, el, at, o = {}) => api.effect({ name: "zoom-in", from: 1.6, blur: 0.8, duration: 0.4, ...o }, el, at);
+const appear = (api, el, at, d = 0.2) => api.tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: d }, at);
+const fade = (api, el, at, d = 0.25) => api.tl.fromTo(el, { opacity: 1 }, { opacity: 0, duration: d, immediateRender: false }, at);
+const grow = (api, el, at, axis = "x", d = 0.45) => api.tl.fromTo(el, axis === "x" ? { scaleX: 0, transformOrigin: "0% 50%" } : { scaleY: 0, transformOrigin: "50% 0%" },
+  { [axis === "x" ? "scaleX" : "scaleY"]: 1, duration: d, ease: "power3.inOut" }, at);
+const recolor = (api, el, at, color, d = 0.25) => api.tl.fromTo(el, { color: getComputedStyle(el).color }, { color, duration: d, immediateRender: false }, at);
+
+/* ---------- 1 · cream: "You're going to have to CREATE a BUDGET in the next few months" ---------- */
+function s1(api) {
+  const ghost = T(api, "2027", { x: -0.035, capTop: 0.418, fitW: 1190, cls: "ghost-out" });
+  appear(api, ghost, 0, 0.5);
+  api.tl.fromTo(ghost, { x: 0 }, { x: -40, duration: 3.6, ease: "none" }, 0);
+  typeIn(api, K(api, "You’re going to have to", { x: 0.083, capTop: 0.319 }), 0.12, 0.03);
+  fly(api, T(api, "Create", { x: 0.086, capTop: 0.359, fitW: 860 }), 1.3);
+  zoom(api, T(api, "a", { x: 0.081, capTop: 0.44, size: 3.4, w: 800, color: "var(--c1)" }), 2.18, { from: 2 });
+  zoom(api, T(api, "Budget", { x: 0.086, capTop: 0.469, fitW: 865, color: "var(--c1)" }), 2.27, { from: 2.4, blur: 1.5, duration: 0.35 });
+  grow(api, box(api, "left:48px;top:1222px;width:400px;height:2px;background:#C9C5BA"), 2.55);
+  ["Oct", "Nov", "Dec", "Jan"].forEach((m, i) => {
+    const e = T(api, m, { x: [0.083, 0.244, 0.47, 0.72][i], capTop: 0.607, size: 3.6, w: 800, color: i ? "#9C9A92" : "var(--text)" });
+    typeIn(api, e, 2.72 + i * 0.07, 0.03);
+    appear(api, box(api, `left:${[0.083, 0.244, 0.47, 0.72][i] * api.W + 4}px;top:1216px;width:2px;height:14px;background:#B9B5AA`), 2.72 + i * 0.07);
+  });
+  typeIn(api, K(api, "In the next few months", { x: 0.083, capTop: 0.672, size: 3, w: 700, color: "var(--text)" }), 2.96, 0.02);
+}
+
+/* ---------- 2 · teal (whip): "When you create that budget in the next few months" ---------- */
+function s2(api) {
+  const ghost = T(api, "Jan", { x: 0.17, capTop: 0.36, fitW: 1250, color: "rgba(243,240,231,.1)" });
+  api.tl.fromTo(ghost, { x: 0 }, { x: -0.3 * api.W, duration: 2.4, ease: "power1.inOut" }, 3.85);
+  typeIn(api, K(api, "When you create", { x: 0.094, capTop: 0.209, color: "var(--text)" }), 4.05);
+  typeIn(api, K(api, "that budget", { x: 0.094, capTop: 0.24, color: "var(--text)" }), 4.64);
+  // the month ruler scrolls left under the paper
+  const track = box(api, "left:0;top:1003px;width:3000px;height:200px");
+  box(api, "left:-1000px;top:0;width:5000px;height:2px;background:rgba(243,240,231,.3)", track);
+  ["Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun"].forEach((m, i) => {
+    T(api, m, { parent: track, x: (120 + i * 190) / api.W, y: 0.026, size: 2.6, w: 600, color: "rgba(243,240,231,.55)" });
+    for (let k = 0; k < 4; k++) box(api, `left:${132 + i * 190 + k * 47.5}px;top:-${k ? 8 : 16}px;width:2px;height:${k ? 8 : 16}px;background:rgba(243,240,231,.35)`, track);
+  });
+  const now = T(api, "Now", { parent: track, x: 230 / api.W, y: -0.032, size: 2.4, w: 700, ls: 0.2, color: "var(--text)" });
+  typeIn(api, now, 4.05, 0.05);
+  const b = box(api, "left:760px;top:-185px;width:390px;height:180px;border:3px solid var(--c1)", track);
+  T(api, "Budget", { parent: b, x: 14 / api.W, y: 12 / api.H, size: 2.6, w: 800, color: "var(--c1)" });
+  api.tl.fromTo(b, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 4.89);
+  api.tl.fromTo(track, { x: 0 }, { x: -480, duration: 2.3, ease: "power1.inOut" }, 3.9);
+  typeIn(api, K(api, "In the next", { x: 0.09, capTop: 0.711, color: "var(--text)" }), 5.26);
+  fly(api, T(api, "Few months", { x: 0.088, capTop: 0.745, fitW: 861, color: "var(--text)" }), 5.83, { stagger: 0.03 });
+}
+
+/* ---------- 3 · lined notes: "You need to understand what delivered the results that this month delivered" ---------- */
+function s3(api) {
+  box(api, `left:123px;top:0;width:2px;height:${api.H}px;background:rgba(40,160,122,.3)`);
+  typeIn(api, K(api, "You need to", { x: 0.092, capTop: 0.238 }), 6.37);
+  fly(api, T(api, "Understand", { x: 0.092, capTop: 0.287, fitW: 847 }), 6.72, { spread: 30, stagger: 0.035 });
+  api.effect({ name: "slide-right", distance: 14, duration: 0.35 }, T(api, "What delivered", { x: 0.09, capTop: 0.37, fitW: 605 }), 7.53);
+  api.effect({ name: "slide-right", distance: 14, duration: 0.35 }, T(api, "The results", { x: 0.09, capTop: 0.432, fitW: 450, color: "var(--c1)" }), 8.34);
+  typeIn(api, K(api, "This month", { x: 0.095, capTop: 0.607, size: 2.6 }), 9.45);
+  const num = T(api, "1,486,000", { x: 0.093, capTop: 0.637, fitW: 878 });
+  const st = { v: 0 };
+  api.tl.set(st, { v: 0 }, 0);
+  [128000, 514000, 728000, 1269000, 1486000].forEach((v, i) => api.tl.to(st, { v, duration: 0.14, ease: "power2.out" }, 10.55 + i * 0.2));
+  api.onFrame(() => { num.textContent = (Math.round(st.v / 1000) * 1000).toLocaleString("en-US"); });
+  zoom(api, num, 9.55, { from: 1.3, blur: 0.4, duration: 0.3 });
+  // ruler + deltas that pop and fly into the number
+  const ruler = box(api, "left:105px;top:1580px;width:925px;height:30px;display:flex;justify-content:space-between;align-items:flex-end");
+  for (let i = 0; i < 41; i++) box(api, `position:static;width:2px;height:${i % 5 ? 12 : 26}px;background:rgba(17,58,63,.35)`, ruler);
+  appear(api, ruler, 9.3, 0.3);
+  ["+128K", "+386K", "+214K", "+541K", "+217K"].forEach((d, i) => {
+    const e = T(api, d, { x: [0.1, 0.24, 0.37, 0.52, 0.66][i], capTop: 0.79, size: 2.4, w: 800, color: "var(--c1)" });
+    api.tl.fromTo(e, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.2, ease: "back.out(2)" }, 9.4 + i * 0.12)
+      .to(e, { x: (0.3 - [0.1, 0.24, 0.37, 0.52, 0.66][i]) * api.W, y: -0.13 * api.H, opacity: 0, duration: 0.25, ease: "power2.in" }, 10.32 + i * 0.2);
+  });
+}
+
+/* ---------- 4 · black: the variance list ---------- */
+function s4(api) {
+  const g = box(api, "left:0;top:0;width:100%;height:100%");
+  K(api, "This month", { parent: g, x: 0.088, capTop: 0.138, size: 1.8, color: "#8A8A8A" });
+  zoom(api, T(api, "1,486,000", { parent: g, x: 0.088, capTop: 0.156, fitW: 240, color: "#CFCFCF" }), 11.7, { from: 2.5, blur: 1 });
+  typeIn(api, K(api, "If there was a variance in", { parent: g, x: 0.088, capTop: 0.212, size: 3.1, color: "var(--text)" }), 11.85, 0.02);
+  appear(api, K(api, "Expected", { parent: g, x: 0.088, capTop: 0.325, size: 1.4, color: "#777" }), 12.4);
+  grow(api, box(api, "left:73px;top:670px;width:0;height:972px;border-left:2px dashed #3A3A3A", g), 12.3, "y", 0.6);
+  const dot = box(api, "left:67px;top:0;width:14px;height:14px;border-radius:50%;background:var(--c1);opacity:0", g);
+  const items = [["Rooms", 12.96], ["F&B", 13.37], ["Banquets", 14.61], ["Segment", 15.26], ["Channel", 16.16]];
+  const size = 12.1;
+  const els = items.map(([t, at], i) => {
+    const capTop = 0.358 + i * 0.098, e = T(api, t, { parent: g, x: 0.088, capTop, size, color: "var(--text)" });
+    zoom(api, e, at, { from: 1.3, blur: 0.5, duration: 0.25 });
+    api.tl.to(dot, { opacity: 1, top: capTop * api.H + 0.3 * size * api.u, duration: 0.25, ease: "power2.out" }, at);
+    appear(api, box(api, `left:73px;top:${capTop * api.H + 0.85 * size * api.u}px;width:44px;height:2px;background:#3A3A3A`, g), at);
+    return e;
+  });
+  els.forEach((e, i) => { if (i < els.length - 1 && i !== 4) recolor(api, e, items[i + 1][1], "#8C8C8C"); });
+  // the variance: BANQUETS slides out of its own outline in green, with its number
+  const ban = els[2];
+  ban.classList.add("slot-1");
+  api.effect({ name: "ghost-shift", shift: 0.3, color: "#2FB386", ghostOpacity: 0.55, stroke: 0.14 }, ban, 16.55);
+  const pct = T(api, "+14.2%", { parent: g, x: 0.69, capTop: 0.358 + 2 * 0.098 + 0.062, size: 2.4, w: 800, color: "var(--c1)" });
+  api.tl.fromTo(pct, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.25 }, 16.85);
+  typeIn(api, K(api, "You need to know", { parent: g, x: 0.088, capTop: 0.243, color: "var(--text)" }), 17.43);
+  // the camera drops: "THE REASON" flies in, the list falls away
+  api.tl.fromTo(g, { y: 0 }, { y: 0.07 * api.H, duration: 0.35, ease: "power2.inOut", immediateRender: false }, 17.95);
+  fly(api, T(api, "The reason", { parent: g, x: 0.088, capTop: 0.268, fitW: 690, color: "#B9B9B9" }), 18.05, { stagger: 0.02, spread: 24, duration: 0.3 });
+  els.forEach((e, i) => api.tl.to(e, { y: 0.12 * api.H, opacity: 0, skewX: -10, duration: 0.2, ease: "power2.in" }, 18.4 + i * 0.03));
+}
+
+/* ---------- 5 · cream: WHY? (the camera pans; a navy circle swallows it) ---------- */
+function s5(api) {
+  T(api, "Why?", { x: 0.02, capTop: 0.64, fitW: 1060, cls: "ghost-out" });
+  const w = T(api, "Why", { x: 0.075, capTop: 0.615, fitW: 690 });
+  fly(api, w, 18.62, { stagger: 0.035, spread: 26, duration: 0.3 });
+  const q = T(api, "?", { x: 0.735, capTop: 0.615, size: parseFloat(w.style.fontSize) / api.u, color: "var(--c1)", upper: false });
+  api.effect({ name: "pop", duration: 0.3 }, q, 18.72);
+  typeIn(api, K(api, "Banquets · +14.2%", { x: 0.083, capTop: 0.884, size: 2.2, color: "var(--text)" }), 18.85, 0.02);
+}
+
+/* ---------- 6 · navy (circle): "and that reason is not a thought in your head" ---------- */
+function s6(api) {
+  appear(api, T(api, "+14.2%", { x: 0.536, capTop: 0.278, size: 2.6, w: 500, color: "rgba(238,241,246,.7)" }), 19.4);
+  appear(api, T(api, "Banquets", { x: 0.086, capTop: 0.318, size: 2.6, w: 600, ls: 0.06 }), 19.45);
+  typeIn(api, K(api, "And that reason is not", { x: 0.08, capTop: 0.348, color: "var(--text)" }), 19.5, 0.025);
+  typeIn(api, T(api, "Last weekend?", { x: 0.075, capTop: 0.755, size: 2.6, w: 600 }), 19.9, 0.02);
+  const th = T(api, "Thought", { x: 0.215, capTop: 0.4, fitW: 696 });
+  fly(api, T(api, "A", { x: 0.085, capTop: 0.4, size: parseFloat(th.style.fontSize) / api.u }), 20.96, { spread: 20 });
+  fly(api, th, 21.04, { stagger: 0.035 });
+  typeIn(api, K(api, "In your head", { x: 0.097, capTop: 0.505, color: "var(--c1)" }), 21.64, 0.03);
+  // the cream wipe rises over this section: clip it at the same edge, same curve
+  api.tl.fromTo(api.el, { clipPath: "inset(0% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 100% 0%)", duration: 1.2, ease: "reelWipe", immediateRender: false }, 22.33);
+  api.tl.fromTo(T(api, "≠", { x: 0.515, capTop: 0.62, size: 28, color: "var(--c1)", upper: false }), { opacity: 0, scale: 0.3, rotation: -20 },
+    { opacity: 1, scale: 1, rotation: 0, duration: 0.4, ease: "back.out(2)" }, 21.95);
+}
+
+/* ---------- 7 · cream (wipe up): "it has to be RECORDED IN WRITING" ---------- */
+function s7(api) {
+  const ghost = T(api, "Recorded", { x: 0, capTop: 0, fitW: 1500, cls: "ghost-out" });
+  ghost.style.left = 900 - ghost.offsetWidth / 2 + "px"; ghost.style.top = 590 - ghost.offsetHeight / 2 + "px"; ghost.style.rotate = "-90deg";
+  appear(api, ghost, 22.6, 0.6);
+  api.tl.fromTo(ghost, { y: 80 }, { y: -40, duration: 3.3, ease: "none" }, 22.4);
+  fly(api, T(api, "Recorded", { x: 0.09, capTop: 0.25, fitW: 853 }), 23.3, { spread: 34 });
+  grow(api, box(api, "left:97px;top:616px;width:860px;height:3px;background:var(--text)"), 23.95, "x", 0.4);
+  const iw = T(api, "In writing", { x: 0.09, capTop: 0.343, fitW: 493, color: "var(--c1)", cls: "slot-1" });
+  typeIn(api, iw, 24.48, 0.07);
+  api.effect({ name: "squiggle", width: 0.45, wavelength: 3.6, height: 1, gap: 0.6 }, iw, 25.1);
+}
+
+/* ---------- 8 · teal (circle): the log becomes a document on a tablet, reviewed again in the budget meeting ---------- */
+function s8(api) {
+  const steps = [["This month", null], ["Record", 25.9], ["Later", 28.6], ["Budget meeting", 29.75]];
+  const its = steps.map(([t], i) => {
+    const capTop = 0.16 + i * 0.024;
+    const e = K(api, t, { x: 0.117, capTop, size: 3, ls: 0.2, color: "rgba(233,240,238,.5)" });
+    const d = box(api, `left:96px;top:${capTop * api.H + 4}px;width:9px;height:9px;border-radius:50%;background:rgba(233,240,238,.45)`);
+    typeIn(api, e, 25.6 + i * 0.05, 0.012);
+    appear(api, d, 25.6 + i * 0.05);
+    return [e, d];
+  });
+  box(api, `left:100px;top:${0.16 * api.H + 8}px;width:1px;height:${0.072 * api.H}px;background:rgba(233,240,238,.3)`);
+  steps.forEach(([, at], i) => {
+    if (at == null) return;
+    its.forEach(([e, d], k) => {
+      const on = k === i;
+      api.tl.to(e, { color: on ? "#F3F0E7" : "rgba(233,240,238,.5)", fontWeight: on ? 700 : 600, scale: on ? 1.12 : 1, transformOrigin: "0% 50%", duration: 0.2 }, at);
+      api.tl.to(d, { background: on ? "#2FB386" : "rgba(233,240,238,.45)", scale: on ? 1.6 : 1, duration: 0.2 }, at);
+    });
+  });
+  typeIn(api, K(api, "When we discuss the", { x: 0.089, capTop: 0.303, color: "var(--text)" }), 29.6, 0.025);
+  const b = T(api, "Budget", { x: 0.095, capTop: 0.335, fitW: 843 });
+  const m = T(api, "Meeting", { x: 0.105, capTop: 0.43, fitW: 833, color: "var(--c1)" });
+  fly(api, b, 30.76, { stagger: 0.045 });
+  fly(api, m, 31.24, { stagger: 0.04, duration: 0.35 });
+}
+
+/* ---------- 9 · lined notes: BUDGET → ACHIEVED → EXCEEDED on a dashed baseline ---------- */
+function s9(api) {
+  grow(api, box(api, `left:0;top:1093px;width:${api.W}px;height:0;border-top:2px dashed rgba(17,58,63,.4)`), 31.7, "x", 0.5);
+  const k1 = K(api, "It could have been", { x: 0.088, capTop: 0.467, size: 2.8 });
+  typeIn(api, k1, 31.7, 0.02); fade(api, k1, 33.1, 0.15);
+  const k2 = K(api, "You could have", { x: 0.088, capTop: 0.467, size: 2.8 });
+  typeIn(api, k2, 33.3, 0.02); fade(api, k2, 35.55, 0.15);
+  const bud = T(api, "Budget", { x: 0.088, capTop: 0.516, fitW: 527 });
+  fly(api, bud, 32.38, { spread: 16, stagger: 0.03, duration: 0.3 });
+  api.tl.to(bud, { y: 0.107 * api.H, scale: 0.666, transformOrigin: "0% 0%", color: "#9B9A94", duration: 0.35, ease: "power3.out" }, 33.45);
+  const ach = T(api, "Achieved", { x: 0.084, capTop: 0.508, fitW: 833 });
+  fly(api, ach, 33.45, { spread: 34 });
+  recolor(api, ach, 34.95, "#A4A39D", 0.35);
+  fly(api, T(api, "Exceeded", { x: 0.084, capTop: 0.325, fitW: 874, color: "var(--c1)" }), 34.9, { spread: 34 });
+  grow(api, box(api, "left:92px;top:800px;width:4px;height:293px;background:var(--c1)"), 35.3, "y", 0.35);
+  typeIn(api, K(api, "Your budgets", { x: 0.105, capTop: 0.468, size: 2.4, w: 700, color: "var(--text)" }), 35.76, 0.03);
+}
+
+/* ---------- 10 · end card ---------- */
+function s10(api) {
+  const mark = T(api, `<span style="font-weight:900">REV</span><span style="font-weight:500;letter-spacing:-.035em">hexperts</span>`,
+    { raw: true, upper: false, x: 0.5, capTop: 0.362, fitW: 880, center: true });
+  api.tl.fromTo(mark, { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.55, ease: "power2.inOut" }, 37.3);
+  const plane = box(api, `left:${0.5 * api.W - 150}px;top:${0.268 * api.H}px;width:150px;height:150px`);
+  plane.innerHTML = `<svg viewBox="0 0 100 100" width="150" height="150"><path d="M8 72 L92 8 L64 92 L50 60 Z" fill="var(--text)"/><path d="M50 60 L92 8 L42 66 Z" fill="#2B6B70"/></svg>`;
+  api.tl.fromTo(plane, { opacity: 0, x: -40, y: 40, scale: 0.5 }, { opacity: 1, x: 0, y: 0, scale: 1, duration: 0.45, ease: "back.out(2)" }, 37.7);
+  typeIn(api, K(api, "for more such", { upper: false, x: 0.5, capTop: 0.522, size: 3.5, w: 500, ls: 0.12, center: true }), 37.95, 0.03);
+  const rs = T(api, `revenue <span style="color:var(--c1)">strategies.</span>`, { raw: true, upper: false, x: 0.5, capTop: 0.55, fitW: 860, center: true });
+  fly(api, rs, 38.25, { spread: 8, stagger: 0.02, duration: 0.3, spin: 30 });
+  const btn = box(api, `left:${0.5 * api.W}px;top:${0.645 * api.H}px;translate:-50% 0;display:grid;border:3px solid var(--text);border-radius:99px;--on:0;` +
+    `background:color-mix(in srgb, #28A07A calc(var(--on)*100%), transparent);border-color:color-mix(in srgb, #28A07A calc(var(--on)*100%), var(--text))`);
+  btn.innerHTML = `<span style="grid-area:1/1;padding:20px 84px;font-weight:700;font-size:${3.1 * api.u}px;color:var(--text)">Follow</span>` +
+    `<span style="grid-area:1/1;padding:20px 50px;font-weight:700;font-size:${3.1 * api.u}px;color:#fff;opacity:0;text-align:center">✓ Following</span>`;
+  const [off, on] = btn.children;
+  api.tl.fromTo(btn, { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 38.75)
+    .fromTo(btn, { scale: 1 }, { scale: 0.9, duration: 0.08, yoyo: true, repeat: 1, immediateRender: false }, 39.35)
+    .fromTo(btn, { "--on": 0 }, { "--on": 1, duration: 0.15, immediateRender: false }, 39.4)
+    .fromTo(off, { opacity: 1 }, { opacity: 0, duration: 0.12, immediateRender: false }, 39.4)
+    .fromTo(on, { opacity: 0 }, { opacity: 1, duration: 0.12, immediateRender: false }, 39.42);
+}
+
+/* ---------- props that travel between sections: the paper (1→2) and the variance log / tablet (6→8) ---------- */
+function sheet(api, w, h, rot, rows = []) {
+  const p = box(api, "left:0;top:0;width:0;height:0", api.layers.content);
+  const s = box(api, `left:${-w / 2}px;top:${-h / 2}px;width:${w}px;height:${h}px;rotate:${rot}deg`, p);
+  s.className = "sheet";
+  const hd = box(api, "", s); hd.className = "hd"; hd.style.left = 0.14 * w + "px"; hd.textContent = "Variance log";
+  const tg = box(api, "", s); tg.className = "hd"; tg.style.right = 0.07 * w + "px"; tg.textContent = "Oct";
+  const r = rows.map(([lb, vl, nt], i) => {
+    const y = 0.185 * h + i * 0.127 * h;
+    const mk = box(api, `top:${y - 22}px`, s); mk.className = "mk"; mk.style.transform = "scaleX(0)";
+    const l = box(api, `left:${0.14 * w}px;top:${y}px`, s); l.className = "lb"; l.textContent = lb;
+    const v = box(api, `top:${y}px${vl.startsWith("−") ? ";color:#4A5050" : ""}`, s); v.className = "vl"; v.textContent = vl;
+    const n = box(api, `left:${0.14 * w}px;top:${y + 52}px`, s); n.className = "nt"; n.textContent = nt;
+    const ck = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    ck.setAttribute("viewBox", "0 0 24 24"); ck.classList.add("ck"); ck.style.top = y + 34 + "px";
+    ck.innerHTML = `<path d="M4 12.5l5 5L20 6.5" style="stroke-dasharray:0 100"/>`; s.appendChild(ck);
+    return { mk, l, v, n, ck };
+  });
+  return { p, s, r };
+}
+
+// the reel's cream wipe: a quick rise to ~60 %, a near pause, then the rest
+const reelWipe = () => CustomEase.create("reelWipe", "M0,0 C0.08,0.42 0.16,0.58 0.26,0.6 0.36,0.62 0.42,0.66 0.5,0.74 0.62,0.86 0.74,1 1,1");
+scene({
+  duration: DURATION, setup: reelWipe, fps: 30, seed: 5, cues: {},
+  moments: [
+    { type: "custom", at: 0, until: 3.6, area: "screen", enter: "none", exit: "push-left", build: s1 },
+    { type: "custom", at: 3.85, until: 6.17, area: "screen", enter: "none", exit: "none", scheme: "teal", schemeTransition: "whip", schemeLead: 0.25, build: s2 },
+    { type: "custom", at: 6.17, until: 11.45, area: "screen", enter: "none", exit: { name: "fade-out", duration: 0.1 }, scheme: "notes", schemeTransition: "cut", schemeLead: 0, build: s3 },
+    { type: "custom", at: 11.62, until: 18.62, area: "screen", enter: "none", exit: "none", scheme: "black", schemeTransition: "circle", schemeFrom: [0.5, 0.42], schemeDuration: 0.22, schemeLead: 0.17, build: s4 },
+    { type: "custom", at: 18.62, until: 19.36, area: "screen", enter: "none", exit: "none", scheme: "base", schemeTransition: "cut", schemeLead: 0, build: s5 },
+    { type: "custom", at: 19.3, until: 23.55, area: "screen", enter: "none", exit: "none", scheme: "navy", schemeTransition: "circle", schemeFrom: [1.15, 0.62], schemeDuration: 0.2, schemeLead: 0.1, build: s6 },
+    { type: "custom", at: 22.33, until: 25.55, area: "screen", enter: "none", exit: { name: "fade-out", duration: 0.12 }, scheme: "base", schemeTransition: "wipe", schemeDuration: 1.2, schemeEase: "reelWipe", schemeLead: 0, build: s7 },
+    { type: "custom", at: 25.55, until: 31.62, area: "screen", enter: "none", exit: "none", scheme: "teal", schemeTransition: "circle", schemeFrom: [0.5, 0.64], schemeDuration: 0.22, schemeLead: 0, build: s8 },
+    { type: "custom", at: 31.62, until: 36.9, area: "screen", enter: "none", exit: { name: "fade-out", duration: 0.35 }, scheme: "notes", schemeTransition: "cut", schemeLead: 0, build: s9 },
+    { type: "custom", at: 37.3, area: "screen", enter: "none", scheme: "paper", schemeTransition: "cut", schemeLead: 0, build: s10 },
+  ],
+  async build(api) {
+    const { W, H, tl } = api;
+    // the paper of section 1, carried into section 2 by the whip
+    const a = sheet(api, 480, 690, 7);
+    tl.set(a.p, { x: 850, y: 1510 }, 0);
+    tl.fromTo(a.p, { y: 1510 + 800, rotation: 8 }, { y: 1510, rotation: 0, duration: 0.6, ease: "expo.out" }, 0.05);
+    tl.to(a.p, { x: 439, y: 863, scale: 0.56, rotation: -10, duration: 0.42, ease: "power3.inOut" }, 3.6);
+    tl.to(a.p, { x: 400, duration: 2.1, ease: "none" }, 4.05);
+    tl.set(a.p, { visibility: "hidden" }, 6.17);
+
+    // the variance log: rises with the cream wipe, fills in, becomes a document on a tablet, then zooms away
+    const rows = [["Banquets", "+14.2%", "Corporate gala added 11 OCT"], ["Rooms", "+3.1%", "Late group block, 62 room nights"],
+                  ["F&B", "−1.8%", "Main outlet closed for refurbishment"], ["Channel", "+2.4%", "Direct promotion, 14–20 OCT"]];
+    const d = sheet(api, 702, 1026, -2, rows);
+    tl.set(d.p, { x: 540, y: 1296, visibility: "hidden" }, 0);
+    tl.set(d.p, { visibility: "visible" }, 22.33);
+    tl.fromTo(d.p, { y: 1296 + 1150 }, { y: 1296, duration: 0.55, ease: "power3.out", immediateRender: false }, 22.33);
+    const lw = box(api, "", d.s); lw.className = "nt"; lw.textContent = "Last weekend?";
+    lw.style.cssText += `;left:${0.14 * 702}px;top:${0.185 * 1026 + 52}px`;
+    d.r.forEach((r, i) => {
+      const t0 = [22.85, 23.6, 24.0, 24.45][i];
+      zoom(api, r.l, t0, { from: i ? 1.5 : 2.2, blur: 0.6, duration: 0.3 });
+      appear(api, r.v, t0 + 0.12, 0.15);
+      if (i) typeIn(api, r.n, t0 + 0.15, 0.012); else { appear(api, lw, 22.95, 0.15); fade(api, lw, 23.5, 0.12); typeIn(api, r.n, 23.6, 0.012); }
+    });
+    // teal: to the centre, then a tablet appears around it
+    tl.to(d.p, { y: 1150, scale: 0.843, duration: 0.35, ease: "power3.inOut" }, 25.55);
+    tl.to(d.s, { rotate: 0, duration: 0.35 }, 25.55);
+    const frame = box(api, `left:${-330 / 0.843}px;top:${-470 / 0.843}px;width:${660 / 0.843}px;height:${940 / 0.843}px;border:${5 / 0.843}px solid rgba(233,240,238,.9);border-radius:${34 / 0.843}px`, d.p);
+    d.p.prepend(frame);
+    tl.fromTo(frame, { opacity: 0, scale: 1.08 }, { opacity: 1, scale: 1, duration: 0.35, ease: "power2.out" }, 26.9);
+    const file = box(api, `left:0;top:${510 / 0.843}px;translate:-50% 0;white-space:nowrap;font-weight:500;font-size:${2.4 / 0.843 * api.u}px;letter-spacing:.12em;color:rgba(233,240,238,.75)`, d.p);
+    file.textContent = "OCT_VARIANCE_LOG.docx";
+    typeIn(api, file, 27.05, 0.015);
+    tl.set([frame, file], { visibility: "hidden" }, 0);
+    tl.set([frame, file], { visibility: "visible" }, 26.85);
+    d.r.forEach((r, i) => {
+      tl.fromTo(r.mk, { scaleX: 0 }, { scaleX: 1, duration: 0.3, ease: "power2.out" }, 28.35 + i * 0.18);
+      tl.fromTo(r.ck.querySelector("path"), { drawSVG: "0%" }, { drawSVG: "100%", duration: 0.25 }, 28.5 + i * 0.18);
+    });
+    tl.to(d.p, { y: 1400, scale: 0.843 * 0.59, duration: 0.5, ease: "power3.inOut" }, 29.85);
+    tl.to(d.p, { y: 960, scale: 3, opacity: 0, duration: 0.32, ease: "power2.in" }, 31.3);
+    tl.set(d.p, { visibility: "hidden" }, 31.62);
+  },
+});
+</script>
+</body>
+</html>
