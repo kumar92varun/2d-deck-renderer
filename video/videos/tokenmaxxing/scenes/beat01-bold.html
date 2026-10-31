@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Beat 1 · bold · Tokenmaxxing</title>
+<style>
+  .stk { position: absolute; white-space: nowrap; line-height: 1; border: calc(var(--u)*.45) solid var(--ink); box-shadow: calc(var(--u)*.9) calc(var(--u)*.9) 0 var(--ink);
+    border-radius: calc(var(--u)*1.2); background: var(--surface); color: var(--ink); display: flex; align-items: center; justify-content: center; }
+  .disp { font-family: "Archivo Black", sans-serif; text-transform: uppercase; }
+  .body { font-family: "Space Grotesk", sans-serif; font-weight: 700; }
+  .big { position: absolute; white-space: nowrap; line-height: 1; color: #fff; text-shadow: calc(var(--u)*.7) calc(var(--u)*.7) 0 var(--ink); }
+  .coin { position: absolute; left: 0; top: 0; border-radius: 50%; display: grid; place-items: center; background: #FFD60A; color: var(--ink);
+    border: calc(var(--u)*.4) solid var(--ink); box-shadow: inset calc(var(--u)*-.4) calc(var(--u)*-.4) 0 rgba(0,0,0,.18); font-family: "Archivo Black", sans-serif; }
+</style></head>
+<body>
+<script type="module">
+/* Beat 1 in the bold theme, concept B "The Arcade" as a sticker game show: PRESS START, six company sticker cards
+   bounce in (physics), a big countdown sticker 3-2-1-GO, the score menu (features / bugs / code) each taped over
+   LOCKED, and on "AI tokens" INSERT MORE TOKENS slams in while yellow token coins rain down with real physics and
+   pile up at the bottom; the hi-score counts. Render: node render.mjs videos/tokenmaxxing/scenes/beat01-bold.html --theme bold */
+import { scene } from "/video/core/scene.js";
+import { box, appear, counter } from "../components/kit.js";
+
+const CUES = { open: 0.35, companies: 1.7, three: 1.9, two: 2.9, one: 3.9, developers: 3.6, go: 4.85, menu: 6.5,
+  features: 7.3, bugs: 9.3, code: 11.5, not: 12.55, tokens: 13.8 };
+const DURATION = 16.0;
+
+scene({
+  duration: DURATION, fps: 30, seed: 601, cues: CUES,
+  motionBlur: { samples: 6, shutter: 0.5 },
+  moments: [{ type: "custom", at: 0, until: DURATION + 1, rect: [0, 0, 1, 1], enter: "none", exit: "none", build }],
+});
+
+async function build(api) {
+  const { W, H, u, tl, el } = api;
+  const C = CUES;
+  const Y = "#FFD60A", P = "#FF5FA2", M = "#00E5A0";
+  const stk = (html, x, y, w, h, o = {}) => { const e = box(api, `left:${x}px;top:${y}px;width:${w}px;height:${h}px;font-size:${(o.size ?? 3) * u}px;${o.bg ? `background:${o.bg};` : ""}${o.css ?? ""}`, o.parent ?? el, "stk " + (o.font ?? "disp")); e.innerHTML = html; return e; };
+  const big = (html, x, y, size, o = {}) => { const e = box(api, `left:${x}px;top:${y}px;font-size:${size * u}px;${o.css ?? ""}`, o.parent ?? el, "big disp"); e.innerHTML = html; if (o.center) e.style.left = x - e.offsetWidth / 2 + "px"; return e; };
+  const pop = (e, at, o = {}) => api.tl.fromTo(e, { opacity: 0, scale: o.from ?? 0.3, rotation: o.r0 ?? -10 }, { opacity: 1, scale: 1, rotation: o.rot ?? 0, duration: o.d ?? 0.4, ease: "back.out(2.6)" }, at);
+
+  // ---------- hook ----------
+  const ps = big("PRESS START", 0.5 * W, 0.36 * H, 12, { center: true });
+  const yr = stk("EARLY 2026", 0.5 * W - 13 * u, 0.56 * H, 26 * u, 7 * u, { bg: Y, size: 3.4 });
+  pop(ps, C.open, { from: 0.5 }); pop(yr, C.open + 0.25, { rot: -4 });
+  tl.to([ps, yr], { y: -1.1 * H, duration: 0.4, ease: "power3.in", immediateRender: false }, C.companies - 0.2);
+
+  // ---------- six company sticker cards bounce in ----------
+  const cards = Array.from({ length: 6 }, (_, i) => {
+    const cw = 0.17 * W, ch = 0.2 * H, x = 0.05 * W + (i % 3) * 0.195 * W, y = 0.2 * H + Math.floor(i / 3) * 0.29 * H;
+    const c = stk(`<div style="text-align:center"><div class="body" style="font-size:.55em;letter-spacing:.2em;opacity:.7">PLAYER ${i + 1}</div>COMPANY ${"ABCDEF"[i]}</div>`, x, y, cw, ch, { size: 3, bg: [Y, P, M, "#fff", Y, P][i] });
+    c.style.rotate = (i % 2 ? 2 : -2) + "deg";
+    const rd = stk("READY!", cw * 0.55, -2.6 * u, 14 * u, 5 * u, { parent: c, bg: "#fff", size: 2.2, css: "rotate:8deg" });
+    pop(rd, C.developers + i * 0.06, { rot: 8, d: 0.3 });
+    return c;
+  });
+  await api.effect({ name: "physics-drop", lift: 0.7, bounce: 0.5, tilt: false, stagger: 0.08 }, cards, C.companies);
+  // countdown sticker on the right
+  const cd = stk("", 0.73 * W, 0.26 * H, 0.21 * W, 0.21 * W, { bg: P, size: 15, css: "border-radius:50%" });
+  pop(cd, C.three - 0.15, { from: 0.2 });
+  const digit = box(api, "left:0;top:0;width:100%;height:100%;display:grid;place-items:center;color:#fff;text-shadow:" + `${0.7 * u}px ${0.7 * u}px 0 var(--ink)`, cd, "disp");
+  api.onFrame((t) => { digit.textContent = t >= C.go ? "GO!" : t >= C.one ? "1" : t >= C.two ? "2" : "3"; digit.style.fontSize = (t >= C.go ? 8 : 15) * u + "px"; });
+  [C.two, C.one].forEach((at) => tl.fromTo(cd, { scale: 1.18 }, { scale: 1, duration: 0.35, ease: "elastic.out(1,0.4)", immediateRender: false }, at));
+  tl.to(cd, { backgroundColor: M, scale: 1.12, duration: 0.15, immediateRender: false }, C.go).to(cd, { scale: 1, duration: 0.3, ease: "elastic.out(1,0.4)" }, C.go + 0.15);
+  // GO: everything zooms off
+  tl.to(cards, { x: 1.2 * W, rotation: 25, duration: 0.6, ease: "power3.in", stagger: 0.05, immediateRender: false }, C.go + 0.6);
+  tl.to(cd, { y: -1.1 * H, duration: 0.45, ease: "power3.in", immediateRender: false }, C.go + 0.9);
+
+  // ---------- score menu: every option taped LOCKED ----------
+  const mt = big("SCORE POINTS FOR:", 0.07 * W, 0.08 * H, 5.4);
+  pop(mt, C.menu, { from: 0.6, r0: -4 });
+  const opts = [["MORE FEATURES", C.features, Y], ["BUGS FIXED", C.bugs, P], ["CODE SHIPPED", C.code, M]].map(([t, at, bg], k) => {
+    const e = stk(t, 0.06 * W + k * 0.305 * W, 0.24 * H, 0.27 * W, 0.2 * H, { bg, size: 4.2, css: `rotate:${[-2, 1.5, -1][k]}deg` });
+    pop(e, at, { rot: [-2, 1.5, -1][k] });
+    return e;
+  });
+  opts.forEach((e, k) => {
+    const tape = stk("LOCKED", 0.11 * W, 0.15 * H, 0.15 * W, 0.06 * H, { parent: e, bg: "#0D0B24", size: 2.4, css: "color:#fff;rotate:-6deg;box-shadow:none" });
+    tl.fromTo(tape, { opacity: 0, scaleX: 0, transformOrigin: "0% 50%" }, { opacity: 1, scaleX: 1, duration: 0.18, ease: "power2.out" }, C.not + k * 0.12);
+    tl.to(e, { filter: "grayscale(1) brightness(.92)", duration: 0.2, immediateRender: false }, C.not + k * 0.12 + 0.1);
+  });
+  // the real option
+  const real = stk("INSERT MORE TOKENS!", 0.06 * W, 0.53 * H, 0.66 * W, 0.17 * H, { bg: Y, size: 6.6, css: "rotate:-2deg" });
+  pop(real, C.tokens, { rot: -2, from: 1.8, r0: -8, d: 0.35 });
+  api.effect("jelly", real, C.tokens + 0.35);
+  const hs = big("HI-SCORE 0", 0.95 * W, 0.08 * H, 4.2);
+  hs.style.left = ""; hs.style.right = 0.05 * W + "px"; hs.style.color = Y;
+  appear(api, hs, C.tokens + 0.3, 0.1);
+  counter(api, hs, { from: 0, to: 48250000, at: C.tokens + 0.3, dur: DURATION - C.tokens - 0.5, fmt: (v) => "HI-SCORE " + Math.round(v).toLocaleString("en-US") });
+
+  // ---------- token coins rain and pile up with real physics ----------
+  const ph = await api.physics({ gravity: 3000, from: C.tokens });
+  ph.walls({ friction: 0.5, restitution: 0.35 });
+  const cs = 7.2 * u;
+  let t0 = C.tokens + 0.05, gap = 0.07;
+  while (t0 < DURATION - 0.4) {
+    const c = box(api, `width:${cs}px;height:${cs}px;font-size:${cs * 0.5}px`, el, "coin");
+    c.textContent = "T";
+    ph.body({ el: c, x: 0.1 * W + api.rng() * 0.8 * W, y: -cs, w: cs, h: cs, shape: "ball", at: t0, vy: 400 + api.rng() * 400,
+      spin: (api.rng() - 0.5) * 12, restitution: 0.4, friction: 0.4 });
+    tl.set(c, { opacity: 0 }, 0).set(c, { opacity: 1 }, t0);
+    t0 += gap; gap = Math.max(0.022, gap * 0.97);
+  }
+  return { reveals: [] };
+}
+</script>
+</body>
+</html>

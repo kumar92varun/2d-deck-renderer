@@ -27,7 +27,7 @@ const DURATION = 16.0;
 scene({
   duration: DURATION, fps: 30, seed: 201, cues: CUES, setup: () => document.fonts.load("16px 'Press Start 2P'"),
   motionBlur: { samples: 6, shutter: 0.5 },
-  background: [{ name: "neon-haze", panels: [{ x: 0.04, y: 0.1, w: 6, color: 1 }, { x: 0.9, y: 0.82, w: 6, color: 2 }], branches: false }],
+  // no background here: the theme's own (navy haze in neon, violet haze in neon-violet)
   moments: [{ type: "custom", at: 0, rect: [0, 0, 1, 1], enter: "none", build }],
 });
 

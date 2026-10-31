@@ -72,7 +72,8 @@ if (!["long", "short"].includes(format)) { console.error("--format must be long 
 const theme = opt("theme", defaultTheme);
 const compare = isVideo && theme !== defaultTheme;          // demos already sit in their theme's folder
 
-const suffix = (compare ? `-${theme}` : "") + (format === "short" ? "-short" : "") + (!draft && scale !== 2 ? `-${scale}x` : "");
+const suffix = (compare && !sceneName.endsWith("-" + theme) ? `-${theme}` : "")      // beat01-paper rendered in paper: no double suffix
+   + (format === "short" ? "-short" : "") + (!draft && scale !== 2 ? `-${scale}x` : "");
 let base, dirs;
 if (isVideo) {
   base = `${video}-${sceneName}`;

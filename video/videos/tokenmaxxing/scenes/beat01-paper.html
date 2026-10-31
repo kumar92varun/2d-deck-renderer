@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Beat 1 · paper · Tokenmaxxing</title>
+<link rel="stylesheet" href="../components/kit.css">
+<style>
+  .hand { position: absolute; white-space: nowrap; line-height: 1.05; font-family: "Kalam", cursive; color: var(--ink); }
+  .note { font-family: "Caveat", cursive; }
+  .sticky { position: absolute; background: #FFE680; box-shadow: 0 10px 18px rgba(90,60,30,.25), 0 2px 3px rgba(90,60,30,.2); }
+  svg.rs { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+</style></head>
+<body>
+<script type="module">
+/* Beat 1 in the paper theme, concept A "The Fuel Race" as a doodle: a hand-drawn track, sketchy cars, start lights
+   coloured in with pencil hatching, a yellow sticky note of scoring rules crossed out in red pen, and on "AI tokens"
+   the real rule circled in red while the cars spin pencil-scribble donuts. Lines draw themselves (DrawSVG).
+   Render: node render.mjs videos/tokenmaxxing/scenes/beat01-paper.html --theme paper */
+import { scene } from "/video/core/scene.js";
+import { box, appear, counter } from "../components/kit.js";
+
+const CUES = { open: 0.35, lanes: 0.9, companies: 1.7, three: 1.9, two: 2.9, one: 3.9, developers: 3.6, go: 4.85,
+  board: 6.5, features: 7.3, bugs: 9.3, code: 11.5, not: 12.55, tokens: 13.8 };
+const DURATION = 16.0;
+
+scene({
+  duration: DURATION, fps: 30, seed: 501, cues: CUES,
+  motionBlur: { samples: 6, shutter: 0.5 },
+  moments: [{ type: "custom", at: 0, until: DURATION + 1, rect: [0, 0, 1, 1], enter: "none", exit: "none", build }],
+});
+
+async function build(api) {
+  const { W, H, u, tl, el } = api;
+  const C = CUES, R = api.rng;
+  const INK = "#2B2622", RED = "#D9480F", BLUE = "#1C64B4";
+  // an SVG layer we draw rough shapes into
+  const svgLayer = (parent = el, w = W, h = H) => { const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); s.setAttribute("class", "rs"); s.setAttribute("width", w); s.setAttribute("height", h); parent.appendChild(s); return s; };
+  const draw = (svg, node, at, dur = 0.5) => { svg.appendChild(node); const ps = node.querySelectorAll("path"); tl.fromTo(ps, { drawSVG: "0%" }, { drawSVG: "100%", duration: dur, ease: "power1.inOut", stagger: dur / Math.max(4, ps.length) }, at); return node; };
+  const hand = (html, x, y, size, o = {}) => { const e = box(api, `left:${x}px;top:${y}px;font-size:${size * u}px;font-weight:${o.w ?? 700};color:${o.color ?? INK};${o.css ?? ""}`, o.parent ?? el, "hand" + (o.note ? " note" : "")); e.innerHTML = html; return e; };
+  const write = (e, at, st = 0.035) => api.effect({ name: "chars", from: "below", stagger: st, duration: 0.18 }, e, at);
+  const svg = svgLayer(), rc = rough.svg(svg), opt = (o = {}) => ({ roughness: 1.6, bowing: 1.5, stroke: INK, strokeWidth: 2.4, seed: Math.floor(R() * 1e6), ...o });
+
+  // ---------- hook ----------
+  const hook = hand("early 2026…", 0.37 * W, 0.08 * H, 8, { note: true, color: BLUE });
+  write(hook, C.open, 0.05);
+  tl.to(hook, { opacity: 0, duration: 0.3, immediateRender: false }, C.three - 0.5);
+
+  // ---------- the track (6 lanes, hand-ruled) ----------
+  const top = 0.36 * H, lh = 0.1 * H, N = 6, sx = 0.2 * W;
+  const laneY = (i) => top + lh * (i + 0.5);
+  for (let i = 0; i <= N; i++) draw(svg, rc.line(0.03 * W, top + i * lh, 0.97 * W, top + i * lh + (R() - 0.5) * 6, opt({ strokeWidth: i % N ? 1.6 : 2.6, stroke: i % N ? "#8a7a62" : INK })), C.lanes + i * 0.06, 0.6);
+  draw(svg, rc.rectangle(sx - 7, top, 14, N * lh, opt({ fill: INK, fillStyle: "cross-hatch", hachureGap: 6, strokeWidth: 1.6 })), C.lanes + 0.4, 0.5);
+  // cars: a sketchy top-down car each, in its own svg so it can move and spin
+  const finishX = [1130, 1380, 1010, 1260, 1520, 900];
+  const cars = [];
+  for (let i = 0; i < N; i++) {
+    hand(`Company ${"ABCDEF"[i]}`, 0.03 * W, laneY(i) - 2.3 * u, 3.7, { note: true });
+    write(el.lastChild, C.companies + i * 0.08, 0.025);
+    const hold = box(api, `left:0;top:${laneY(i)}px;width:0;height:0`);
+    const cw = 15 * u, ch = 6.8 * u;
+    const cs = svgLayer(hold, cw, ch); cs.style.left = -cw / 2 + "px"; cs.style.top = -ch / 2 + "px";
+    const cr = rough.svg(cs), col = [BLUE, RED, "#2f9e44", "#7048e8", "#e8590c", "#0c8599"][i];
+    [[0.12, 0], [0.12, 0.78], [0.68, 0], [0.68, 0.78]].forEach(([wx, wy]) => cs.appendChild(cr.rectangle(wx * cw, wy * ch, 0.2 * cw, 0.22 * ch, opt({ fill: INK, fillStyle: "solid", strokeWidth: 1.4 }))));
+    cs.appendChild(cr.path(`M${0.06 * cw} ${0.2 * ch} Q${0.06 * cw} ${0.12 * ch} ${0.2 * cw} ${0.12 * ch} L${0.78 * cw} ${0.14 * ch} Q${0.98 * cw} ${0.3 * ch} ${0.98 * cw} ${0.5 * ch} Q${0.98 * cw} ${0.7 * ch} ${0.78 * cw} ${0.86 * ch} L${0.2 * cw} ${0.88 * ch} Q${0.06 * cw} ${0.88 * ch} ${0.06 * cw} ${0.8 * ch} Z`,
+      opt({ fill: col, fillStyle: "hachure", hachureGap: 5, fillWeight: 1.6, strokeWidth: 2.2 })));
+    cs.appendChild(cr.ellipse(0.5 * cw, 0.5 * ch, 0.22 * cw, 0.4 * ch, opt({ fill: "#fff", fillStyle: "solid", strokeWidth: 1.8 })));
+    const spin = box(api, "left:0;top:0;width:0;height:0", hold); spin.appendChild(cs);
+    cars.push({ hold, spin });
+    tl.fromTo(hold, { x: -0.12 * W, opacity: 0 }, { x: sx + 0.075 * W, opacity: 1, duration: 0.6, ease: "back.out(1.4)" }, C.companies + 0.1 + i * 0.08);
+    const lx = sx + 0.075 * W;
+    tl.to(hold, { x: lx + 0.62 * (finishX[i] - lx), duration: 1.4 + i * 0.07, ease: "power2.in" }, C.go + i * 0.03)
+      .to(hold, { x: finishX[i], duration: C.tokens - (C.go + 1.5 + i * 0.07), ease: "none" }, C.go + 1.45 + i * 0.1);
+    // speed lines behind each car after GO (pencil dashes)
+    const sl = svgLayer(hold, 1, 1);
+    [-0.25, 0, 0.25].forEach((dy) => sl.appendChild(rough.svg(sl).line(-0.12 * W, dy * ch, -cw * 0.6, dy * ch, opt({ strokeWidth: 1.4, stroke: "#8a7a62" }))));
+    tl.fromTo(sl, { opacity: 0 }, { opacity: 1, duration: 0.2 }, C.go + 0.2).to(sl, { opacity: 0, duration: 0.3 }, C.tokens - 0.2);
+  }
+
+  // ---------- start lights: three circles coloured in with pencil hatching ----------
+  const lg = svgLayer();
+  const lcx = [0.42, 0.5, 0.58].map((f) => f * W), lcy = 0.17 * H, lr = 3.4 * u;
+  lcx.forEach((x, k) => {
+    draw(lg, rc.circle(x, lcy, lr * 2, opt({ strokeWidth: 2.4 })), C.three - 0.5 + k * 0.08, 0.35);
+    const f = draw(lg, rc.circle(x, lcy, lr * 1.7, opt({ stroke: "none", fill: "#e03131", fillStyle: "hachure", hachureGap: 4, fillWeight: 2.2 })), [C.three, C.two, C.one][k], 0.35);
+    tl.to(f, { opacity: 0, duration: 0.08 }, C.go);
+  });
+  const go = hand("GO!", 0.5 * W, lcy - 6 * u, 11, { color: "#2f9e44", css: "transform:translateX(-50%)" });
+  tl.fromTo(go, { opacity: 0, scale: 0.4, rotation: -12 }, { opacity: 1, scale: 1, rotation: -4, duration: 0.25, ease: "back.out(3)" }, C.go)
+    .to(go, { opacity: 0, duration: 0.3 }, C.go + 0.8);
+  tl.to(lg, { opacity: 0, duration: 0.3, immediateRender: false }, C.go + 0.8);
+
+  // ---------- the sticky note of scoring rules ----------
+  const nx = 0.24 * W, ny = 0.035 * H, nw = 0.52 * W, nh = 0.29 * H;
+  const note = box(api, `left:${nx}px;top:${ny}px;width:${nw}px;height:${nh}px`, el, "sticky");
+  tl.fromTo(note, { y: -0.45 * H, rotation: -8 }, { y: 0, rotation: -1.5, duration: 0.7, ease: "back.out(1.3)" }, C.board);
+  const pf = hand("Points for:", 3 * u, 1.6 * u, 3.4, { parent: note, note: true });
+  write(pf, C.board + 0.5);
+  const nsvg = svgLayer(note, nw, nh), nrc = rough.svg(nsvg);
+  const opts = [["more features", C.features], ["bugs fixed", C.bugs], ["code shipped", C.code]];
+  let ox = 3 * u;
+  opts.forEach(([t, at], k) => {
+    const x = ox, y = 6.8 * u;
+    const e = hand("☐ " + t, x, y, 3.5, { parent: note, color: BLUE });
+    ox += e.offsetWidth + 2.4 * u;
+    write(e, at - 0.15, 0.03);
+    const w = e.offsetWidth;
+    draw(nsvg, nrc.line(x - 4, y + 2.6 * u, x + w + 6, y + 2 * u, opt({ stroke: RED, strokeWidth: 3.6 })), C.not + k * 0.12, 0.25);
+    draw(nsvg, nrc.line(x - 2, y + 0.8 * u, x + 2.4 * u, y + 3.6 * u, opt({ stroke: RED, strokeWidth: 3 })), C.not + 0.1 + k * 0.12, 0.12);
+  });
+  const real = hand("✔ MORE AI TOKENS!", 3 * u, 14.6 * u, 6.2, { parent: note, color: RED });
+  write(real, C.tokens, 0.03);
+  const rw = real.offsetWidth;
+  draw(nsvg, nrc.ellipse(3 * u + rw / 2, 14.6 * u + 3.6 * u, rw * 1.12, 9.5 * u, opt({ stroke: RED, strokeWidth: 3.4 })), C.tokens + 0.55, 0.45);
+  tl.to(note, { keyframes: { x: [0, -0.8 * u, 0.6 * u, -0.3 * u, 0] }, duration: 0.3, ease: "none" }, C.tokens + 0.1);
+  // tally in the corner, counting up
+  const tal = hand("tokens burned: 0", nw - 2 * u, nh - 5.2 * u, 3, { parent: note, note: true, color: RED, css: "transform:translateX(-100%)" });
+  appear(api, tal, C.tokens + 0.6, 0.2);
+  counter(api, tal, { from: 0, to: 48250000, at: C.tokens + 0.6, dur: DURATION - C.tokens - 0.8, fmt: (v) => "tokens burned: " + Math.round(v).toLocaleString("en-US") });
+
+  // ---------- donuts: cars spin in place, pencil scribbles pile up around them ----------
+  const Rr = 0.03 * H, spinRate = [1.45, 1.6, 1.35, 1.7, 1.5, 1.4];
+  api.onFrame((t) => cars.forEach((c, i) => {
+    if (t < C.tokens) { c.spin.style.transform = ""; return; }
+    const d = t - C.tokens, a = d * Math.min(1, d / 0.6) * spinRate[i] * 6.283;
+    c.spin.style.transform = `translate(${Rr * Math.sin(a)}px, ${Rr * (1 - Math.cos(a)) * 0.9}px) rotate(${(a * 180) / Math.PI}deg)`;
+  }));
+  const sc = svgLayer();
+  cars.forEach((_, i) => {
+    const cx = finishX[i], cy = laneY(i) + Rr * 0.9;
+    let d = "";
+    for (let k = 0; k < 26; k++) { const a = k * 0.9, rr = Rr * (1.3 + 0.12 * k) + R() * 6; d += `${k ? "L" : "M"}${cx + rr * Math.cos(a)} ${cy + rr * 0.55 * Math.sin(a)} `; }
+    const node = rc.path(d, opt({ stroke: i % 2 ? RED : "#8a7a62", strokeWidth: 1.6, roughness: 2.4 }));
+    node.style.opacity = 0.75;
+    draw(sc, node, C.tokens + 0.2 + i * 0.05, DURATION - C.tokens - 0.4);
+  });
+  return { reveals: [] };
+}
+</script>
+</body>
+</html>

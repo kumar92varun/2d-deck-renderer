@@ -4,15 +4,15 @@
    Everything is driven by timeline state, so any frame renders the same. */
 import { box } from "./kit.js";
 
-export function receipt(api, { x, y, w, maxH, lineH = 3.3, fontSize = 2.15 }) {
+export function receipt(api, { x, y, w, maxH, lineH = 3.3, fontSize = 2.15, paperCss = "", headCss = "", font = '"Courier New", monospace' }) {
   const { u, tl } = api;
   const lh = lineH * u;
   // printer head
   const head = box(api, `left:${x - 1.2 * u}px;top:${y}px;width:${w + 2.4 * u}px;height:${3.2 * u}px;border-radius:${0.8 * u}px;
-    background:linear-gradient(#2a2f45,#141827);border:2px solid #8a91b8;box-shadow:0 0 ${1.4 * u}px rgba(54,214,231,.5)`);
+    background:linear-gradient(#2a2f45,#141827);border:2px solid #8a91b8;box-shadow:0 0 ${1.4 * u}px rgba(54,214,231,.5);${headCss}`);
   const clip = box(api, `left:${x}px;top:${y - maxH}px;width:${w}px;height:${maxH}px;overflow:hidden`);
   const paper = box(api, `left:0;top:100%;width:${w}px;height:${80 * lh}px;background:#F4F1FF;color:#160c2a;
-    font:700 ${fontSize * u}px "Courier New", monospace;box-shadow:0 0 ${2 * u}px rgba(178,59,232,.45)`, clip);
+    font:700 ${fontSize * u}px ${font};box-shadow:0 0 ${2 * u}px rgba(178,59,232,.45);${paperCss}`, clip);
   const st = { L: 0.6 * lh };
   api.onFrame(() => { paper.style.transform = `translateY(${-st.L}px)`; });
   let n = 0;                           // lines printed so far

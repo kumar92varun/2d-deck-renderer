@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Beat 1 · kinetic · Tokenmaxxing</title>
+<link rel="stylesheet" href="../components/kit.css">
+<style>
+  /* this beat goes big: the words are the picture */
+  html.theme-kinetic body[data-format=long] .m.m-headline .t-main { font-size: calc(var(--u)*26); }
+  .theme-kinetic .m-headline .t-kicker, .theme-kinetic .m-list .t-title { font-size: calc(var(--u)*3.2); }
+  .theme-kinetic .m-list .t-item { font-size: calc(var(--u)*13); line-height: .98; }
+  html.theme-kinetic .m.m-stat .t-number { font-size: calc(var(--u)*17); }
+  .theme-kinetic .m-stat .t-label { font-size: calc(var(--u)*2.8); }
+</style></head>
+<body>
+<script type="module">
+/* Beat 1 in the kinetic theme, concept C "The Bill" told typographically (the reference reel's language):
+   cream "Early 2026, big tech started a RACE" over a scrolling month ruler; whip to teal: the score list
+   (features / bug fixes / code shipped) arrives word by word, then every line is struck; circle to black:
+   "The real score: AI TOKENS", and the bill runs up as a counter with green deltas.
+   Render: node render.mjs videos/tokenmaxxing/scenes/beat01-kinetic.html --theme kinetic */
+import { scene } from "/video/core/scene.js";
+import { strike } from "../components/kit.js";
+
+const CUES = { open: 0.3, companies: 1.7, go: 4.85, board: 6.5, features: 7.3, bugs: 9.3, code: 11.5, not: 12.55, tokens: 13.8 };
+const DURATION = 16.0;
+
+scene({
+  duration: DURATION, fps: 30, seed: 701, cues: CUES,
+  moments: [
+    { type: "headline", at: "open", area: "wide", kicker: "Early 2026, big tech started a", text: "{1|Race}", ghost: "2026", ghostAt: [0.66, 0.42], until: "go-0.42" },
+    { type: "timeline", at: "companies", area: "bottom", labels: ["Company A", "Company B", "Company C", "Company D", "Company E", "Company F"], visible: 4, anchor: 0.12,
+      steps: [{ at: "companies", i: 0 }, { at: "companies+0.5", i: 1 }, { at: "companies+1", i: 2 }, { at: "companies+1.5", i: 3 }, { at: "companies+2", i: 4 }, { at: "companies+2.5", i: 5 }],
+      caption: "6 companies · 1 scoreboard", until: "go-0.42" },
+    { type: "headline", at: "go", area: "wide", scheme: "teal", kicker: "On your marks", text: "{1|Go}", until: "board-0.2" },
+    { type: "list", at: "board", rect: [0.07, 0.08, 0.86, 0.86], scheme: "teal", title: "Points for", items: [{ text: "Features", at: "features" }, { text: "Bug fixes", at: "bugs" }, { text: "Code shipped", at: "code" }], until: "tokens-0.3" },
+    { type: "headline", at: "tokens", area: "top", rect: [0.07, 0.06, 0.86, 0.42], scheme: "black", schemeTransition: "circle", schemeFrom: [0.5, 0.55], kicker: "The real score", text: "AI {1|tokens}" },
+    { type: "stat", at: "tokens+0.6", rect: [0.07, 0.52, 0.86, 0.42], value: 48250000, label: "The bill · tokens burned", countFor: 1.5, deltas: ["+2.4M", "+5.1M", "+9.8M", "+14.2M", "+16.7M"] },
+  ],
+  async build(api) {
+    // "...की नहीं": every honest score is struck through, in green, and steps back to grey
+    const items = [...api.stage.querySelectorAll(".m-list .t-item .t-text")];
+    items.forEach((e, k) => {
+      strike(api, e, CUES.not + k * 0.1, { slot: 1, thick: 1.4 });
+      api.tl.to(e, { color: "#5f7d7b", duration: 0.25, immediateRender: false }, CUES.not + k * 0.1 + 0.12);
+    });
+    const kick = [...api.stage.querySelectorAll(".m-list .t-title")][0];
+    if (kick) api.onFrame((t) => { kick.textContent = t >= CUES.not ? "Not points for" : "Points for"; });
+  },
+});
+</script>
+</body>
+</html>

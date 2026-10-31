@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Beat 1 · clean · Tokenmaxxing</title>
+<link rel="stylesheet" href="../components/kit.css">
+<style>
+  .theme-clean .m-list .t-item.struck .t-text { color: var(--muted); }
+  .theme-clean .m-headline { align-items: flex-start; text-align: left; }
+  .theme-clean .m-headline .t-main { font-size: calc(var(--u)*10.5); }
+  .theme-clean .m-list .t-title { font-size: calc(var(--u)*7); }
+  .theme-clean .m-list .t-item { font-size: calc(var(--u)*5.6); }
+  .bigno { font-weight: 800; letter-spacing: -.04em; color: var(--c2); font-variant-numeric: tabular-nums; }
+</style></head>
+<body>
+<script type="module">
+/* Beat 1 in the clean theme, concept C "The Bill" told editorially: big Inter headlines on the left carry the story;
+   on the right a white receipt card prints the race and voids features / bugs / code; then one huge orange number:
+   the tokens billed. Orange (colour 2) = cost. Render: node render.mjs videos/tokenmaxxing/scenes/beat01-clean.html --theme clean */
+import { scene } from "/video/core/scene.js";
+import { T, box, appear, stamp, strike, counter } from "../components/kit.js";
+import { receipt } from "../components/receipt.js";
+
+const CUES = { open: 0.35, companies: 1.7, go: 4.85, billed: 6.5, features: 7.3, bugs: 9.3, code: 11.5, not: 12.55, tokens: 13.8 };
+const DURATION = 16.0;
+
+scene({
+  duration: DURATION, fps: 30, seed: 401, cues: CUES,
+  motionBlur: { samples: 6, shutter: 0.5 },
+  moments: [
+    { type: "headline", at: "open", rect: [0.07, 0.2, 0.5, 0.5], kicker: "Early 2026", text: "Big tech started\na {2|race}", until: "billed-0.3" },
+    { type: "list", at: "billed", rect: [0.07, 0.18, 0.5, 0.6], title: "Points for…", style: "numbers", color: 1,
+      items: [{ text: "Shipping features", at: "features" }, { text: "Fixing bugs", at: "bugs" }, { text: "Deploying code", at: "code" }], until: "tokens-0.3" },
+    { type: "headline", at: "tokens", rect: [0.07, 0.16, 0.5, 0.36], kicker: "The real score", text: "{2|AI tokens}\nburned", color: 2 },
+    { type: "custom", at: 0, until: DURATION + 1, rect: [0, 0, 1, 1], enter: "none", exit: "none", build },
+  ],
+});
+
+async function build(api) {
+  const { W, H, u, tl } = api;
+  const C = CUES;
+  // the list's three items get struck and greyed on "...नहीं"
+  const items = [...api.stage.querySelectorAll(".m-list .t-item .t-text")];
+  items.forEach((e, k) => {
+    strike(api, e, C.not + k * 0.12, { slot: 2, thick: 0.35 });
+    tl.to(e, { color: "#9A9DA6", duration: 0.25, immediateRender: false }, C.not + k * 0.12 + 0.1);
+  });
+
+  // receipt card on the right
+  const rx = 0.64 * W, rw = 0.27 * W;
+  const r = receipt(api, { x: rx, y: 0.9 * H, w: rw, maxH: 0.84 * H, lineH: 3.5, fontSize: 2.1, font: '"Inter", sans-serif',
+    paperCss: "background:#fff;color:#16171B;box-shadow:0 12px 30px rgba(20,22,30,.12), 0 2px 6px rgba(20,22,30,.08);border-radius:6px 6px 0 0",
+    headCss: "background:#16171B;border:0;box-shadow:0 6px 18px rgba(20,22,30,.25)" });
+  const b = "font-weight:800";
+  r.print(`<span style='margin:auto;${b};letter-spacing:.2em'>THE TECH RACE</span>`, C.open);
+  r.print("<span style='margin:auto;color:#6B6F7B'>Early 2026</span>", C.open + 0.3);
+  "ABCDEF".split("").forEach((c, i) => r.print(r.dots(`Company ${c}`, "entered"), C.companies + 0.1 + i * 0.12));
+  r.print(`<span style='${b}'>Race start</span><span>00:00</span>`, C.go);
+  r.print(`<span style='${b};color:#6B6F7B'>BILLED FOR</span>`, C.billed);
+  const rows = [["Features", C.features], ["Bug fixes", C.bugs], ["Code shipped", C.code]].map(([t, at]) => r.print(r.dots(t, "—"), at));
+  rows.forEach((row, k) => { strike(api, row, C.not + k * 0.12, { slot: 2, thick: 0.25 }); tl.to(row, { opacity: 0.4, duration: 0.2, immediateRender: false }, C.not + k * 0.12 + 0.1); });
+  r.print(`<span style='${b};color:#F76707'>AI tokens</span><span style='${b};color:#F76707'>× 48,250,000</span>`, C.tokens);
+  r.stream((i) => r.dots("AI tokens", "$" + (1840 + i * 137).toLocaleString("en-US")), C.tokens + 0.5, DURATION, 0.09);
+
+  // the one huge number
+  const lbl = T(api, "TOKENS BURNED", { x: 0.07, y: 0.6, size: 2.4, w: 700, ls: 0.2, cls: "dim" });
+  const num = T(api, "48,250,000", { x: 0.07, y: 0.645, size: 13, cls: "bigno" });
+  appear(api, lbl, C.tokens + 0.5, 0.25);
+  api.effect({ name: "rise", distance: 3 }, num, C.tokens + 0.5);
+  counter(api, num, { from: 0, to: 48250000, at: C.tokens + 0.5, dur: DURATION - C.tokens - 0.7, ease: "power3.in" });
+  return { reveals: [] };
+}
+</script>
+</body>
+</html>
