@@ -124,7 +124,37 @@ export default {
     return 1.1;
   },
 
+  // kinetic type: each letter flies in from its own random direction, spinning and scaling, and lands hard.
+  // Looks best with the theme's motion blur on. opts: spread (u), spin (deg), stagger, duration
+  "letters-fly"(api, t, at, o) {
+    let d = 0;
+    els(t).forEach((el) => {
+      const cs = split(el, "chars"), sp = (o.spread ?? 45) * api.u, spin = o.spin ?? 110;
+      const rnd = cs.map(() => { const a = api.rng() * 6.283; return [Math.cos(a) * sp * (0.5 + api.rng()), Math.sin(a) * sp * (0.5 + api.rng()), (api.rng() - 0.5) * 2 * spin, 0.4 + api.rng() * 1.4]; });
+      api.tl.fromTo(cs, { opacity: 0, x: (i) => rnd[i][0], y: (i) => rnd[i][1], rotation: (i) => rnd[i][2], scale: (i) => rnd[i][3] },
+        { opacity: 1, x: 0, y: 0, rotation: 0, scale: 1, duration: o.duration ?? 0.42, ease: o.ease ?? "power3.out", stagger: o.stagger ?? 0.045 }, at);
+      d = Math.max(d, (o.duration ?? 0.42) + cs.length * (o.stagger ?? 0.045));
+    });
+    return d;
+  },
+  // big and soft → sharp in place (a fast push-in)
+  "zoom-in"(api, t, at, o) {
+    api.tl.fromTo(els(t), { opacity: 0, scale: o.from ?? 2.6, filter: `blur(${(o.blur ?? 1.2) * api.u}px)` },
+      { opacity: 1, scale: 1, filter: "blur(0px)", duration: o.duration ?? 0.5, ease: o.ease ?? "expo.out", stagger: ST(o, 0.08) }, at);
+    return 0.5;
+  },
+
   // ---------- exits ----------
+  // whip off to the left (pairs with the whip scheme transition; streaks with motion blur)
+  "push-left"(api, t, at, o) {
+    api.tl.fromTo(els(t), { x: 0 }, { x: -(o.distance ?? 1) * api.W, duration: o.duration ?? 0.42, ease: "power3.in", immediateRender: false }, at);
+    return 0.42;
+  },
+  // scroll up and away (a list making room for the next thought)
+  "push-up"(api, t, at, o) {
+    api.tl.fromTo(els(t), { y: 0, opacity: 1 }, { y: -(o.distance ?? 0.35) * api.H, opacity: 0, duration: o.duration ?? 0.45, ease: "power3.in", immediateRender: false }, at);
+    return 0.45;
+  },
   "fade-out"(api, t, at, o) {
     api.tl.fromTo(els(t), { opacity: 1 }, { opacity: 0, duration: o.duration ?? 0.35, ease: "power1.in", immediateRender: false }, at);
     return 0.35;

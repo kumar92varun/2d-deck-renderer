@@ -8,14 +8,17 @@ A theme's private effects live in `themes/<name>/effects.js`; promote one here w
 
 | File | Effects |
 | --- | --- |
-| `text.js` (enter) | `fade`, `rise`, `slide-left`, `slide-right`, `slam`, `pop`, `drop` (bounce), `blur-in`, `flicker`, `chars` (per letter; `from: below/above/scale/blur/random`), `words`, `scramble` (decoding text), `typewriter`, `wipe` (`dir: up/down`), `grow-x`, `grow-y`, `grow-elastic` |
-| `text.js` (exit) | `fade-out`, `sink`, `blur-out`, `shrink-out`, `wipe-out`, `flicker-out` |
-| `emphasis.js` | `pulse`, `shake`, `glow-burst`, `light-sweep`, `underline`, `glitch` (RGB split), `jelly` (squash & stretch) |
+| `text.js` (enter) | `fade`, `rise`, `slide-left`, `slide-right`, `slam`, `pop`, `drop` (bounce), `blur-in`, `flicker`, `chars` (per letter; `from: below/above/scale/blur/random`), `words`, `scramble` (decoding text), `typewriter`, `wipe` (`dir: up/down`), `grow-x`, `grow-y`, `grow-elastic`, `letters-fly` (kinetic: each letter flies in from a random direction), `zoom-in` |
+| `text.js` (exit) | `fade-out`, `sink`, `blur-out`, `shrink-out`, `wipe-out`, `flicker-out`, `push-left` (whip off), `push-up` (scroll away) |
+| `emphasis.js` | `pulse`, `shake`, `glow-burst`, `light-sweep`, `underline`, `glitch` (RGB split), `jelly` (squash & stretch), `squiggle` (wavy underline draws on), `ghost-shift` (word slides out of its own outline) |
 | `transitions.js` | `flash`, `cover-wipe`, `band-wipe`, `iris`, `light-pass` (`at` = the moment the screen is covered) |
 | `backgrounds.js` | `solid`, `gradient-drift` (CSS), GPU: `aurora`, `nebula` (shader noise), `grid` (glowing grid with travelling pulses and a ring wave), `light-leaks`, `god-rays` |
 | `particles.js` | `sparks`, `confetti`, `embers` (rising stream), `shockwave` (ring), `dust-field` (ambient, background) |
 | `physics.js` | `physics-drop` (enter: fall, bounce, settle/stack), `physics-fall` (exit: tumble away, `floor: true` to pile up), `shatter` (letters burst and fall) |
 | `post.js` | `bloom` (GPU layers), `grain`, `vignette`, `scanlines`, `chromatic` |
+
+Screen-wide colour changes are not effects but **schemes** (a moment's `scheme:`; see `themes/README.md`), and
+camera **motion blur** is a theme/renderer setting (`motionBlur`, `--motion-blur N`).
 
 ## Rules for writing effects
 

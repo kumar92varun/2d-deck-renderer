@@ -7,7 +7,8 @@ renders in any theme (`node render.mjs <scene> --theme <name>`). Each video pick
 
 Themes so far (each has a STYLE.md; demos in `out/_themes/<name>/showcase.mp4`):
 `neon` (dark, glowing; Tokenmaxxing), `neon-violet` (neon on the older violet haze), `clean` (light, minimal),
-`paper` (hand-drawn on paper, Rough.js strokes), `bold` (flat, loud stickers on indigo).
+`paper` (hand-drawn on paper, Rough.js strokes), `bold` (flat, loud stickers on indigo), `kinetic` (editorial kinetic
+typography with colour sections, flying letters and motion blur; from a reference reel).
 
 ```
 themes/<name>/
@@ -41,6 +42,12 @@ export default {
     section:  { transition: "cover-wipe", enter: "slam" },
     ...
   },
+  schemes: {                        // optional whole-screen colour sections; a moment switches with scheme: "teal"
+    teal: { bg, text, muted, c1, ..., plate },   // palette overrides + optional plate CSS (background) for the screen
+  },
+  schemeTransition: "whip",         // cut | whip | circle | wipe (a moment can override with schemeTransition / schemeFrom)
+  motionBlur: { samples: 8, shutter: 0.6 },   // renderer averages N sub-frames per frame (real camera blur)
+  particleBlend: "normal",          // light themes: particles are paint ("add" = light, the default)
   effects,                          // private effects from ./effects.js
   components: { quote: { build(api, m) { ... } } },   // optional: replace a moment type completely
 };
@@ -69,7 +76,15 @@ Define glow/shadow variables that use `var(--c)` on `*` (not `:root`), or they r
 | `image` | `.t-figure` > `.t-img`, `.t-credit`; `.t-caption` |
 | `chart` | `.t-title`, `.t-plot` > `.t-bar` > `.t-blabel`, `.t-track` > `.t-fill`, `.t-bvalue`; `.t-note` |
 | inline | `.hl.slot-N` (highlighted words), `strong` |
+| `doc` (`.frame-paper` / `.frame-tablet`) | `.t-doc` > `.t-sheet` > `.t-doc-head` (`.t-doc-title`, `.t-doc-tag`), `.t-row` (`.t-row-mark`, `.t-row-label`, `.t-row-value`, `.t-row-note`, `.t-row-check`); `.t-doc-file` |
+| `timeline` | `.t-timeline` > `.t-tl-track` > `.t-tl-label(.is-active)`, `.t-tl-tick(.big)`; `.t-tl-caption` |
+| `agenda` | `.t-agenda` > `.t-ag-item(.is-active)` > `.t-ag-dot`, `.t-ag-text` |
+| stat extras | `.t-ruler` > `i(.big)`, `.t-delta` |
+| end extras | `.t-cta` > `.t-cta-off`, `.t-cta-on` (CSS var `--on` goes 0 → 1) |
+| ghost word | `.fx-ghost-word` (and `.in-scheme-<name> .fx-ghost-word` per scheme) |
 | custom blocks | `.fx-stroke` (line drawings), anything the block adds |
+
+`core/base.css` gives all of these a neutral default look, so a new theme only restyles what it wants.
 
 ## Making a new theme
 

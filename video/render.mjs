@@ -23,6 +23,8 @@
      --offset S          seconds to cut from the start of the recording (from tools/cue-times.mjs); default 0
      --no-captions       hide text moments (clean plate)
      --fps N             override the scene's fps
+     --motion-blur N     camera motion blur with N sub-frames per frame (default: the theme's setting, off in --draft);
+                         --motion-blur 0 turns it off. Costs N× render time.
      --query "k=v&k2=v2" extra URL options for the scene (e.g. the effects lab's bg=aurora); stills get them in the name
 
    Output (repo-root out/, gitignored; the review page out/<video>/index.html is rebuilt after every render)
@@ -96,12 +98,15 @@ async function openScene(browser) {
   const [w, h] = format === "short" ? [1080, 1920] : [1920, 1080];
   await page.setViewport({ width: w, height: h, deviceScaleFactor: scale });
   const url = srv.urlFor(scenePath) + `?format=${format}&render=1&captions=${captions ? 1 : 0}&theme=${encodeURIComponent(theme)}${query ? "&" + query : ""}`;
-  page.on("pageerror", (e) => console.error("[scene error]", e.message));
+  let fail;
+  const failed = new Promise((_, rej) => { fail = rej; });
+  page.on("pageerror", (e) => { console.error("[scene error]", e.message); fail(new Error("scene failed to load: " + e.message)); });
   page.on("console", (m) => { if (["error", "warn"].includes(m.type())) console.error(`[scene ${m.type()}]`, m.text()); });
   await page.goto(url, { waitUntil: "load" });
-  await page.waitForFunction(() => window.__scene, { timeout: 60000 });
-  const info = await page.evaluate(async () => { await window.__scene.ready;
-    const s = window.__scene; return { duration: s.duration, fps: s.fps, width: s.width, height: s.height, theme: s.theme }; });
+  await Promise.race([page.waitForFunction(() => window.__scene, { timeout: 60000 }), failed]);
+  const info = await Promise.race([failed, page.evaluate(async () => { await window.__scene.ready;
+    const s = window.__scene; return { duration: s.duration, fps: s.fps, width: s.width, height: s.height, theme: s.theme, motionBlur: s.motionBlur }; })]);
+  failed.catch(() => {});                                            // later page errors are only logged
   return { page, info };
 }
 
@@ -114,23 +119,45 @@ function run(cmd, args) {
   return new Promise((res, rej) => spawn(cmd, args, { stdio: ["ignore", "inherit", "inherit"] }).on("close", (c) => (c === 0 ? res() : rej(new Error(`${cmd} exited ${c}`)))));
 }
 
-async function renderRange({ fps, startFrame, endFrame, file, report }) {
+/* Motion blur: N sub-frames spread over the shutter (a fraction of the frame interval), centred on the frame time,
+   averaged by ffmpeg (tmix) — like a real camera, so fast moves streak and everything else stays sharp. */
+function subTimes(f, fps, mb) {
+  if (!mb) return [f / fps];
+  return Array.from({ length: mb.samples }, (_, k) => Math.max(0, (f + mb.shutter * (k / (mb.samples - 1) - 0.5)) / fps));
+}
+const blurFilter = (mb) => (mb ? `tmix=frames=${mb.samples},select='eq(mod(n\,${mb.samples})\,${mb.samples - 1})',` : "");
+
+async function averageStill(bufs) {
+  // average N PNGs into one (same tmix as the video path)
+  return new Promise((res, rej) => {
+    const n = bufs.length;
+    const ff = spawn("ffmpeg", ["-loglevel", "error", "-f", "image2pipe", "-c:v", "png", "-i", "-", "-vf", `tmix=frames=${n},select='eq(n\,${n - 1})'`,
+      "-frames:v", "1", "-f", "image2pipe", "-c:v", "png", "-"], { stdio: ["pipe", "pipe", "inherit"] });
+    const out = []; ff.stdout.on("data", (d) => out.push(d)); ff.on("close", (c) => (c === 0 ? res(Buffer.concat(out)) : rej(new Error("ffmpeg average failed"))));
+    for (const b of bufs) ff.stdin.write(b);
+    ff.stdin.end();
+  });
+}
+
+async function renderRange({ fps, startFrame, endFrame, file, report, mb }) {
   const browser = await launch();
   try {
     const { page } = await openScene(browser);
     const type = draft ? "jpeg" : "png";
     const enc = draft ? ["-preset", "veryfast", "-crf", "22"] : ["-preset", "slow", "-crf", "14", "-tune", "film"];
     const ff = spawn("ffmpeg", ["-y", "-loglevel", "error",
-      "-f", "image2pipe", "-framerate", String(fps), "-c:v", type === "png" ? "png" : "mjpeg", "-i", "-",
-      "-vf", "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p",
+      "-f", "image2pipe", "-framerate", String(fps * (mb ? mb.samples : 1)), "-c:v", type === "png" ? "png" : "mjpeg", "-i", "-",
+      "-vf", `${blurFilter(mb)}setpts=N/(${fps}*TB),scale=out_color_matrix=bt709:out_range=tv,format=yuv420p`,
       "-c:v", "libx264", ...enc, "-profile:v", "high",
       "-x264-params", "colorprim=bt709:transfer=bt709:colormatrix=bt709:range=tv",   // full BT.709 tags so every player decodes the same colours
       "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709",
       "-movflags", "+faststart", "-r", String(fps), file], { stdio: ["pipe", "inherit", "inherit"] });
     const done = new Promise((res, rej) => ff.on("close", (c) => (c === 0 ? res() : rej(new Error("ffmpeg exited " + c)))));
     for (let f = startFrame; f < endFrame; f++) {
-      const buf = await grab(page, f / fps, type);
-      if (!ff.stdin.write(buf)) await new Promise((r) => ff.stdin.once("drain", r));
+      for (const t of subTimes(f, fps, mb)) {
+        const buf = await grab(page, t, type);
+        if (!ff.stdin.write(buf)) await new Promise((r) => ff.stdin.once("drain", r));
+      }
       report();
     }
     ff.stdin.end();
@@ -143,12 +170,17 @@ try {
   const probe = await launch();
   const { page, info } = await openScene(probe);
   const fps = Number(opt("fps", info.fps));
+  const mbN = opt("motion-blur", null) != null ? Number(opt("motion-blur")) : draft ? 0 : info.motionBlur?.samples || 0;
+  const mb = mbN > 1 ? { samples: mbN, shutter: info.motionBlur?.shutter ?? 0.5 } : null;
 
   if (stills) {
     await mkdir(dirs.stills, { recursive: true });
     for (const t of stills) {
       const file = path.join(dirs.stills, `${base}${compare ? "-" + theme : ""}${query ? "-" + query.replace(/[^\w=-]+/g, "_") : ""}-t${t}.png`);
-      await writeFile(file, await grab(page, t, "png"));
+      let img;
+      if (mb) { const bufs = []; for (const st of subTimes(t * fps, fps, mb)) bufs.push(await grab(page, st, "png")); img = await averageStill(bufs); }
+      else img = await grab(page, t, "png");
+      await writeFile(file, img);
       console.log("still:", file);
     }
     await probe.close();
@@ -161,7 +193,7 @@ try {
     await mkdir(outDir, { recursive: true });
     const file = path.join(outDir, `${base}${suffix}${partial ? `-${from}-${to}s` : ""}${draft ? "-draft" : ""}.mp4`);
     const n = Math.min(workers, Math.max(1, Math.floor(total / 30)));
-    console.log(`${base} · theme ${theme}${compare ? " (comparison)" : ""} · ${info.width * scale}x${info.height * scale} · ${fps} fps · ${total} frames · ${draft ? "draft" : "final"} · ${n} worker(s)`);
+    console.log(`${base} · theme ${theme}${compare ? " (comparison)" : ""} · ${info.width * scale}x${info.height * scale} · ${fps} fps · ${total} frames · ${draft ? "draft" : "final"}${mb ? ` · motion blur ${mb.samples}×` : ""} · ${n} worker(s)`);
     const t0 = Date.now();
     let doneFrames = 0;
     const report = () => {
@@ -171,7 +203,7 @@ try {
       process.stdout.write(`\r  ${doneFrames}/${total} frames · ${rate.toFixed(1)} fps · ETA ${Math.max(0, (total - doneFrames) / rate).toFixed(0)}s   `);
     };
     if (n === 1) {
-      await renderRange({ fps, startFrame: first, endFrame: last, file, report });
+      await renderRange({ fps, startFrame: first, endFrame: last, file, report, mb });
     } else {
       // equal chunks in parallel, joined without re-encoding
       const chunk = Math.ceil(total / n), parts = [];
@@ -179,7 +211,7 @@ try {
         const s = first + i * chunk, e = Math.min(last, s + chunk);
         if (s < e) parts.push({ s, e, file: path.join(outDir, `.${base}${suffix}-part${i}.mp4`) });
       }
-      await Promise.all(parts.map((p) => renderRange({ fps, startFrame: p.s, endFrame: p.e, file: p.file, report })));
+      await Promise.all(parts.map((p) => renderRange({ fps, startFrame: p.s, endFrame: p.e, file: p.file, report, mb })));
       const list = path.join(outDir, `.${base}${suffix}-parts.txt`);
       await writeFile(list, parts.map((p) => `file '${p.file}'`).join("\n"));
       await run("ffmpeg", ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", list, "-c", "copy", "-movflags", "+faststart", file]);

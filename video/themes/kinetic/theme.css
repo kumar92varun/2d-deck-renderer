@@ -1,0 +1,104 @@
+/* Kinetic: heavy Montserrat capitals, left-aligned, tight leading; small kickers with very wide tracking. */
+@font-face { font-family: "Montserrat"; font-weight: 500; font-display: block; src: url("fonts/montserrat-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Montserrat"; font-weight: 600; font-display: block; src: url("fonts/montserrat-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Montserrat"; font-weight: 700; font-display: block; src: url("fonts/montserrat-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Montserrat"; font-weight: 800; font-display: block; src: url("fonts/montserrat-latin-800-normal.woff2") format("woff2"); }
+@font-face { font-family: "Montserrat"; font-weight: 900; font-display: block; src: url("fonts/montserrat-latin-900-normal.woff2") format("woff2"); }
+
+.theme-kinetic .m { align-items: flex-start; text-align: left; }
+.theme-kinetic .m-end, .theme-kinetic .m-section.centered { align-items: center; text-align: center; }
+.theme-kinetic .hl { color: var(--c); }
+.theme-kinetic strong { font-weight: 900; }
+
+/* kicker: the small line that sets up the big word */
+.theme-kinetic .t-kicker { font-weight: 600; font-size: calc(var(--u)*2.5); letter-spacing: .32em; text-transform: uppercase; color: var(--kicker); margin-bottom: .9em; white-space: nowrap; }
+.theme-kinetic .t-main { font-weight: 900; line-height: .98; text-transform: uppercase; letter-spacing: -.012em; color: var(--text); white-space: nowrap; }
+.theme-kinetic .t-sub { font-weight: 800; font-size: calc(var(--u)*4.6); line-height: 1.15; margin-top: .45em; text-transform: uppercase; color: var(--text); white-space: nowrap; }
+.theme-kinetic .t-sub .hl { color: var(--c); }
+.theme-kinetic .m-title .t-main { font-size: calc(var(--u)*15); }
+.theme-kinetic .m-headline .t-main { font-size: calc(var(--u)*13); }
+.theme-kinetic body[data-format=long] .m-headline .t-main { font-size: calc(var(--u)*15); }
+.theme-kinetic .m-section .t-main { font-size: calc(var(--u)*13); }
+.theme-kinetic .m-end .t-main { font-size: calc(var(--u)*9); }
+.theme-kinetic .m-end .t-sub { font-size: calc(var(--u)*3); font-weight: 600; letter-spacing: .12em; text-transform: none; color: var(--kicker); }
+
+/* giant outlined ghost words behind */
+.theme-kinetic .fx-ghost-word { font-weight: 900; font-size: calc(var(--u)*52); letter-spacing: -.02em; color: transparent; -webkit-text-stroke: calc(var(--u)*.16) var(--text); opacity: .13; text-transform: uppercase; }
+.theme-kinetic .in-scheme-teal .fx-ghost-word, .theme-kinetic .in-scheme-navy .fx-ghost-word { -webkit-text-stroke: 0; color: var(--text); opacity: .07; }
+
+/* list: big stacked words; earlier ones step back to grey (focus) */
+.theme-kinetic .m-list .t-title { font-weight: 600; font-size: calc(var(--u)*2.5); letter-spacing: .32em; text-transform: uppercase; color: var(--kicker); margin-bottom: calc(var(--u)*2.6); }
+.theme-kinetic .t-items { display: flex; flex-direction: column; gap: calc(var(--u)*.4); border-left: 1px dashed color-mix(in srgb, var(--text) 30%, transparent); padding-left: calc(var(--u)*1.6); }
+.theme-kinetic .t-item { display: flex; align-items: center; font-weight: 900; font-size: calc(var(--u)*7.4); line-height: 1.05; text-transform: uppercase; color: var(--text); white-space: nowrap; }
+.theme-kinetic .t-marker { display: none; }
+
+/* stat */
+.theme-kinetic .t-number { font-weight: 900; font-size: calc(var(--u)*16); line-height: 1; letter-spacing: -.02em; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.theme-kinetic .t-prefix, .theme-kinetic .t-suffix { font-size: .5em; }
+.theme-kinetic .t-label { order: -1; font-weight: 600; font-size: calc(var(--u)*2.3); letter-spacing: .32em; text-transform: uppercase; color: var(--kicker); margin-bottom: calc(var(--u)*1.2); }
+.theme-kinetic .t-ruler { width: 100%; margin-top: calc(var(--u)*6); }
+.theme-kinetic .t-delta { font-weight: 800; font-size: calc(var(--u)*2.4); color: var(--c1); }
+
+/* compare: two blocks, text only, divided by a rule */
+.theme-kinetic .m-compare { flex-direction: row; align-items: stretch; gap: calc(var(--u)*4); }
+.theme-kinetic .t-side { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: calc(var(--u)*1.2); text-align: left; }
+.theme-kinetic .t-left { border-right: 1px dashed color-mix(in srgb, var(--text) 30%, transparent); padding-right: calc(var(--u)*3); }
+.theme-kinetic .t-head { font-weight: 900; font-size: calc(var(--u)*7); text-transform: uppercase; color: var(--c); margin-bottom: calc(var(--u)*1); }
+.theme-kinetic .t-point { font-weight: 700; font-size: calc(var(--u)*3.2); text-transform: uppercase; color: var(--text); }
+.theme-kinetic .t-vs { display: none; }
+
+/* quote */
+.theme-kinetic .t-quote { font-weight: 900; font-size: calc(var(--u)*6.6); line-height: 1.04; text-transform: uppercase; color: var(--text); }
+.theme-kinetic .t-mark { display: block; font-size: 1.6em; line-height: .7; color: var(--c1); }
+.theme-kinetic .t-by { margin-top: calc(var(--u)*2.4); font-weight: 600; font-size: calc(var(--u)*2.3); letter-spacing: .32em; text-transform: uppercase; color: var(--kicker); }
+
+/* image: a print with a soft paper shadow, slightly turned */
+.theme-kinetic .t-figure { position: relative; height: 74%; display: flex; padding: calc(var(--u)*1); background: var(--paper); rotate: -2deg;
+  box-shadow: 0 calc(var(--u)*1) calc(var(--u)*3) rgba(0,0,0,.2), 0 calc(var(--u)*.2) calc(var(--u)*.4) rgba(0,0,0,.12); }
+.theme-kinetic .t-img { display: block; height: 100%; width: auto; max-width: 100%; }
+.theme-kinetic .t-credit { position: absolute; right: .8em; bottom: .3em; font-size: calc(var(--u)*1.4); color: var(--kicker); }
+.theme-kinetic .t-caption { margin-top: calc(var(--u)*2.4); font-weight: 600; font-size: calc(var(--u)*2.2); letter-spacing: .3em; text-transform: uppercase; color: var(--kicker); }
+
+/* chart */
+.theme-kinetic .m-chart { align-items: stretch; }
+.theme-kinetic .m-chart .t-title { font-weight: 900; font-size: calc(var(--u)*6); text-transform: uppercase; color: var(--text); margin-bottom: calc(var(--u)*3); }
+.theme-kinetic .t-plot { width: 100%; display: flex; flex-direction: column; gap: calc(var(--u)*1.8); }
+.theme-kinetic .t-bar { display: grid; grid-template-columns: 24% 1fr 13%; align-items: center; gap: calc(var(--u)*1.6); }
+.theme-kinetic .t-blabel { font-weight: 800; font-size: calc(var(--u)*2.8); text-transform: uppercase; color: var(--text); }
+.theme-kinetic .t-track { height: calc(var(--u)*3.2); border-bottom: 1px dashed color-mix(in srgb, var(--text) 30%, transparent); }
+.theme-kinetic .t-fill { display: block; height: 100%; background: var(--c); }
+.theme-kinetic .t-bvalue { font-weight: 900; font-size: calc(var(--u)*3); color: var(--c1); }
+.theme-kinetic .t-note { margin-top: calc(var(--u)*2.4); font-weight: 600; font-size: calc(var(--u)*1.7); letter-spacing: .25em; text-transform: uppercase; color: var(--kicker); }
+
+/* doc / tablet props */
+.theme-kinetic .m-doc { align-items: center; }
+.theme-kinetic .t-sheet { background-color: var(--paper); color: var(--ink); font-family: "Montserrat", sans-serif; }
+.theme-kinetic .t-doc-title, .theme-kinetic .t-doc-tag { font-weight: 600; letter-spacing: .3em; }
+.theme-kinetic .t-row-label { font-weight: 900; text-transform: uppercase; color: var(--ink); }
+.theme-kinetic .t-row-value { color: #28A07A; }
+.theme-kinetic .t-row-note { color: #6E6C66; }
+.theme-kinetic .frame-tablet { border-color: color-mix(in srgb, var(--text) 85%, transparent); background: color-mix(in srgb, var(--text) 8%, transparent); }
+
+/* timeline / agenda */
+.theme-kinetic .t-tl-label { font-weight: 800; font-size: calc(var(--u)*2.4); color: var(--text); }
+.theme-kinetic .t-tl-label.is-active { color: var(--text); }
+.theme-kinetic .t-tl-caption { font-weight: 600; letter-spacing: .32em; color: var(--kicker); }
+.theme-kinetic .t-ag-item { font-weight: 600; font-size: calc(var(--u)*2.6); letter-spacing: .3em; color: color-mix(in srgb, var(--text) 45%, transparent); }
+.theme-kinetic .t-ag-item.is-active { color: var(--text); font-weight: 700; }
+.theme-kinetic .t-ag-dot { background: var(--c1); }
+
+/* end card CTA */
+.theme-kinetic .t-cta { border-color: var(--text); }
+.theme-kinetic .t-cta > span { font-weight: 700; font-size: calc(var(--u)*2.2); letter-spacing: .04em; color: var(--text); }
+.theme-kinetic .t-cta .t-cta-on { color: #fff; }
+
+.theme-kinetic .fx-stroke { color: var(--text) !important; }
+
+/* 9:16: the big words fill the width, like the reference reel (long words still shrink to fit) */
+.theme-kinetic body[data-format=short] .m-headline .t-main, .theme-kinetic body[data-format=short] .m-section .t-main { font-size: calc(var(--u)*19); }
+.theme-kinetic body[data-format=short] .m-title .t-main { font-size: calc(var(--u)*20); }
+.theme-kinetic body[data-format=short] .t-sub { font-size: calc(var(--u)*6.4); }
+.theme-kinetic body[data-format=short] .t-kicker, .theme-kinetic body[data-format=short] .m-list .t-title { font-size: calc(var(--u)*3); }
+.theme-kinetic body[data-format=short] .t-item { font-size: calc(var(--u)*10.5); }
+.theme-kinetic body[data-format=short] .t-number { font-size: calc(var(--u)*20); }
+.theme-kinetic body[data-format=short] .t-ag-item { font-size: calc(var(--u)*3); }

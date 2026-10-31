@@ -57,6 +57,14 @@ export const COMPONENTS = {
         return { li, at: o.at != null ? api.at(o.at) : m.start + (head ? 0.6 : 0) + i * (m.gap ?? 0.6) };
       });
       for (const { li } of items) api.fit(li.querySelector(".t-text"), api.rect.w * 0.9);
+      // focus mode: when the next item arrives, the earlier ones step back to the muted colour
+      if (m.focus ?? api.cfg.focus) {
+        const muted = getComputedStyle(api.el).getPropertyValue("--muted").trim() || "#888";
+        items.forEach(({ li }, i) => { if (items[i + 1]) {
+          const base = getComputedStyle(li).color;
+          api.tl.fromTo(li, { color: base }, { color: muted, duration: 0.3, immediateRender: false }, items[i + 1].at);
+        } });
+      }
       return { main: head || ul, reveals: [
         ...(head ? [{ targets: head, at: m.start, role: "enter" }] : []),
         ...items.map(({ li, at }) => ({ targets: li, at, role: head ? "part" : "enter" })),
@@ -67,6 +75,7 @@ export const COMPONENTS = {
   stat: {
     area: "main",
     build(api, m) {
+      m = { ...m, ticks: m.ticks ?? api.cfg.ticks };
       const num = api.el.appendChild(div("t-number", `<span class="t-prefix">${m.prefix ?? ""}</span><span class="t-value">0</span><span class="t-suffix">${m.suffix ?? ""}</span>`));
       const label = m.label ? api.el.appendChild(div("t-label", api.html(m.label))) : null;
       const val = num.querySelector(".t-value"), st = { v: m.from ?? 0 };
@@ -76,7 +85,21 @@ export const COMPONENTS = {
       num.style.minWidth = num.offsetWidth + "px";
       api.tl.fromTo(st, { v: m.from ?? 0 }, { v: m.value, duration: m.countFor ?? 1.4, ease: m.countEase ?? "power2.out" }, m.start + 0.1);
       api.onFrame(() => { val.textContent = fmt(st.v); });
-      return { main: num, reveals: [{ targets: num, at: m.start, role: "enter" }, ...(label ? [{ targets: label, at: later(api, m, "labelAt", 0.5), role: "part" }] : [])] };
+      // optional tick ruler under the number, with deltas ("+128K") popping up along it as the count climbs
+      let ruler = null;
+      if (m.ticks || m.deltas) {
+        ruler = api.el.appendChild(div("t-ruler", Array.from({ length: 41 }, (_, i) => `<i class="${i % 5 ? "" : "big"}"></i>`).join("")));
+        (m.deltas || []).forEach((dl, i, all) => {
+          const d = typeof dl === "string" ? { text: dl } : dl;
+          const tag = ruler.appendChild(div("t-delta", api.html(d.text)));
+          tag.style.left = (d.x ?? (i + 0.5) / all.length) * 100 + "%";
+          const at = d.at != null ? api.at(d.at) : m.start + 0.2 + (i * (m.countFor ?? 1.4)) / all.length;
+          api.tl.fromTo(tag, { opacity: 0, y: 1.5 * api.u }, { opacity: 1, y: 0, duration: 0.25, ease: "back.out(2)" }, at)
+                .to(tag, { opacity: 0, y: -2 * api.u, duration: 0.4, ease: "power1.in" }, at + (m.deltaHold ?? 0.9));
+        });
+      }
+      return { main: num, reveals: [{ targets: num, at: m.start, role: "enter" }, ...(label ? [{ targets: label, at: later(api, m, "labelAt", 0.5), role: "part" }] : []),
+        ...(ruler ? [{ targets: ruler, at: m.start, role: "part" }] : [])] };
     },
   },
   // two sides: { left: { title, points: [] }, right: {...}, vs: "vs", leftAt, rightAt }. Left uses colour 1, right colour 2.
@@ -157,12 +180,79 @@ export const COMPONENTS = {
       ] };
     },
   },
-  // closing card
+  // closing card; cta: "Follow" adds a button that switches to "✓ Following" at ctaAt
   end: {
     area: "full", caption: true,
     build(api, m) {
-      const p = textBlock(api, m, { main: m.text, sub: m.sub });
-      return { main: p.main, reveals: [{ targets: p.main, at: m.start, role: "enter" }, ...(p.sub ? [{ targets: p.sub, at: later(api, m, "subAt", 0.6), role: "part" }] : [])] };
+      const p = textBlock(api, m, { main: m.text, sub: m.sub, kicker: m.kicker });
+      let btn = null;
+      if (m.cta) {
+        btn = api.el.appendChild(div("t-cta", `<span class="t-cta-off">${api.html(m.cta)}</span><span class="t-cta-on">✓ ${api.html(m.ctaDone || m.cta + "ing")}</span>`));
+        const tAt = later(api, m, "ctaAt", 1.6), on = btn.querySelector(".t-cta-on"), off = btn.querySelector(".t-cta-off");
+        api.tl.fromTo(btn, { scale: 1 }, { scale: 0.9, duration: 0.08, yoyo: true, repeat: 1, immediateRender: false }, tAt)
+              .fromTo(on, { opacity: 0 }, { opacity: 1, duration: 0.15, immediateRender: false }, tAt + 0.06)
+              .fromTo(off, { opacity: 1 }, { opacity: 0, duration: 0.15, immediateRender: false }, tAt + 0.06)
+              .fromTo(btn, { "--on": 0 }, { "--on": 1, duration: 0.2, immediateRender: false }, tAt + 0.06);
+      }
+      return { main: p.main, reveals: [...(p.kicker ? [{ targets: p.kicker, at: m.start, role: "part" }] : []), { targets: p.main, at: m.start, role: "enter" },
+        ...(p.sub ? [{ targets: p.sub, at: later(api, m, "subAt", 0.6), role: "part" }] : []),
+        ...(btn ? [{ targets: btn, at: later(api, m, "ctaIn", 1), role: "part" }] : [])] };
+    },
+  },
+  /* a paper document (or a tablet showing one) with rows that write in, then highlight and tick off:
+     { title, tag, frame: "paper"|"tablet", file, tilt, rows: [{ label, note, value, at }], checkAt, checkGap } */
+  doc: {
+    area: "right",
+    build(api, m) {
+      const box = api.el.appendChild(div(`t-doc frame-${m.frame || "paper"}`));
+      box.style.setProperty("--tilt", (m.tilt ?? -3) + "deg");
+      const sheet = box.appendChild(div("t-sheet", `<div class="t-doc-head"><span class="t-doc-title">${api.html(m.title || "")}</span><span class="t-doc-tag">${api.html(m.tag || "")}</span></div>`));
+      const rows = (m.rows || []).map((r, i) => {
+        const row = sheet.appendChild(div("t-row", `<span class="t-row-mark"></span><span class="t-row-label">${api.html(r.label)}</span><span class="t-row-value">${api.html(r.value ?? "")}</span>
+          <span class="t-row-note">${api.html(r.note ?? "")}</span><svg class="t-row-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>`));
+        return { row, at: r.at != null ? api.at(r.at) : m.start + 0.6 + i * (m.rowGap ?? 0.45) };
+      });
+      if (m.file) box.appendChild(div("t-doc-file", api.html(m.file)));
+      if (m.checkAt != null) rows.forEach(({ row }, i) => {
+        const at = api.at(m.checkAt) + i * (m.checkGap ?? 0.35);
+        api.tl.fromTo(row.querySelector(".t-row-mark"), { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power2.out" }, at)
+              .fromTo(row.querySelector(".t-row-check path"), { drawSVG: "0%" }, { drawSVG: "100%", duration: 0.3, ease: "power2.out" }, at + 0.15);
+      });
+      return { main: box, reveals: [{ targets: box, at: m.start, role: "enter" }, ...rows.map(({ row, at }) => ({ targets: row, at, role: "row" }))] };
+    },
+  },
+  /* a ruler of labels (months, years, steps) that scrolls so the active one sits at `anchor`:
+     { labels: ["SEP", "OCT", ...], steps: [{ at, i }], visible: 5, anchor: 0.3, caption } */
+  timeline: {
+    area: "bottom",
+    build(api, m) {
+      const n = m.labels.length, gap = api.rect.w / (m.visible ?? 5), anchor = (m.anchor ?? 0.3) * api.rect.w;
+      const wrap = api.el.appendChild(div("t-timeline"));
+      const track = wrap.appendChild(div("t-tl-track"));
+      track.style.width = n * gap + "px";
+      const labs = m.labels.map((l, i) => { const e = track.appendChild(div("t-tl-label", api.html(l))); e.style.left = i * gap + "px"; return e; });
+      for (let i = 0; i < n * 4; i++) { const k = track.appendChild(div(i % 4 ? "t-tl-tick" : "t-tl-tick big")); k.style.left = (i * gap) / 4 + "px"; }
+      const cap = m.caption ? api.el.appendChild(div("t-tl-caption", api.html(m.caption))) : null;
+      const steps = (m.steps || [{ at: m.start, i: 0 }]).map((st) => ({ at: api.at(st.at), i: st.i }));
+      const xFor = (i) => anchor - i * gap;
+      api.tl.set(track, { x: xFor(steps[0].i) }, 0);
+      steps.forEach((st, k) => {
+        if (k) api.tl.to(track, { x: xFor(st.i), duration: m.scrollFor ?? 0.6, ease: "power3.inOut" }, st.at);
+        labs.forEach((e, i) => api.tl.to(e, { opacity: i === st.i ? 1 : 0.45, scale: i === st.i ? 1.15 : 1, duration: 0.25 }, st.at));
+        labs.forEach((e, i) => api.tl.set(e, { attr: { class: "t-tl-label" + (i === st.i ? " is-active" : "") } }, st.at));
+      });
+      return { main: wrap, reveals: [{ targets: wrap, at: m.start, role: "enter" }, ...(cap ? [{ targets: cap, at: later(api, m, "captionAt", 0.5), role: "part" }] : [])] };
+    },
+  },
+  /* a chapter / agenda list with a marker on the active item: { items: [...], steps: [{ at, i }] } */
+  agenda: {
+    area: "top",
+    build(api, m) {
+      const list = api.el.appendChild(div("t-agenda"));
+      const its = m.items.map((t) => list.appendChild(div("t-ag-item", `<span class="t-ag-dot"></span><span class="t-ag-text">${api.html(t)}</span>`)));
+      const steps = (m.steps || [{ at: m.start, i: 0 }]).map((st) => ({ at: api.at(st.at), i: st.i }));
+      steps.forEach((st) => its.forEach((e, i) => api.tl.set(e, { attr: { class: "t-ag-item" + (i === st.i ? " is-active" : "") } }, st.at)));
+      return { main: list, reveals: [{ targets: its, at: m.start, role: "enter" }] };
     },
   },
   // escape hatch: m.build(api) builds anything inside api.el (an area box); return { reveals, main } or nothing

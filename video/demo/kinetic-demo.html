@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Kinetic demo · Track what you spend</title></head>
+<body>
+<script type="module">
+/* Demo of the kinetic theme's toolkit with generic content: colour sections with whip / circle / cut transitions,
+   flying letters with motion blur, ghost words, a paper log that writes itself and ticks off, a month timeline,
+   a counter with deltas, a focus list with a ghost-shift highlight, an agenda, a squiggle and an end card with a CTA.
+   Works in both formats:
+     node render.mjs demo/kinetic-demo.html --theme kinetic                  (16:9)
+     node render.mjs demo/kinetic-demo.html --theme kinetic --format short   (9:16)  */
+import { scene } from "/video/core/scene.js";
+
+const CUES = {
+  open: 0.4, save: 1.1, logIn: 2.2,
+  months: 5.0, oneMonth: 5.7, scroll1: 6.8, scroll2: 7.8,
+  track: 10.4, spent: 11.4, count: 12.6,
+  where: 17.0, rent: 17.6, food: 18.4, travel: 19.2, fun: 20.0, subs: 20.8, shift: 21.8,
+  reason: 24.2, guess: 25.0, squig: 26.4,
+  written: 28.6, rows: 29.6, check: 33.0,
+  plan: 35.6, step2: 36.6, step3: 37.6, step4: 38.6,
+  could: 40.4, saved: 41.2,
+  end: 44.0, follow: 46.2,
+};
+const DURATION = 48.5;
+const wide = new URLSearchParams(location.search).get("format") !== "short";
+
+scene({
+  duration: DURATION, fps: 30, seed: 11, cues: CUES,
+  moments: [
+    // 1 · cream: kicker + huge two-line headline, ghost year behind, an empty log slides in
+    { type: "headline", at: "save", kicker: "If you want to", text: "Save\n{1|more}", ghost: "2027", ghostAt: [0.5, 0.42], until: "months-0.25" },
+    { type: "doc", at: "logIn", area: "right", title: "Savings log", tag: "Oct", tilt: -4, rows: [], until: "months-0.25" },
+
+    // 2 · teal (whip): a month timeline scrolls under the headline
+    { type: "headline", at: "months", scheme: "teal", kicker: "Start with", text: "{1|One} month", ghost: "JAN", ghostAt: [0.55, 0.62], until: "track-0.25" },
+    { type: "timeline", at: "months", area: "bottom", labels: ["Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr"],
+      steps: [{ at: "months", i: 1 }, { at: "scroll1", i: 2 }, { at: "scroll2", i: 4 }], caption: "In the next few months", until: "track-0.25" },
+
+    // 3 · lined notes: big statement, then a counter with a ruler and deltas
+    { type: "headline", at: "track", scheme: "notes", kicker: "You need to", text: "Track", sub: "what you {1|spend}", subAt: "spent", area: wide ? "left" : "main", until: "where-0.3" },
+    { type: "stat", at: "count", area: wide ? "right" : "bottom", value: 42800, label: "This month", countFor: 2.6,
+      deltas: ["+12.4K", "+8.1K", "+15.0K", "+7.3K"], until: "where-0.3" },
+
+    // 4 · black: a focus list; the odd one out shifts and leaves its outline
+    { type: "list", at: "where", scheme: "black", schemeTransition: "cut", title: "Where it went", area: wide ? "wide" : "full",
+      items: [{ text: "Rent", at: "rent" }, { text: "Food", at: "food" }, { text: "Travel", at: "travel" }, { text: "Fun", at: "fun" }, { text: "Subscriptions", at: "subs" }],
+      until: "reason-0.3" },
+
+    // 5 · navy (circle): kicker + "a guess" with a squiggle
+    { type: "headline", at: "reason", scheme: "navy", schemeTransition: "circle", schemeFrom: [0.8, 0.7], kicker: "And the reason is not",
+      text: "A {1|guess}", emphasis: { name: "squiggle" }, emphasisDelay: CUES.squig - CUES.reason, until: "written-0.3" },
+
+    // 6 · cream: the log writes itself, then every row is checked off
+    { type: "headline", at: "written", scheme: "base", kicker: "It is", text: "Written\n{1|down}", ghost: "LOG", ghostAt: [0.3, 0.5], area: wide ? "left" : "main", until: "plan-0.3" },
+    { type: "doc", at: "written+0.3", area: "right", title: "Savings log", tag: "Oct", tilt: -3, checkAt: "check",
+      rows: [{ label: "Rent", note: "Fixed, 1st of the month", value: "18,000", at: "rows" }, { label: "Food", note: "Groceries + eating out", value: "9,400", at: "rows+0.5" },
+             { label: "Travel", note: "Metro pass, two cabs", value: "6,000", at: "rows+1" }, { label: "Fun", note: "Concert, games", value: "5,200", at: "rows+1.5" }],
+      until: "plan-0.3" },
+
+    // 7 · teal: an agenda that steps through, with the checked log on a tablet
+    { type: "agenda", at: "plan", scheme: "teal", area: "top", items: ["This month", "Record", "Review", "Plan ahead"],
+      steps: [{ at: "plan", i: 0 }, { at: "step2", i: 1 }, { at: "step3", i: 2 }, { at: "step4", i: 3 }], until: "could-0.3" },
+    { type: "doc", at: "plan+0.2", area: wide ? "right" : "right", frame: "tablet", file: "oct_savings_log.pdf", title: "Savings log", tag: "Oct", checkAt: "plan+0.6", checkGap: 0.15,
+      rows: [{ label: "Rent", value: "18,000" }, { label: "Food", value: "9,400" }, { label: "Travel", value: "6,000" }, { label: "Fun", value: "5,200" }], rowGap: 0.05, until: "could-0.3" },
+
+    // 8 · notes: "you could have saved"
+    { type: "headline", at: "could", scheme: "notes", kicker: "You could have", text: "{1|Saved}", sub: "for the trip", subAt: "saved+0.6", emphasis: "underline", emphasisDelay: 1, until: "end-0.3" },
+
+    // 9 · cream: end card with a follow button
+    { type: "end", at: "end", scheme: "base", schemeTransition: "wipe", text: "Thanks for watching", sub: "for more money habits", cta: "Follow", ctaAt: "follow" },
+  ],
+  async build(api) {
+    // the "Fun" row of the focus list shifts out of line in colour 1, leaving its outline behind
+    const fun = [...api.stage.querySelectorAll(".m-list .t-item")].find((e) => e.textContent.includes("Fun"));
+    if (fun) {
+      fun.classList.add("slot-1");
+      await api.effect({ name: "ghost-shift", shift: 0.35 }, fun.querySelector(".t-text"), "shift");
+      const tag = document.createElement("span");
+      tag.className = "kin-tag"; tag.textContent = "+18%";
+      tag.style.cssText = `font-weight:800;font-size:${2.4 * api.u}px;color:var(--c1);margin-left:${1.5 * api.u}px;letter-spacing:.02em`;
+      fun.querySelector(".t-text").appendChild(tag);             // inside the word, so it travels with the shift
+      api.tl.fromTo(tag, { opacity: 0, x: -2 * api.u }, { opacity: 1, x: 0, duration: 0.3, ease: "back.out(2)" }, CUES.shift + 0.3);
+    }
+  },
+});
+</script>
+</body>
+</html>

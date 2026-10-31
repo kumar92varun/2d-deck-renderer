@@ -74,4 +74,37 @@ export default {
     api.tl.to(els(t), { keyframes: [{ scaleX: 1 + 0.18 * s, scaleY: 1 - 0.2 * s, duration: 0.08 }, { scaleX: 1 - 0.08 * s, scaleY: 1 + 0.1 * s, duration: 0.1 }, { scaleX: 1, scaleY: 1, duration: 0.3, ease: "elastic.out(1,0.5)" }] }, at);
     return 0.48;
   },
+  // a hand-made wavy underline that draws itself (DrawSVG) under the target, in the slot colour
+  squiggle(api, t, at, o) {
+    for (const el of els(t)) {
+      if (getComputedStyle(el).position === "static") el.style.position = "relative";
+      const w = el.offsetWidth, h = (o.height ?? 0.9) * api.u, waves = Math.max(3, Math.round(w / (o.wavelength ?? 5.5) / api.u));
+      let dpath = `M0 ${h / 2}`;
+      for (let i = 0; i < waves; i++) { const x0 = (i * w) / waves, x1 = ((i + 0.5) * w) / waves, x2 = ((i + 1) * w) / waves; dpath += ` Q ${(x0 + x1) / 2} ${i % 2 ? h : 0} ${x1} ${h / 2} T ${x2} ${h / 2}`; }
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("width", w); svg.setAttribute("height", h * 2);
+      svg.style.cssText = `position:absolute;left:0;top:calc(100% + ${(o.gap ?? 0.2) * api.u}px);overflow:visible;pointer-events:none`;
+      svg.innerHTML = `<path d="${dpath}" fill="none" stroke="var(--c)" stroke-width="${(o.width ?? 0.45) * api.u}" stroke-linecap="round"/>`;
+      el.appendChild(svg);
+      api.tl.fromTo(svg.querySelector("path"), { drawSVG: "0%" }, { drawSVG: "100%", duration: o.duration ?? 0.5, ease: "power2.inOut" }, at);
+    }
+    return 0.5;
+  },
+  // the word slides right in the slot colour and leaves its outline behind where it was (a "shift" / variance highlight)
+  "ghost-shift"(api, t, at, o) {
+    for (const el of els(t)) {
+      if (getComputedStyle(el).position === "static") el.style.position = "relative";
+      const ghost = el.cloneNode(true);
+      ghost.className = "fx-ghost-copy";
+      const base = getComputedStyle(el).color;
+      ghost.style.cssText = `position:absolute;left:0;top:0;color:transparent;-webkit-text-stroke:${(o.stroke ?? 0.12) * api.u}px ${base};opacity:0;pointer-events:none;white-space:nowrap`;
+      el.appendChild(ghost);
+      const shift = (o.shift ?? 0.22) * el.offsetWidth;
+      api.tl.fromTo(ghost, { opacity: 0 }, { opacity: o.ghostOpacity ?? 0.35, duration: 0.15 }, at)
+            .fromTo(ghost, { x: 0 }, { x: -shift, duration: 0.45, ease: "power3.out", immediateRender: false }, at)
+            .fromTo(el, { color: base }, { color: o.color ?? (getComputedStyle(el).getPropertyValue("--c").trim() || base), duration: 0.2, immediateRender: false }, at)
+            .fromTo(el, { x: 0 }, { x: shift, duration: 0.45, ease: "power3.out", immediateRender: false }, at);
+    }
+    return 0.45;
+  },
 };

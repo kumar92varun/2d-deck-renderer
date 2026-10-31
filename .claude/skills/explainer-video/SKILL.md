@@ -59,6 +59,11 @@ scene({
   that overlaps its space starts), `area` (theme area name: full, main, top, bottom, center, left, right),
   `color` (palette slot 1 / 2 / "a" / "m"), content fields per type (see `components/index.js`), and optional
   effect overrides `enter`, `part`, `exit`, `emphasis`, `pulse: [cues]`. Unknown effect names fall back to the theme's.
+- **Moment types:** title, headline, list (`focus: true` dims earlier items), stat (`ticks`, `deltas`), compare, quote,
+  image, chart, section, end (`cta: "Follow"`, `ctaAt`), doc (paper/tablet log with `rows`, `checkAt`), timeline
+  (`labels`, `steps: [{ at, i }]`), agenda (`items`, `steps`), custom. Any moment can add `ghost: "2027"` (giant
+  outlined word behind) and `scheme: "teal"` (switch the whole screen to a theme colour section, with
+  `schemeTransition: cut|whip|circle|wipe`, `schemeFrom: [x, y]`).
 - **Inline text:** `{2|word}` colour 2, `{word}` accent, `**bold**`, `\n` line break.
 - **Custom blocks** (`type: "custom"`, `build(api)`) are the escape hatch for anything the moment types don't cover.
   They draw inside `api.el` (a box at `api.rect`) or on the GPU (`await api.gl("front")`), set their own positions,
@@ -98,7 +103,9 @@ scene({
 | Comparison | the same with `--theme <name>` (and `--stills` for a quick look) |
 | Theme demo | `node render.mjs demo/showcase.html --theme <name>` |
 
-Defaults: `--format long` (1920×1080; Shorts are on hold, never render `short` until Varun asks), `--scale 2`
+Themes with `motionBlur` (kinetic) render each frame from 8 sub-frames: about 3× slower; `--motion-blur 0` for quick checks.
+Defaults: `--format long` (1920×1080; Shorts are on hold for Tokenmaxxing, never render `short` for it until Varun asks;
+theme demos may render both), `--scale 2`
 (3840×2160) for finals, `--workers 6`, GPU (Metal). About 1 s of render per 1 s of video at 4K.
 **Read your stills and critique them before showing Varun:** text inside the frame, nothing clipped or overlapping,
 no Devanagari, glows without hard edges or leftover smudges, the cue word's animation is the focal point, and the

@@ -159,6 +159,16 @@ async function build(def, resolveReady) {
     const next = moments.filter((n) => n.start > m.start && overlap(m.areaName, n.areaName)).sort((a, b) => a.start - b.start)[0];
     m.end = next ? next.start - (m.cfg.handoff ?? 0.25) : duration + 1;
   }
+  // colour schemes: a moment may switch the whole screen to another scheme (theme.schemes); later moments inherit it
+  let cur = def.scheme || "base";
+  if (cur !== "base") addPlate(api, cur, 0, "cut");
+  for (const m of [...moments].sort((a, b) => a.start - b.start)) {
+    if (m.scheme && m.scheme !== cur &&
+        addPlate(api, m.scheme, m.start - (m.schemeLead ?? m.cfg.schemeLead ?? 0.2), m.schemeTransition || m.cfg.schemeTransition || theme.schemeTransition || "cut", m.schemeFrom)) {
+      cur = m.scheme;
+    }
+    m.schemeName = cur;
+  }
   for (const m of moments) await buildMoment(api, m);
 
   // ---------- extra imperative code from the scene ----------
@@ -185,9 +195,37 @@ async function build(def, resolveReady) {
 
   await document.fonts.ready;
   seek(Number(P.get("t") || 0));
-  Object.assign(window.__scene, { duration, fps, width: W, height: H, format, theme: theme.name, seek });
+  Object.assign(window.__scene, { duration, fps, width: W, height: H, format, theme: theme.name, seek,
+    motionBlur: def.motionBlur ?? theme.motionBlur ?? null });
   if (!isRender) stageScale = mountPreview({ stage, W, H, duration, fps, seek, theme: theme.name });
   resolveReady();
+}
+
+/* Scheme plates: a full-screen layer in the scheme's background (theme.schemes[name].plate CSS, else its bg colour)
+   brought in at `at` by a transition: cut | whip (slides in from the right) | circle (grows from `from` [x, y] 0–1) | wipe (from the bottom). */
+function addPlate(api, name, at, how, from) {
+  const sc = api.theme.schemes?.[name] || (name === "base" ? { bg: api.theme.palette.bg, plate: api.theme.basePlate } : null);
+  if (!sc) {   // a scene written for another theme still renders: this theme just keeps its own background
+    console.warn(`[scheme] "${name}" not in theme ${api.theme.name} (has: ${Object.keys(api.theme.schemes || {}).join(", ") || "none"}); ignored`);
+    return false;
+  }
+  const d = document.createElement("div");
+  d.className = "scheme-plate scheme-" + name;
+  d.style.cssText = `position:absolute;inset:0;background:${sc.plate || sc.bg};visibility:hidden`;
+  api.layers.bg.appendChild(d);
+  const tl = api.tl, [fx, fy] = from || [0.5, 0.5];
+  tl.fromTo(d, { visibility: "hidden" }, { visibility: "visible", duration: 0.001, immediateRender: false }, Math.max(0, at - 0.001));
+  if (how === "whip") tl.fromTo(d, { xPercent: 100 }, { xPercent: 0, duration: 0.42, ease: "power3.inOut", immediateRender: false }, at);
+  else if (how === "circle") tl.fromTo(d, { clipPath: `circle(0% at ${fx * 100}% ${fy * 100}%)` }, { clipPath: `circle(150% at ${fx * 100}% ${fy * 100}%)`, duration: 0.6, ease: "power2.in", immediateRender: false }, at);
+  else if (how === "wipe") tl.fromTo(d, { yPercent: 100 }, { yPercent: 0, duration: 0.5, ease: "power3.inOut", immediateRender: false }, at);
+  return true;
+}
+
+/* the CSS variables of a scheme, applied on a moment so its text takes the scheme's colours */
+function schemeVars(api, name) {
+  const sc = api.theme.schemes?.[name];
+  if (!sc) return "";
+  return Object.entries(sc).filter(([k]) => k !== "plate").map(([k, v]) => `--${k}:${v};`).join("");
 }
 
 async function buildMoment(api, m) {
@@ -197,8 +235,22 @@ async function buildMoment(api, m) {
   const slot = m.color ?? m.cfg.color ?? 1;
   const el = document.createElement("div");
   el.className = `m m-${m.type} slot-${slot} area-${m.areaName}` + (comp.caption ? " is-caption" : "") + (m.className ? " " + m.className : "");
-  el.style.cssText = `position:absolute;left:${rect.x}px;top:${rect.y}px;width:${rect.w}px;height:${rect.h}px`;
+  el.style.cssText = `position:absolute;left:${rect.x}px;top:${rect.y}px;width:${rect.w}px;height:${rect.h}px;${m.schemeName && m.schemeName !== "base" ? schemeVars(api, m.schemeName) : ""}`;
+  if (m.schemeName) el.classList.add("in-scheme-" + m.schemeName);
   api.layers.content.appendChild(el);
+  // a giant outlined "ghost" word behind the moment (m.ghost), drifting slowly; styled by .fx-ghost-word in the theme
+  if (m.ghost) {
+    const g = document.createElement("div");
+    g.className = "fx-ghost-word";
+    g.textContent = m.ghost;
+    const pos = m.ghostAt || [0.5, 0.5];
+    g.style.cssText = `position:absolute;left:${pos[0] * api.W - rect.x}px;top:${pos[1] * api.H - rect.y}px;translate:-50% -50%;white-space:nowrap;pointer-events:none;z-index:-1`;
+    el.style.isolation = "isolate";
+    el.prepend(g);
+    const op = Number(getComputedStyle(g).opacity) || 0.12;          // the theme's ghost opacity is the target
+    api.tl.fromTo(g, { opacity: 0, x: 4 * api.u }, { opacity: op, x: 0, duration: 0.8, ease: "power2.out" }, m.start);
+    api.tl.fromTo(g, { xPercent: 0 }, { xPercent: -6, duration: Math.max(1, m.end - m.start), ease: "none", immediateRender: false }, m.start);
+  }
   const mapi = Object.create(api);
   Object.assign(mapi, { m, rect, el, slot, cfg: m.cfg });
 
