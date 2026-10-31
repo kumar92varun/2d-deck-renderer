@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Effects lab</title></head>
+<body>
+<script type="module">
+/* Test bench for the effects library: every effect runs at least once. Pick a background with ?bg=<name>
+   (aurora, nebula, grid, light-leaks, god-rays, gradient-drift, solid; default = the theme's own).
+     node render.mjs demo/effects-lab.html --stills 1.4,2.9,4.6,6.4,...      (or open it in the preview) */
+import { scene } from "/video/core/scene.js";
+const bg = new URLSearchParams(location.search).get("bg");
+
+scene({
+  duration: 34, fps: 30, seed: 3,
+  background: bg ? [bg, "dust-field"] : undefined,
+  cues: {},
+  moments: [
+    { type: "headline", at: 0.3, until: 2.6, text: "Letters {from chaos}", enter: { name: "chars", from: "random" }, emphasis: "underline", exit: "shatter" },
+    { type: "headline", at: 3.6, until: 6.2, text: "DECODING SIGNAL", sub: "scramble · glitch", enter: "scramble", emphasis: { name: "glitch", amount: 1.2 }, exit: { name: "physics-fall", split: "children" } },
+    { type: "list", at: 7.2, until: 10.6, title: "Physics drop", style: "numbers", items: ["Falls", "Bounces", "Settles"], gap: 0.3, part: { name: "physics-drop", lift: 0.6 }, exit: "wipe-out" },
+    { type: "headline", at: 11.2, until: 13.6, text: "Typed out, then swept", enter: "typewriter", emphasis: { name: "light-sweep" }, pulse: [12.6], exit: "blur-out" },
+    { type: "stat", at: 14.2, until: 17.2, value: 100, suffix: "%", label: "confetti and a jelly", emphasis: ["confetti", "jelly"], enter: "drop", exit: "shrink-out" },
+    { type: "section", at: 18, until: 20.4, kicker: "Iris", text: "Transition", className: "", enter: "pop" },
+    { type: "headline", at: 21, until: 23.6, text: "Wipe in, sink out", sub: "shockwave + embers", enter: "wipe", emphasis: ["shockwave", "embers"], exit: "sink" },
+    { type: "headline", at: 24.6, until: 27.2, text: "Words, one by one", enter: "words", emphasis: "shake", exit: "flicker-out" },
+    { type: "headline", at: 28, until: 30.6, text: "Blur in", sub: "slide in from the side", enter: "blur-in", part: "slide-right", exit: "fade-out" },
+    { type: "end", at: 31.2, text: "All effects ran", enter: "pop", emphasis: "sparks" },
+  ],
+  async build(api) {
+    // transitions on their own
+    await api.effect("iris", null, 18);
+    await api.effect("band-wipe", null, 24.2);
+    await api.effect("cover-wipe", null, 27.7);
+    await api.effect("flash", null, 31.2);
+  },
+});
+</script>
+</body>
+</html>

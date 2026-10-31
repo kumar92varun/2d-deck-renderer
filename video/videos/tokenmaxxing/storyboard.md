@@ -12,31 +12,34 @@ If the script or storyboard changes there, update this file too. This file is wh
 | Audio | Varun's Hindi voiceover + music, added in his editor | Same, re-cut |
 | Captions | Toggleable overlay layer | On by default |
 
-**Mascot: Tok.** A rounded neon tile with dot eyes. In this video Tok is the token itself: cheap and cheerful at first, then piling up, then working smart.
+**No mascot.** Tok was dropped for good on 2026-10-31; where the storyboard below mentions Tok, show the idea without a character.
 
 **Core visual metaphor.** A two-bar neon meter, Tokens (magenta) and Value (cyan), on screen from beat 4 onward. Tokenmaxxing makes magenta blaze up while cyan barely glows. Valuemaxxing makes magenta dim and shrink while cyan rises and brightens.
 
 ## Build status
 
+Theme: `neon` (set in `video.json`). Every scene below was built on the old pre-theme system and does not render until it is
+converted to the theme system (next step); the statuses describe the old builds, whose renders are in `out/tokenmaxxing/`.
+
 | Beat | Scene file | Status |
 | --- | --- | --- |
-| 1 | `scenes/tokenmaxxing/beat01.html` | rebuilt as the neon race opening (desktop only), timed to the recording (16 s); the old leaderboard version is `beat01-board.html` |
-| 2 | `scenes/tokenmaxxing/beat02.html` | built, timed to the recording (33.2 s) |
-| 3 | `scenes/tokenmaxxing/beat03.html` | built, timed to Take 2 recording (22.3 s) |
-| 4 | `scenes/tokenmaxxing/beat04.html` | built, timed to the recording (18.7 s, no Tok, both bars rise) |
-| 5 | `scenes/tokenmaxxing/beat05.html` | built, timed to the recording (23.8 s, desktop only) |
-| 6 | `scenes/tokenmaxxing/beat06.html` | built, timed to the recording (19.8 s, desktop only); photo `assets/jensen-huang-2023.jpg` (CC BY 2.0, credited on screen) |
-| 7 | `scenes/tokenmaxxing/beat07.html` | built, timed to the recording (17.1 s, desktop only); names and numbers on the boards are illustrative; "Claudeonomics" tagged "Meta · as reported" |
-| 8 | `scenes/tokenmaxxing/beat08.html` | built, placeholder cues (waiting for recording) |
-| 9 | `scenes/tokenmaxxing/beat09.html` | built, placeholder cues (waiting for recording); carries "* According to reports" |
-| 10 | `scenes/tokenmaxxing/beat10.html` | built, placeholder cues (waiting for recording) |
-| 11 | `scenes/tokenmaxxing/beat11.html` | built, placeholder cues (waiting for recording) |
-| 12 | `scenes/tokenmaxxing/beat12.html` | built, placeholder cues (waiting for recording); first beat with a sad Tok (tokenminning) |
-| 13 | `scenes/tokenmaxxing/beat13.html` | built, placeholder cues (waiting for recording) |
-| 14 | `scenes/tokenmaxxing/beat14.html` | built, placeholder cues (waiting for recording) |
-| 15 | `scenes/tokenmaxxing/beat15.html` | built, placeholder cues (waiting for recording) |
-| 16 | `scenes/tokenmaxxing/beat16.html` | built, placeholder cues (waiting for recording); covers both rules 4 and 5 |
-| 17 | `scenes/tokenmaxxing/beat17.html` | built, placeholder cues (waiting for recording) |
+| 1 | `scenes/beat01.html` | rebuilt as the neon race opening (desktop only), timed to the recording (16 s); the old leaderboard version is `beat01-board.html` |
+| 2 | `scenes/beat02.html` | built, timed to the recording (33.2 s) |
+| 3 | `scenes/beat03.html` | built, timed to Take 2 recording (22.3 s) |
+| 4 | `scenes/beat04.html` | built, timed to the recording (18.7 s, no Tok, both bars rise) |
+| 5 | `scenes/beat05.html` | built, timed to the recording (23.8 s, desktop only) |
+| 6 | `scenes/beat06.html` | built, timed to the recording (19.8 s, desktop only); photo `assets/jensen-huang-2023.jpg` (CC BY 2.0, credited on screen) |
+| 7 | `scenes/beat07.html` | built, timed to the recording (17.1 s, desktop only); names and numbers on the boards are illustrative; "Claudeonomics" tagged "Meta · as reported" |
+| 8 | `scenes/beat08.html` | built, placeholder cues (waiting for recording) |
+| 9 | `scenes/beat09.html` | built, placeholder cues (waiting for recording); carries "* According to reports" |
+| 10 | `scenes/beat10.html` | built, placeholder cues (waiting for recording) |
+| 11 | `scenes/beat11.html` | built, placeholder cues (waiting for recording) |
+| 12 | `scenes/beat12.html` | built, placeholder cues (waiting for recording); first beat with a sad Tok (tokenminning) |
+| 13 | `scenes/beat13.html` | built, placeholder cues (waiting for recording) |
+| 14 | `scenes/beat14.html` | built, placeholder cues (waiting for recording) |
+| 15 | `scenes/beat15.html` | built, placeholder cues (waiting for recording) |
+| 16 | `scenes/beat16.html` | built, placeholder cues (waiting for recording); covers both rules 4 and 5 |
+| 17 | `scenes/beat17.html` | built, placeholder cues (waiting for recording) |
 
 ## Storyboard
 

@@ -1,0 +1,23 @@
+/* Theme-neutral structure every scene gets before its theme's CSS. Themes style everything visual. */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg, #000); }
+body { color: var(--text, #fff); -webkit-font-smoothing: antialiased; font-family: var(--font, system-ui, sans-serif); }
+.stage { background: var(--bg, #000); }
+.layer { position: absolute; inset: 0; pointer-events: none; }
+canvas.layer { width: 100%; height: 100%; }
+
+/* palette slots: components colour themselves with var(--c) / var(--c-hi) */
+.slot-1 { --c: var(--c1); --c-hi: var(--c1-hi, var(--c1)); }
+.slot-2 { --c: var(--c2); --c-hi: var(--c2-hi, var(--c2)); }
+.slot-a { --c: var(--accent); --c-hi: var(--accent-hi, var(--accent)); }
+.slot-m { --c: var(--muted); --c-hi: var(--muted); }
+.hl { color: var(--c); }
+
+/* moments: absolute boxes in their area; content is laid out by the component, styled by the theme */
+.m { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+.m > * { will-change: transform, opacity; }
+
+body.no-captions .is-caption { display: none; }
+.guides { display: none; }
+body.show-guides .guides { display: block; }
+.guides .zone { position: absolute; background: rgba(255,0,0,.18); border: 2px dashed rgba(255,80,80,.8); }

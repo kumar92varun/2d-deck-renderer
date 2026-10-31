@@ -1,0 +1,76 @@
+/* Neon theme: glow = white-hot core + tight coloured halo (radii 2–4u, never 6u+: wide halos make frames hazy).
+   Components colour themselves through var(--c) / var(--c-hi) (the moment's palette slot). */
+
+@font-face { font-family: "Poppins"; font-weight: 400; font-display: block; src: url("fonts/poppins-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Poppins"; font-weight: 600; font-display: block; src: url("fonts/poppins-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Poppins"; font-weight: 800; font-display: block; src: url("fonts/poppins-latin-800-normal.woff2") format("woff2"); }
+
+/* defined on every element (not just the root) so var(--c) resolves to each element's own palette slot */
+.theme-neon * {
+  --glow: 0 0 calc(var(--u)*.15) #fff, 0 0 calc(var(--u)*.7) var(--c-hi), 0 0 calc(var(--u)*2) var(--c), 0 0 calc(var(--u)*4) color-mix(in srgb, var(--c) 70%, transparent);
+  --box-glow: 0 0 calc(var(--u)*.5) #fff, 0 0 calc(var(--u)*1.6) var(--c-hi), 0 0 calc(var(--u)*4) var(--c), inset 0 0 calc(var(--u)*2.5) color-mix(in srgb, var(--c) 45%, transparent);
+  --soft: 0 0 calc(var(--u)*1.5) rgba(110,107,214,.9);
+  --underline-glow: 0 0 calc(var(--u)*.5) #fff, 0 0 calc(var(--u)*1.5) var(--c);
+}
+.theme-neon .neon { color: #fff; text-shadow: var(--glow); }
+.theme-neon .hl { color: #fff; text-shadow: var(--glow); }
+.theme-neon strong { font-weight: 800; }
+
+/* ---------- text moments ---------- */
+.theme-neon .t-kicker { font-weight: 600; font-size: calc(var(--u)*3); letter-spacing: .28em; text-transform: uppercase; color: var(--c-hi); text-shadow: var(--soft); margin-bottom: .6em; white-space: nowrap; }
+.theme-neon .t-main { font-weight: 800; line-height: 1.08; letter-spacing: .01em; color: #fff; text-shadow: var(--glow); white-space: nowrap; }
+.theme-neon .t-sub { font-weight: 600; font-size: calc(var(--u)*4.4); margin-top: .5em; color: var(--text); text-shadow: var(--soft); white-space: nowrap; }
+.theme-neon .m-title .t-main { font-size: calc(var(--u)*12); }
+.theme-neon .m-headline .t-main { font-size: calc(var(--u)*9); }
+.theme-neon .m-section .t-main { font-size: calc(var(--u)*10); }
+.theme-neon .m-end .t-main { font-size: calc(var(--u)*10); }
+
+/* ---------- list ---------- */
+.theme-neon .m-list { align-items: flex-start; text-align: left; }
+.theme-neon .m-list .t-title { font-weight: 800; font-size: calc(var(--u)*6); color: #fff; text-shadow: var(--glow); margin-bottom: calc(var(--u)*3); }
+.theme-neon .t-items { display: flex; flex-direction: column; gap: calc(var(--u)*2.2); }
+.theme-neon .t-item { display: flex; align-items: center; gap: calc(var(--u)*2.4); font-weight: 600; font-size: calc(var(--u)*5); color: var(--text); text-shadow: var(--soft); white-space: nowrap; }
+.theme-neon .t-marker { flex: none; width: calc(var(--u)*5.2); height: calc(var(--u)*5.2); border-radius: 50%; display: grid; place-items: center;
+  border: calc(var(--u)*.35) solid #fff; box-shadow: var(--box-glow); font-weight: 800; font-size: calc(var(--u)*2.8); color: #fff; text-shadow: var(--glow); background: var(--surface); }
+.theme-neon .list-bullets .t-marker { width: calc(var(--u)*2); height: calc(var(--u)*2); background: #fff; }
+
+/* ---------- stat ---------- */
+.theme-neon .t-number { font-weight: 800; font-size: calc(var(--u)*22); line-height: 1; color: #fff; text-shadow: var(--glow); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.theme-neon .t-prefix, .theme-neon .t-suffix { font-size: .55em; }
+.theme-neon .t-label { font-weight: 600; font-size: calc(var(--u)*4.6); margin-top: calc(var(--u)*1.5); color: var(--text); text-shadow: var(--soft); }
+
+/* ---------- compare ---------- */
+.theme-neon .m-compare { flex-direction: row; align-items: stretch; gap: calc(var(--u)*4); }
+.theme-neon .t-side { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--u)*2);
+  border: calc(var(--u)*.4) solid #fff; border-radius: calc(var(--u)*2.4); background: radial-gradient(ellipse at 50% 60%, color-mix(in srgb, var(--c) 18%, transparent), var(--surface) 70%);
+  box-shadow: var(--box-glow); padding: calc(var(--u)*3); }
+.theme-neon .t-head { font-weight: 800; font-size: calc(var(--u)*6.4); color: #fff; text-shadow: var(--glow); }
+.theme-neon .t-point { font-weight: 600; font-size: calc(var(--u)*3.8); color: var(--text); text-shadow: var(--soft); }
+.theme-neon .t-vs { align-self: center; font-weight: 800; font-size: calc(var(--u)*5); --c: var(--accent); --c-hi: var(--accent-hi); color: #fff; text-shadow: var(--glow); }
+
+/* ---------- quote ---------- */
+.theme-neon .t-quote { font-weight: 600; font-size: calc(var(--u)*6.4); line-height: 1.25; color: var(--text); text-shadow: var(--soft); max-width: 100%; }
+.theme-neon .t-mark { display: block; font-weight: 800; font-size: 2.2em; line-height: .6; color: #fff; text-shadow: var(--glow); --c: var(--accent); --c-hi: var(--accent-hi); }
+.theme-neon .t-by { margin-top: calc(var(--u)*3); font-weight: 600; font-size: calc(var(--u)*3.6); color: var(--c-hi); text-shadow: var(--soft); }
+
+/* ---------- image ---------- */
+.theme-neon .t-figure { position: relative; height: 82%; aspect-ratio: auto; border: calc(var(--u)*.35) solid #fff; border-radius: calc(var(--u)*1.6);
+  box-shadow: var(--box-glow); overflow: hidden; background: var(--surface); display: flex; }
+.theme-neon .t-img { display: block; height: 100%; width: auto; max-width: 100%; }
+.theme-neon .t-credit { position: absolute; right: .6em; bottom: .4em; font-size: calc(var(--u)*1.6); color: rgba(255,255,255,.75); }
+.theme-neon .t-caption { margin-top: calc(var(--u)*2); font-weight: 600; font-size: calc(var(--u)*4); color: var(--text); text-shadow: var(--soft); }
+
+/* ---------- chart ---------- */
+.theme-neon .m-chart .t-title { font-weight: 800; font-size: calc(var(--u)*5.6); color: #fff; text-shadow: var(--glow); margin-bottom: calc(var(--u)*3.5); }
+.theme-neon .t-plot { width: 100%; display: flex; flex-direction: column; gap: calc(var(--u)*2.6); }
+.theme-neon .t-bar { display: grid; grid-template-columns: 22% 1fr 12%; align-items: center; gap: calc(var(--u)*2); }
+.theme-neon .t-blabel { text-align: right; font-weight: 600; font-size: calc(var(--u)*3.6); color: var(--text); text-shadow: var(--soft); }
+.theme-neon .t-track { height: calc(var(--u)*4.4); border-radius: 99px; border: calc(var(--u)*.25) solid color-mix(in srgb, var(--c-hi) 55%, transparent);
+  background: var(--surface); padding: calc(var(--u)*.6); }
+.theme-neon .t-fill { display: block; height: 100%; border-radius: 99px; background: linear-gradient(to right, var(--c), var(--c-hi) 75%, #fff);
+  box-shadow: 0 0 calc(var(--u)*.5) #fff, 0 0 calc(var(--u)*1.6) var(--c-hi), 0 0 calc(var(--u)*3.5) var(--c); }
+.theme-neon .t-bvalue { font-weight: 800; font-size: calc(var(--u)*3.8); color: #fff; text-shadow: var(--glow); text-align: left; }
+.theme-neon .t-note { margin-top: calc(var(--u)*2.5); font-size: calc(var(--u)*2); color: var(--muted); }
+
+/* line drawings in custom blocks (stroke = currentColor) */
+.theme-neon .fx-stroke svg { filter: drop-shadow(0 0 calc(var(--u)*.25) #fff) drop-shadow(0 0 calc(var(--u)*1.2) var(--c)); }

@@ -1,67 +1,16 @@
-/* Reusable pieces for the series: Tok (mascot), token tiles, the Tokens/Value meter,
-   neon boxes and glow flares. Each returns DOM plus small helpers that add tweens
+/* LEGACY, from the pre-theme system (was video/lib/components.js). Tokenmaxxing's own pieces: token tiles, the
+   Tokens/Value meter, the AI box, leaderboard, captions, glow flares. Kept as the source for converting the beats
+   to the theme system; port each piece to a theme-aware ES module in this folder as its beats are converted, then
+   delete this file. The Tok mascot was removed for good (2026-10-31). Each returns DOM plus small helpers that add tweens
    to the scene timeline at a given time. */
 
 (function () {
   const svgNS = "http://www.w3.org/2000/svg";
-  let uid = 0;
 
   const COLORS = {
     magenta: { main: "#B23BE8", hi: "#E39BFF" },
     cyan: { main: "#36D6E7", hi: "#B4F7FF" },
     gold: { main: "#F5B82E", hi: "#FFE7A3" },   // accent for titles/badges only, never for tokens or value
-  };
-
-  /* ---------- Tok, the mascot ---------- */
-  window.createTok = function (ctx, { size, color = "magenta", mood = "happy" }) {
-    const c = COLORS[color], id = "tokglow" + uid++;
-    const wrap = document.createElement("div");
-    wrap.className = "tok";
-    wrap.style.cssText = `position:absolute;width:${size}px;height:${size}px;will-change:transform`;
-    wrap.innerHTML = `
-      <svg viewBox="-20 -20 160 160" width="${size * 160 / 120}" height="${size * 160 / 120}"
-           style="position:absolute;left:${-size * 20 / 120}px;top:${-size * 20 / 120}px;overflow:visible">
-        <defs>
-          <filter id="${id}" filterUnits="userSpaceOnUse" x="-20" y="-20" width="160" height="160">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="b1"/>
-            <feGaussianBlur in="SourceGraphic" stdDeviation="4.5" result="b2"/>
-            <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="b3"/>
-            <feMerge><feMergeNode in="b3"/><feMergeNode in="b2"/><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-          <linearGradient id="${id}f" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="${color === "cyan" ? "#145864" : "#4B1F70"}"/>
-            <stop offset="1" stop-color="#1A0D35"/>
-          </linearGradient>
-        </defs>
-        <g class="tok-body">
-          <rect x="10" y="10" width="100" height="100" rx="28" fill="url(#${id}f)"/>
-          <g filter="url(#${id})">
-            <rect x="10" y="10" width="100" height="100" rx="28" fill="none" stroke="${c.main}" stroke-width="7"/>
-            <rect x="10" y="10" width="100" height="100" rx="28" fill="none" stroke="#fff" stroke-width="2.6"/>
-          </g>
-          <g class="tok-eyes" filter="url(#${id})" style="transform-origin:60px 54px">
-            <circle cx="43" cy="54" r="7.5" fill="#fff"/>
-            <circle cx="77" cy="54" r="7.5" fill="#fff"/>
-          </g>
-          <path class="tok-mouth" d="${mood === "sad" ? "M48 84 Q60 74 72 84" : "M48 76 Q60 86 72 76"}" fill="none" stroke="${c.hi}" stroke-width="4" stroke-linecap="round" filter="url(#${id})"/>
-        </g>
-      </svg>`;
-    ctx.stage.appendChild(wrap);
-    gsap.set(wrap, { transformOrigin: "50% 100%" });
-    const eyes = wrap.querySelector(".tok-eyes");
-    return {
-      el: wrap,
-      // anticipation → stretch → settle (classic squash & stretch)
-      squash(at, strength = 1) {
-        ctx.tl.to(wrap, { scaleX: 1 + 0.18 * strength, scaleY: 1 - 0.2 * strength, duration: 0.08, ease: "power2.out" }, at)
-              .to(wrap, { scaleX: 1 - 0.08 * strength, scaleY: 1 + 0.1 * strength, duration: 0.1, ease: "power2.out" }, at + 0.08)
-              .to(wrap, { scaleX: 1, scaleY: 1, duration: 0.2, ease: "elastic.out(1, 0.5)" }, at + 0.18);
-      },
-      blink(at) {
-        ctx.tl.to(eyes, { scaleY: 0.1, duration: 0.06, ease: "power1.in" }, at)
-              .to(eyes, { scaleY: 1, duration: 0.09, ease: "power1.out" }, at + 0.06);
-      },
-    };
   };
 
   /* ---------- A token tile ---------- */

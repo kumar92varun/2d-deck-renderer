@@ -2,7 +2,7 @@
 
 # Video pipeline
 video/node_modules/
-video/out/
+out/
 .DS_Store
 
 # Voiceover recordings (large, personal)

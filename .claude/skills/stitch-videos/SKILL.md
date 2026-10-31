@@ -8,6 +8,12 @@ description: Use when the user wants to join several video clips into one video,
 Joins clips in order, normalizes each clip's loudness to a common level, and mixes quiet background
 music under the whole video. Originals are never touched; output goes to a new file.
 
+## In this repo
+
+Finished beats with his voiceover are `out/<video>/final/<video>-beatNN-audio.mp4` (one file per beat, natural sort
+gives the right order). Copy or link only the beats he wants into a scratch folder if `final/` also holds other files,
+and write the full cut to `out/<video>/final/<video>-full.mp4`. Never touch the beat files themselves.
+
 ## Inputs to get from the user
 
 1. Folder with the clips (and the order, if not alphabetical/natural sort).

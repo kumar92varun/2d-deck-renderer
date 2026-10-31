@@ -1,14 +1,25 @@
 {
-  "name": "neon-explainer-video",
+  "name": "explainer-video",
   "version": "1.0.0",
   "private": true,
-  "description": "Frame-stepping Puppeteer + GSAP renderer for neon explainer videos (Shorts + main videos)",
+  "description": "Multi-theme animated explainer videos: content-first scenes, GSAP + PixiJS + Rapier, frame-stepped on the GPU with Puppeteer + ffmpeg",
   "type": "module",
   "scripts": {
+    "preview": "node core/server.mjs",
     "render": "node render.mjs",
-    "render:draft": "node render.mjs --draft"
+    "render:draft": "node render.mjs --draft",
+    "review": "node core/review.mjs",
+    "gpu-check": "node tools/gpu-check.mjs"
   },
   "dependencies": {
     "puppeteer": "^25.15.0"
+  },
+  "devDependencies": {
+    "@dimforge/rapier2d-compat": "^0.21.0",
+    "gsap": "^3.15.0",
+    "lottie-web": "^5.13.0",
+    "pixi-filters": "^6.1.5",
+    "pixi.js": "^8.22.0",
+    "roughjs": "^4.6.6"
   }
 }

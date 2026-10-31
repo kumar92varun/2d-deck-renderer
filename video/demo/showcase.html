@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Theme showcase · From Bean to Cup</title></head>
+<body>
+<script type="module">
+/* Generic theme showcase (no video-specific components, no voiceover). Render it in any theme to judge the theme:
+     node render.mjs demo/showcase.html --theme <name>        → out/_themes/<name>/showcase.mp4
+   It uses every generic moment type, an image, particles, GPU backgrounds/bloom and a custom block with real
+   physics (beans pour into a cup). Facts are approximate; it's a demo. */
+import { scene } from "/video/core/scene.js";
+
+const CUES = {
+  title: 0.5, titleSub: 1.5,
+  fruit: 5.2, fruitSub: 6.4, cherries: 5.6,
+  journey: 10.2, grow: 11.2, pick: 12.4, roast: 13.6, brew: 14.8,
+  part2: 18.0,
+  cups: 20.6, cupsLabel: 21.4,
+  compare: 25.2, robusta: 26.8,
+  chart: 31.0,
+  pour: 36.4, steam: 39.2,
+  quote: 41.4, quoteBy: 43.0,
+  end: 46.0,
+};
+const DURATION = 50;
+
+scene({
+  duration: DURATION, fps: 30, seed: 7, cues: CUES,
+  moments: [
+    { type: "title", at: "title", kicker: "A two-minute explainer", text: "From {Bean} to {2|Cup}", sub: "How coffee gets to you", subAt: "titleSub" },
+
+    { type: "headline", at: "fruit", area: "left", text: "Coffee is a {1|fruit}", sub: "The bean is the seed\ninside a cherry", subAt: "fruitSub" },
+    { type: "image", at: "cherries", area: "right", src: "assets/coffee-cherries.svg", caption: "Ripe coffee cherries", until: "journey-0.3" },
+
+    { type: "list", at: "journey", style: "steps", title: "The journey", color: 2, items: [
+      { text: "Grow on the farm", at: "grow" }, { text: "Pick the ripe cherries", at: "pick" },
+      { text: "Roast the {a|green beans}", at: "roast" }, { text: "Grind and brew", at: "brew" } ] },
+
+    { type: "section", at: "part2", kicker: "Part 2", text: "By the numbers", until: "cups-0.3" },
+
+    { type: "stat", at: "cups", value: 2.25, decimals: 2, suffix: " billion", label: "cups of coffee drunk every day", labelAt: "cupsLabel", pulse: ["cups+2.2"] },
+
+    { type: "compare", at: "compare", rightAt: "robusta",
+      left: { title: "Arabica", points: ["Sweeter, fruity", "Less caffeine", "~60% of coffee"] },
+      right: { title: "Robusta", points: ["Bitter, earthy", "About 2× the caffeine", "~40% of coffee"] } },
+
+    { type: "chart", at: "chart", title: "Top producers", unit: "%", note: "Approximate share of world coffee output",
+      data: [{ label: "Brazil", value: 37 }, { label: "Vietnam", value: 17 }, { label: "Colombia", value: 8 }, { label: "Indonesia", value: 6 }] },
+
+    { type: "headline", at: "pour", area: "top", text: "Roasted. Ground. {a|Brewed.}", until: "quote-0.3" },
+    // Escape hatch: a one-off visual with real physics. Positions are its own; colours and effects come from the theme.
+    { type: "custom", at: "pour", area: "bottom", until: "quote-0.3", enter: "none", build: pourBeans },
+
+    { type: "quote", at: "quote", text: "Good coffee takes time.\nGreat coffee takes {patience}.", by: "A barista", byAt: "quoteBy", until: "end-0.3" },
+
+    { type: "end", at: "end", text: "Thanks for watching", sub: "Like · Subscribe · Share" },
+  ],
+});
+
+async function pourBeans(api) {
+  const { W, H, u, rect } = api;
+  // the cup: an SVG line drawing in colour slot 2, bottom centre of the frame
+  const cw = 0.2 * W, ch = 0.2 * H, cx = W / 2, top = H - 0.06 * H - ch;
+  const cup = document.createElement("div");
+  cup.className = "slot-2 fx-stroke";
+  cup.style.cssText = `position:absolute;left:${cx - cw / 2 - rect.x}px;top:${top - rect.y}px;width:${cw}px;height:${ch}px;color:var(--c-hi)`;
+  const sw = 0.5 * u;
+  cup.innerHTML = `<svg viewBox="0 0 ${cw} ${ch}" width="${cw}" height="${ch}" style="overflow:visible">
+    <path d="M0 0 L ${cw * 0.11} ${ch} L ${cw * 0.89} ${ch} L ${cw} 0" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M${cw * 0.955} ${ch * 0.25} C ${cw * 1.25} ${ch * 0.2}, ${cw * 1.22} ${ch * 0.75}, ${cw * 0.9} ${ch * 0.78}" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round"/></svg>`;
+  api.el.appendChild(cup);
+  api.tl.fromTo(cup.querySelector("svg"), { opacity: 0, y: 4 * u }, { opacity: 1, y: 0, duration: 0.5, ease: "back.out(2)" }, api.m.start);
+
+  // physics world: cup walls follow the drawing
+  const ph = await api.physics({ gravity: 2600, from: api.m.start });
+  const wall = (x1, y1, x2, y2) => ph.box({ x: (x1 + x2) / 2, y: (y1 + y2) / 2, w: Math.hypot(x2 - x1, y2 - y1), h: sw * 2, angle: Math.atan2(y2 - y1, x2 - x1), friction: 0.7 });
+  const L = cx - cw / 2;
+  wall(L, top, L + cw * 0.11, top + ch);
+  wall(L + cw * 0.11, top + ch, L + cw * 0.89, top + ch);
+  wall(L + cw * 0.89, top + ch, L + cw, top);
+
+  // beans: Pixi shapes on the front WebGL layer, tinted with the accent colour, poured over ~2.4 s
+  const layer = await api.gl("front");
+  const box = new PIXI.Container(); layer.root.addChild(box);
+  const bean = api.hexNum(api.color("a")), crease = api.hexNum(api.color("bg"));
+  const pourY = 0.3 * H;                           // pour point just under the headline
+  for (let i = 0; i < 110; i++) {
+    const bw = (1.5 + api.rng() * 0.4) * u, bh = bw * 1.4;
+    const g = new PIXI.Graphics().ellipse(0, 0, bw / 2, bh / 2).fill(bean)
+      .moveTo(0, -bh * 0.38).bezierCurveTo(bw * 0.22, -bh * 0.1, -bw * 0.22, bh * 0.1, 0, bh * 0.38).stroke({ color: crease, width: bw * 0.12 });
+    box.addChild(g);
+    const at = api.m.start + 0.3 + i * 0.026;
+    ph.body({ el: g, x: cx + (api.rng() - 0.5) * cw * 0.25, y: pourY + api.rng() * 20, w: bw, h: bh, shape: "capsule",
+      at, vy: 150, spin: (api.rng() - 0.5) * 10, restitution: 0.25, friction: 0.5, angle: api.rng() * 3 });
+    api.tl.fromTo(g, { alpha: 0 }, { alpha: 1, duration: 0.12 }, at);
+  }
+  api.tl.fromTo(box, { alpha: 1 }, { alpha: 0, duration: 0.35, immediateRender: false }, api.m.end);
+  // a little steam once the cup is full
+  const mouth = document.createElement("div");
+  mouth.style.cssText = `position:absolute;left:${cx - cw * 0.3 - rect.x}px;top:${top - rect.y}px;width:${cw * 0.6}px;height:2px`;
+  api.el.appendChild(mouth);
+  await api.effect({ name: "embers", layer: "back", duration: 1.6, rate: 22, size: [4, 9], alpha: 0.4, life: [0.8, 1.4], colors: ["#ffffff", api.color(2, true)] }, mouth, CUES.steam);
+}
+</script>
+</body>
+</html>

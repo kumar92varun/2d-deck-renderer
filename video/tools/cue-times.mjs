@@ -6,13 +6,15 @@
    the other script) still gets the right time; those are flagged "check" so you can verify them by ear.
 
    Usage (from video/)
-     node tools/cue-times.mjs --beat 3 --audio ~/recordings/beat03.m4a
-     node tools/cue-times.mjs --beat 3 --audio beat03.wav --json out.json      # also write the raw result
+     node tools/cue-times.mjs --video tokenmaxxing --beat 3                  # audio: ../recordings/tokenmaxxing/beat03.m4a
+     node tools/cue-times.mjs --video tokenmaxxing --beat 3 --audio take2.wav --json out.json   # other file, keep raw result
    Options
-     --storyboard FILE   default storyboard/tokenmaxxing.md
+     --video NAME        the video folder in videos/ (its storyboard.md and recordings/<NAME>/ are used)
+     --audio FILE        default ../recordings/<video>/beatNN.m4a
+     --storyboard FILE   default videos/<video>/storyboard.md
      --lang CODE         recogniser language, default hi
      --model FILE        default $WHISPER_MODEL or ~/.cache/deckrenderer-whisper/models/ggml-large-v3-turbo-q5_0.bin
-   Setup: brew install whisper-cpp ffmpeg, plus the model file above (see the neon-explainer skill). */
+   Setup: brew install whisper-cpp ffmpeg, plus the model file above (see the explainer-video skill). */
 import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
 import os from "node:os";
@@ -20,9 +22,11 @@ import path from "node:path";
 
 const argv = process.argv.slice(2);
 const opt = (n, d) => { const i = argv.indexOf("--" + n); return i >= 0 ? argv[i + 1] : d; };
-const beat = Number(opt("beat")), audio = opt("audio");
-if (!beat || !audio) { console.error("Usage: node tools/cue-times.mjs --beat N --audio FILE [--json FILE]"); process.exit(1); }
-const storyboard = opt("storyboard", "storyboard/tokenmaxxing.md");
+const beat = Number(opt("beat")), video = opt("video");
+if (!beat || (!video && !opt("storyboard"))) { console.error("Usage: node tools/cue-times.mjs --video NAME --beat N [--audio FILE] [--json FILE]"); process.exit(1); }
+const here = path.dirname(new URL(import.meta.url).pathname);
+const audio = opt("audio", path.join(here, "../../recordings", video || "", `beat${String(beat).padStart(2, "0")}.m4a`));
+const storyboard = opt("storyboard", path.join(here, "../videos", video || "", "storyboard.md"));
 const lang = opt("lang", "hi");
 const model = opt("model", process.env.WHISPER_MODEL || path.join(os.homedir(), ".cache/deckrenderer-whisper/models/ggml-large-v3-turbo-q5_0.bin"));
 
@@ -135,4 +139,5 @@ try {
   const weak = script.filter((t) => t.est || t.sim < 0.6).length;
   console.log(`\n${script.length - weak} of ${script.length} words matched what was heard; ${weak} matched by position or estimated (cue words among them are flagged above).`);
   if (opt("json")) writeFileSync(opt("json"), JSON.stringify(result, null, 2));
+  if (video) console.log(`\nRender with the voiceover merged in (set DURATION = ${sceneDur.toFixed(1)} in the scene first):\n  node render.mjs videos/${video}/scenes/beat${String(beat).padStart(2, "0")}.html --audio ${path.relative(process.cwd(), audio)} --offset ${off.toFixed(2)}`);
 } finally { rmSync(tmp, { recursive: true, force: true }); }

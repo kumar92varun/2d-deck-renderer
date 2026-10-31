@@ -1,83 +1,107 @@
 #!/usr/bin/env node
-/* Frame-stepping renderer: seeks the scene's GSAP timeline frame by frame,
-   screenshots each frame with Puppeteer, and pipes the images straight into ffmpeg.
-   No real-time recording, so no dropped frames, however heavy the glow.
+/* Frame-stepping renderer: seeks the scene's timeline frame by frame on the GPU (Metal), screenshots each frame
+   with Puppeteer and pipes it straight into ffmpeg. No real-time recording, so no dropped frames.
 
-   Examples
-     node render.mjs scenes/tokenmaxxing/beat04.html                       # Short, final quality
-     node render.mjs scenes/tokenmaxxing/beat04.html --format long         # 1920x1080
-     node render.mjs scenes/tokenmaxxing/beat04.html --format both --draft # quick check, both sizes
-     node render.mjs scenes/tokenmaxxing/beat04.html --workers 3           # split across 3 browsers
-     node render.mjs scenes/tokenmaxxing/beat04.html --stills 0.8,6,11     # PNG stills only
-     node render.mjs scenes/tokenmaxxing/beat04.html --no-captions         # clean plate, captions off
+   Examples (from video/)
+     node render.mjs videos/tokenmaxxing/scenes/beat04.html                       # final 4K, the video's own theme
+     node render.mjs videos/tokenmaxxing/scenes/beat04.html --audio ../recordings/tokenmaxxing/beat04.m4a --offset 1.23
+                                                                                  # + merge the voiceover → final/…-audio.mp4
+     node render.mjs videos/tokenmaxxing/scenes/beat04.html --theme paper         # comparison render in another theme
+     node render.mjs videos/tokenmaxxing/scenes/beat04.html --draft               # quick 1080p timing check
+     node render.mjs videos/tokenmaxxing/scenes/beat04.html --stills 0.8,6,11     # PNG stills
+     node render.mjs demo/showcase.html --theme neon                              # theme showcase → out/_themes/neon/
 
    Options
-     --format short|long|both   default short (1080x1920)
-     --scale N                  render at N x resolution, e.g. 2 -> 2160x3840 / 3840x2160 (default 1). Sharper on YouTube;
-                                ~4x slower and bigger files. Files get a -2x suffix.
-     --bg navy|violet           backdrop palette (default navy). Non-default palettes add a suffix to the file name.
-     --fps N                    default from the scene (30)
-     --draft                    JPEG frames + fast encode (for checking timing)
-     --workers N                parallel browsers, default 1 (each uses ~300–500 MB)
-     --from S --to S            render only part of the scene (seconds)
-     --stills a,b,c             write PNG stills at these times instead of a video
-     --no-captions              hide the captions layer
-     --out DIR                  output root, default ./out. Files are sorted into subfolders automatically:
-                                  <out>/videos/desktop/   long (1920x1080) videos
-                                  <out>/videos/short/     Shorts (1080x1920) videos
-                                  <out>/stills/           PNG stills from --stills
-*/
+     --theme NAME        theme (default: the video's video.json theme)
+     --format long|short default long (1920x1080). short = 1080x1920 (Shorts are on hold)
+     --scale N           default 2 (3840x2160) for finals, 1 for --draft
+     --draft             JPEG frames + fast encode, scale 1 → drafts/
+     --workers N         parallel browsers, default 6
+     --from S --to S     only part of the scene (seconds) → drafts/
+     --stills a,b,c      PNG stills at these times instead of a video
+     --audio FILE        merge this recording into the render (→ final/…-audio.mp4)
+     --offset S          seconds to cut from the start of the recording (from tools/cue-times.mjs); default 0
+     --no-captions       hide text moments (clean plate)
+     --fps N             override the scene's fps
+     --query "k=v&k2=v2" extra URL options for the scene (e.g. the effects lab's bg=aurora); stills get them in the name
+
+   Output (repo-root out/, gitignored; the review page out/<video>/index.html is rebuilt after every render)
+     out/<video>/final/    <video>-beatNN-audio.mp4          deliverable: picture + his recording
+     out/<video>/silent/   <video>-beatNN.mp4                picture only
+     out/<video>/drafts/   <video>-beatNN-draft.mp4          quick checks, safe to delete
+     out/<video>/stills/   <video>-beatNN-t6.5.png
+     out/<video>/compare/<theme>/  same names with -<theme>  renders in a theme other than the video's own
+     out/_themes/<theme>/  showcase.mp4, stills             theme demos */
 import puppeteer from "puppeteer";
 import { spawn } from "node:child_process";
-import { mkdir, writeFile, rm } from "node:fs/promises";
+import { mkdir, writeFile, rm, readFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { startServer, ROOT } from "./core/server.mjs";
+import { recordRender } from "./core/review.mjs";
 
 // ---------- args ----------
 const argv = process.argv.slice(2);
 const scene = argv.find((a) => !a.startsWith("--") && /\.html$/.test(a));
-if (!scene) { console.error("Usage: node render.mjs <scene.html> [options]"); process.exit(1); }
+if (!scene) { console.error("Usage: node render.mjs <scene.html> [options]   (see the top of render.mjs)"); process.exit(1); }
 const opt = (name, def) => { const i = argv.indexOf("--" + name); return i >= 0 ? argv[i + 1] : def; };
 const flag = (name) => argv.includes("--" + name);
-const formats = opt("format", "short") === "both" ? ["short", "long"] : [opt("format", "short")];
+const format = opt("format", "long");
+if (!["long", "short"].includes(format)) { console.error("--format must be long or short"); process.exit(1); }
 const draft = flag("draft");
-const workers = Math.max(1, Number(opt("workers", 1)));
-const outDir = path.resolve(opt("out", "out"));
-// Videos are split by format (long = the desktop/YouTube video, short = the Short), stills go in their own folder.
-const videoDir = (format) => path.join(outDir, "videos", format === "long" ? "desktop" : "short");
-const stillsDir = path.join(outDir, "stills");
+const workers = Math.max(1, Number(opt("workers", 6)));
 const stills = opt("stills", null)?.split(",").map(Number);
 const captions = !flag("no-captions");
-const scale = Math.max(1, Number(opt("scale", 1)));
-const bg = opt("bg", "navy");
-// -violet / -2x suffixes keep variants from overwriting each other (navy at 1x has no suffix)
-const suffix = (bg !== "navy" ? `-${bg}` : "") + (scale !== 1 ? `-${scale}x` : "");
-// out/videos/short/<video>-<beat>-<format>.mp4, e.g. out/videos/short/tokenmaxxing-beat04-short.mp4
-const name = `${path.basename(path.dirname(path.resolve(scene)))}-${path.basename(scene, ".html")}`;
+const scale = Math.max(1, Number(opt("scale", draft ? 1 : 2)));
+const audio = opt("audio", null), offset = Number(opt("offset", 0));
+const query = opt("query", "");
 
-// ---------- browser ----------
-async function launch() {
-  const args = ["--hide-scrollbars", "--mute-audio", "--force-color-profile=srgb",
-                "--font-render-hinting=none", "--disable-lcd-text"];
-  if (process.env.USE_SPARTICUZ === "1") {          // only for sandboxes that can't download Chrome
-    const { default: chromium } = await import("@sparticuz/chromium");
-    return puppeteer.launch({ executablePath: await chromium.executablePath(), headless: "shell",
-                              args: [...chromium.args.filter((a) => a !== "--single-process"), ...args] });
-  }
-  return puppeteer.launch({ headless: "shell", executablePath: process.env.CHROME_PATH || undefined,
-                            args: process.getuid?.() === 0 ? [...args, "--no-sandbox"] : args });
+// ---------- where this scene's output goes ----------
+const scenePath = path.resolve(scene);
+const OUT = path.join(ROOT, "out");
+const rel = path.relative(path.join(ROOT, "video"), scenePath).split(path.sep);
+const sceneName = path.basename(scenePath, ".html");
+const isVideo = rel[0] === "videos" && rel[2] === "scenes";
+const video = isVideo ? rel[1] : null;
+const cfgFile = isVideo ? path.join(ROOT, "video", "videos", video, "video.json") : path.join(path.dirname(scenePath), "video.json");
+const cfg = existsSync(cfgFile) ? JSON.parse(await readFile(cfgFile, "utf8")) : {};
+const defaultTheme = cfg.theme || "neon";
+const theme = opt("theme", defaultTheme);
+const compare = isVideo && theme !== defaultTheme;          // demos already sit in their theme's folder
+
+const suffix = (compare ? `-${theme}` : "") + (format === "short" ? "-short" : "") + (!draft && scale !== 2 ? `-${scale}x` : "");
+let base, dirs;
+if (isVideo) {
+  base = `${video}-${sceneName}`;
+  const vroot = path.join(OUT, video), cmp = path.join(vroot, "compare", theme);
+  dirs = { silent: compare ? cmp : path.join(vroot, "silent"), final: compare ? cmp : path.join(vroot, "final"),
+           drafts: path.join(vroot, "drafts"), stills: path.join(vroot, "stills"), root: vroot };
+} else {
+  base = sceneName;                                               // demo/showcase.html → out/_themes/<theme>/showcase.mp4
+  const troot = path.join(OUT, "_themes", theme);
+  dirs = { silent: troot, final: troot, drafts: troot, stills: path.join(troot, "stills"), root: null };
 }
 
-async function openScene(browser, format) {
+// ---------- browser ----------
+const srv = await startServer();
+async function launch() {
+  const args = ["--hide-scrollbars", "--mute-audio", "--force-color-profile=srgb", "--font-render-hinting=none", "--disable-lcd-text",
+    "--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"];   // real GPU (Metal) instead of the SwiftShader software fallback
+  return puppeteer.launch({ headless: "shell", executablePath: process.env.CHROME_PATH || undefined, protocolTimeout: 600000,
+    args: process.getuid?.() === 0 ? [...args, "--no-sandbox"] : args });
+}
+
+async function openScene(browser) {
   const page = await browser.newPage();
   const [w, h] = format === "short" ? [1080, 1920] : [1920, 1080];
   await page.setViewport({ width: w, height: h, deviceScaleFactor: scale });
-  const url = pathToFileURL(path.resolve(scene)).href + `?format=${format}&render=1&captions=${captions ? 1 : 0}&bg=${bg}`;
+  const url = srv.urlFor(scenePath) + `?format=${format}&render=1&captions=${captions ? 1 : 0}&theme=${encodeURIComponent(theme)}${query ? "&" + query : ""}`;
   page.on("pageerror", (e) => console.error("[scene error]", e.message));
+  page.on("console", (m) => { if (["error", "warn"].includes(m.type())) console.error(`[scene ${m.type()}]`, m.text()); });
   await page.goto(url, { waitUntil: "load" });
-  await page.waitForFunction(() => window.__scene);
+  await page.waitForFunction(() => window.__scene, { timeout: 60000 });
   const info = await page.evaluate(async () => { await window.__scene.ready;
-    const s = window.__scene; return { duration: s.duration, fps: s.fps, width: s.width, height: s.height }; });
+    const s = window.__scene; return { duration: s.duration, fps: s.fps, width: s.width, height: s.height, theme: s.theme }; });
   return { page, info };
 }
 
@@ -86,11 +110,14 @@ async function grab(page, t, type) {
   return page.screenshot({ type, ...(type === "jpeg" ? { quality: 92 } : {}), optimizeForSpeed: true });
 }
 
-// ---------- encode one frame range to one file ----------
-async function renderRange({ format, fps, startFrame, endFrame, file, label }) {
+function run(cmd, args) {
+  return new Promise((res, rej) => spawn(cmd, args, { stdio: ["ignore", "inherit", "inherit"] }).on("close", (c) => (c === 0 ? res() : rej(new Error(`${cmd} exited ${c}`)))));
+}
+
+async function renderRange({ fps, startFrame, endFrame, file, report }) {
   const browser = await launch();
   try {
-    const { page } = await openScene(browser, format);
+    const { page } = await openScene(browser);
     const type = draft ? "jpeg" : "png";
     const enc = draft ? ["-preset", "veryfast", "-crf", "22"] : ["-preset", "slow", "-crf", "14", "-tune", "film"];
     const ff = spawn("ffmpeg", ["-y", "-loglevel", "error",
@@ -101,63 +128,76 @@ async function renderRange({ format, fps, startFrame, endFrame, file, label }) {
       "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709",
       "-movflags", "+faststart", "-r", String(fps), file], { stdio: ["pipe", "inherit", "inherit"] });
     const done = new Promise((res, rej) => ff.on("close", (c) => (c === 0 ? res() : rej(new Error("ffmpeg exited " + c)))));
-    const t0 = Date.now(), total = endFrame - startFrame;
     for (let f = startFrame; f < endFrame; f++) {
       const buf = await grab(page, f / fps, type);
       if (!ff.stdin.write(buf)) await new Promise((r) => ff.stdin.once("drain", r));
-      const n = f - startFrame + 1;
-      if (n % 30 === 0 || n === total) {
-        const rate = n / ((Date.now() - t0) / 1000);
-        process.stdout.write(`\r  ${label}: ${n}/${total} frames · ${rate.toFixed(1)} fps · ETA ${Math.max(0, (total - n) / rate).toFixed(0)}s   `);
-      }
+      report();
     }
     ff.stdin.end();
     await done;
-    process.stdout.write("\n");
   } finally { await browser.close(); }
 }
 
 // ---------- main ----------
-await mkdir(stillsDir, { recursive: true });
-for (const f of formats) await mkdir(videoDir(f), { recursive: true });
-for (const format of formats) {
-  // probe duration/fps from the scene
+try {
   const probe = await launch();
-  const { page, info } = await openScene(probe, format);
+  const { page, info } = await openScene(probe);
   const fps = Number(opt("fps", info.fps));
 
   if (stills) {
+    await mkdir(dirs.stills, { recursive: true });
     for (const t of stills) {
-      const file = path.join(stillsDir, `${name}-${format}-t${t}${suffix}.png`);
+      const file = path.join(dirs.stills, `${base}${compare ? "-" + theme : ""}${query ? "-" + query.replace(/[^\w=-]+/g, "_") : ""}-t${t}.png`);
       await writeFile(file, await grab(page, t, "png"));
       console.log("still:", file);
     }
     await probe.close();
-    continue;
-  }
-  await probe.close();
-
-  const from = Number(opt("from", 0)), to = Math.min(Number(opt("to", info.duration)), info.duration);
-  const first = Math.round(from * fps), last = Math.round(to * fps);
-  const file = path.join(videoDir(format), `${name}-${format}${suffix}${draft ? "-draft" : ""}.mp4`);
-  console.log(`${name} · ${format} ${info.width * scale}x${info.height * scale} · ${fps} fps · ${last - first} frames · ${draft ? "draft" : "final"} · ${workers} worker(s)`);
-  const t0 = Date.now();
-
-  if (workers === 1) {
-    await renderRange({ format, fps, startFrame: first, endFrame: last, file, label: "frames" });
   } else {
-    // Split into equal chunks, render in parallel, then join without re-encoding.
-    const chunk = Math.ceil((last - first) / workers), parts = [];
-    for (let i = 0; i < workers; i++) {
-      const s = first + i * chunk, e = Math.min(last, s + chunk);
-      if (s < e) parts.push({ s, e, file: path.join(videoDir(format), `.${name}-${format}${suffix}-part${i}.mp4`) });
+    await probe.close();
+    const from = Number(opt("from", 0)), to = Math.min(Number(opt("to", info.duration)), info.duration);
+    const partial = from > 0 || to < info.duration;
+    const first = Math.round(from * fps), last = Math.round(to * fps), total = last - first;
+    const outDir = draft || partial ? dirs.drafts : dirs.silent;
+    await mkdir(outDir, { recursive: true });
+    const file = path.join(outDir, `${base}${suffix}${partial ? `-${from}-${to}s` : ""}${draft ? "-draft" : ""}.mp4`);
+    const n = Math.min(workers, Math.max(1, Math.floor(total / 30)));
+    console.log(`${base} · theme ${theme}${compare ? " (comparison)" : ""} · ${info.width * scale}x${info.height * scale} · ${fps} fps · ${total} frames · ${draft ? "draft" : "final"} · ${n} worker(s)`);
+    const t0 = Date.now();
+    let doneFrames = 0;
+    const report = () => {
+      doneFrames++;
+      if (doneFrames % 15 && doneFrames !== total) return;
+      const rate = doneFrames / ((Date.now() - t0) / 1000);
+      process.stdout.write(`\r  ${doneFrames}/${total} frames · ${rate.toFixed(1)} fps · ETA ${Math.max(0, (total - doneFrames) / rate).toFixed(0)}s   `);
+    };
+    if (n === 1) {
+      await renderRange({ fps, startFrame: first, endFrame: last, file, report });
+    } else {
+      // equal chunks in parallel, joined without re-encoding
+      const chunk = Math.ceil(total / n), parts = [];
+      for (let i = 0; i < n; i++) {
+        const s = first + i * chunk, e = Math.min(last, s + chunk);
+        if (s < e) parts.push({ s, e, file: path.join(outDir, `.${base}${suffix}-part${i}.mp4`) });
+      }
+      await Promise.all(parts.map((p) => renderRange({ fps, startFrame: p.s, endFrame: p.e, file: p.file, report })));
+      const list = path.join(outDir, `.${base}${suffix}-parts.txt`);
+      await writeFile(list, parts.map((p) => `file '${p.file}'`).join("\n"));
+      await run("ffmpeg", ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", list, "-c", "copy", "-movflags", "+faststart", file]);
+      await Promise.all([list, ...parts.map((p) => p.file)].map((f) => rm(f, { force: true })));
     }
-    await Promise.all(parts.map((p, i) => renderRange({ format, fps, startFrame: p.s, endFrame: p.e, file: p.file, label: `worker ${i + 1}` })));
-    const list = path.join(videoDir(format), `.${name}-${format}${suffix}-parts.txt`);
-    await writeFile(list, parts.map((p) => `file '${p.file}'`).join("\n"));
-    await new Promise((res, rej) => spawn("ffmpeg", ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", list, "-c", "copy", "-movflags", "+faststart", file], { stdio: "inherit" })
-      .on("close", (c) => (c === 0 ? res() : rej(new Error("concat failed")))));
-    await Promise.all([list, ...parts.map((p) => p.file)].map((f) => rm(f, { force: true })));
+    process.stdout.write("\n");
+    console.log(`done: ${file} (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
+    if (dirs.root) await recordRender(dirs.root, file, { theme, scale, draft, duration: total / fps, scene: path.relative(ROOT, scenePath) });
+
+    if (audio && !draft && !partial) {
+      await mkdir(dirs.final, { recursive: true });
+      const out = path.join(dirs.final, `${base}${suffix}-audio.mp4`);
+      await run("ffmpeg", ["-y", "-loglevel", "error", "-i", file, "-ss", String(offset), "-t", String(info.duration), "-i", path.resolve(audio),
+        "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", out]);
+      console.log(`with audio: ${out}`);
+      if (dirs.root) await recordRender(dirs.root, out, { theme, scale, duration: info.duration, scene: path.relative(ROOT, scenePath), audio: path.relative(ROOT, path.resolve(audio)), offset });
+    }
   }
-  console.log(`done: ${file} (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
+} finally {
+  srv.server.close();
 }
