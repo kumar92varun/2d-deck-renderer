@@ -1,0 +1,64 @@
+/* Clean: ink on off-white, Inter, generous whitespace, colour only where it means something. */
+@font-face { font-family: "Inter"; font-weight: 400; font-display: block; src: url("fonts/inter-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 700; font-display: block; src: url("fonts/inter-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Inter"; font-weight: 800; font-display: block; src: url("fonts/inter-latin-800-normal.woff2") format("woff2"); }
+
+.theme-clean * { --card-shadow: 0 calc(var(--u)*.3) calc(var(--u)*.8) rgba(20,22,30,.06), 0 calc(var(--u)*1.6) calc(var(--u)*4) rgba(20,22,30,.08); }
+.theme-clean .hl { color: var(--c); }
+.theme-clean strong { font-weight: 800; }
+
+.theme-clean .t-kicker { font-weight: 700; font-size: calc(var(--u)*2.4); letter-spacing: .2em; text-transform: uppercase; color: var(--c); margin-bottom: .9em; white-space: nowrap; }
+.theme-clean .t-main { font-weight: 800; line-height: 1.05; letter-spacing: -.025em; color: var(--text); white-space: nowrap; }
+.theme-clean .t-sub { font-weight: 400; font-size: calc(var(--u)*4); line-height: 1.35; margin-top: .7em; color: var(--muted); white-space: nowrap; }
+.theme-clean .m-title .t-main { font-size: calc(var(--u)*12); }
+.theme-clean .m-headline .t-main { font-size: calc(var(--u)*8.5); }
+.theme-clean .m-section .t-main, .theme-clean .m-end .t-main { font-size: calc(var(--u)*10); }
+.theme-clean .fx-underline { bottom: -0.06em !important; }
+
+/* list: numbered rows with thin rules */
+.theme-clean .m-list { align-items: flex-start; text-align: left; }
+.theme-clean .m-list .t-title { font-weight: 800; font-size: calc(var(--u)*6); letter-spacing: -.02em; margin-bottom: calc(var(--u)*3); }
+.theme-clean .t-items { display: flex; flex-direction: column; min-width: 60%; }
+.theme-clean .t-item { display: flex; align-items: center; gap: calc(var(--u)*2.6); padding: calc(var(--u)*1.8) 0; border-top: calc(var(--u)*.14) solid #DEDBD2;
+  font-weight: 700; font-size: calc(var(--u)*4.4); color: var(--text); white-space: nowrap; }
+.theme-clean .t-marker { flex: none; width: calc(var(--u)*5); font-weight: 800; font-size: calc(var(--u)*3); color: var(--c); font-variant-numeric: tabular-nums; }
+.theme-clean .list-steps .t-marker::before { content: "0"; }
+.theme-clean .list-bullets .t-marker { width: calc(var(--u)*1.4); height: calc(var(--u)*1.4); border-radius: 50%; background: var(--c); }
+
+/* stat */
+.theme-clean .t-number { font-weight: 800; font-size: calc(var(--u)*22); line-height: 1; letter-spacing: -.04em; color: var(--c); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.theme-clean .t-prefix, .theme-clean .t-suffix { font-size: .45em; letter-spacing: -.02em; color: var(--text); }
+.theme-clean .t-label { font-weight: 400; font-size: calc(var(--u)*4.2); margin-top: calc(var(--u)*2); color: var(--muted); }
+
+/* compare: two white cards with a coloured top rule */
+.theme-clean .m-compare { flex-direction: row; align-items: center; gap: calc(var(--u)*3); }
+.theme-clean .t-side { flex: 1; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: calc(var(--u)*1.6); text-align: left;
+  background: var(--surface); border-radius: calc(var(--u)*1.6); border-top: calc(var(--u)*.7) solid var(--c); box-shadow: var(--card-shadow); padding: calc(var(--u)*4); }
+.theme-clean .t-head { font-weight: 800; font-size: calc(var(--u)*6); letter-spacing: -.02em; color: var(--c); margin-bottom: calc(var(--u)*1); }
+.theme-clean .t-point { font-weight: 400; font-size: calc(var(--u)*3.6); color: var(--text); }
+.theme-clean .t-point::before { content: "— "; color: var(--muted); }
+.theme-clean .t-vs { align-self: center; font-weight: 700; font-size: calc(var(--u)*3); color: var(--muted); text-transform: uppercase; letter-spacing: .15em; }
+
+/* quote */
+.theme-clean .t-quote { font-weight: 700; font-size: calc(var(--u)*6); line-height: 1.22; letter-spacing: -.02em; color: var(--text); }
+.theme-clean .t-mark { display: block; font-weight: 800; font-size: 2em; line-height: .7; color: var(--c); }
+.theme-clean .t-by { margin-top: calc(var(--u)*3); font-weight: 400; font-size: calc(var(--u)*3.2); color: var(--muted); }
+
+/* image: rounded, soft shadow */
+.theme-clean .t-figure { position: relative; height: 80%; border-radius: calc(var(--u)*1.6); box-shadow: var(--card-shadow); overflow: hidden; display: flex; background: var(--surface); }
+.theme-clean .t-img { display: block; height: 100%; width: auto; max-width: 100%; }
+.theme-clean .t-credit { position: absolute; right: .6em; bottom: .4em; font-size: calc(var(--u)*1.6); color: rgba(255,255,255,.85); }
+.theme-clean .t-caption { margin-top: calc(var(--u)*2.2); font-size: calc(var(--u)*3.2); color: var(--muted); }
+
+/* chart: flat bars, values outside */
+.theme-clean .m-chart { align-items: stretch; }
+.theme-clean .m-chart .t-title { font-weight: 800; font-size: calc(var(--u)*5.6); letter-spacing: -.02em; margin-bottom: calc(var(--u)*4); text-align: left; }
+.theme-clean .t-plot { width: 100%; display: flex; flex-direction: column; gap: calc(var(--u)*2.2); }
+.theme-clean .t-bar { display: grid; grid-template-columns: 20% 1fr 10%; align-items: center; gap: calc(var(--u)*2); }
+.theme-clean .t-blabel { text-align: left; font-weight: 700; font-size: calc(var(--u)*3.4); color: var(--text); }
+.theme-clean .t-track { height: calc(var(--u)*4.4); background: #E9E6DD; border-radius: calc(var(--u)*.6); overflow: hidden; }
+.theme-clean .t-fill { display: block; height: 100%; background: var(--c); border-radius: calc(var(--u)*.6); }
+.theme-clean .t-bvalue { font-weight: 800; font-size: calc(var(--u)*3.6); color: var(--text); font-variant-numeric: tabular-nums; }
+.theme-clean .t-note { margin-top: calc(var(--u)*3); font-size: calc(var(--u)*2); color: var(--muted); text-align: left; }
+
+.theme-clean .fx-stroke { color: var(--text) !important; }

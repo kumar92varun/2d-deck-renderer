@@ -1,0 +1,74 @@
+/* Bold: flat colour, chunky capitals, sticker cards with thick ink outlines and hard offset shadows. */
+@font-face { font-family: "Archivo Black"; font-weight: 400; font-display: block; src: url("fonts/archivo-black-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Space Grotesk"; font-weight: 400; font-display: block; src: url("fonts/space-grotesk-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Space Grotesk"; font-weight: 700; font-display: block; src: url("fonts/space-grotesk-latin-700-normal.woff2") format("woff2"); }
+
+.theme-bold * { --line: calc(var(--u)*.45); --pop: calc(var(--u)*.9) calc(var(--u)*.9) 0 var(--ink); }
+.theme-bold .display { font-family: "Archivo Black", sans-serif; }
+.theme-bold .hl { color: var(--c); }
+.theme-bold strong { font-weight: 700; }
+
+.theme-bold .t-kicker { display: inline-block; font-weight: 700; font-size: calc(var(--u)*2.6); letter-spacing: .14em; text-transform: uppercase; color: var(--ink);
+  background: var(--c); padding: .3em .8em; border: var(--line) solid var(--ink); box-shadow: var(--pop); margin-bottom: 1em; white-space: nowrap; }
+.theme-bold .t-main { font-family: "Archivo Black", sans-serif; line-height: 1.02; text-transform: uppercase; letter-spacing: -.01em; color: var(--text); white-space: nowrap;
+  text-shadow: calc(var(--u)*.6) calc(var(--u)*.6) 0 var(--ink); }
+.theme-bold .t-sub { font-weight: 700; font-size: calc(var(--u)*4); line-height: 1.3; margin-top: .7em; color: var(--muted); white-space: nowrap; }
+.theme-bold .m-title .t-main { font-size: calc(var(--u)*11); }
+.theme-bold .m-headline .t-main { font-size: calc(var(--u)*7.6); }
+.theme-bold .m-section .t-main, .theme-bold .m-end .t-main { font-size: calc(var(--u)*9.5); }
+
+/* list: sticker rows */
+.theme-bold .m-list { align-items: flex-start; text-align: left; }
+.theme-bold .m-list .t-title { font-family: "Archivo Black", sans-serif; text-transform: uppercase; font-size: calc(var(--u)*5.6); color: var(--text); text-shadow: calc(var(--u)*.5) calc(var(--u)*.5) 0 var(--ink); margin-bottom: calc(var(--u)*3); }
+.theme-bold .t-items { display: flex; flex-direction: column; gap: calc(var(--u)*1.8); }
+.theme-bold .t-item { display: flex; align-items: center; gap: calc(var(--u)*2); font-weight: 700; font-size: calc(var(--u)*4.2); color: var(--ink); white-space: nowrap;
+  background: var(--surface); border: var(--line) solid var(--ink); box-shadow: var(--pop); border-radius: calc(var(--u)*1); padding: calc(var(--u)*.8) calc(var(--u)*2.6) calc(var(--u)*.8) calc(var(--u)*.8); }
+.theme-bold .t-item .hl { color: var(--ink); background: var(--c); padding: 0 .2em; }
+.theme-bold .t-marker { flex: none; width: calc(var(--u)*5); height: calc(var(--u)*5); display: grid; place-items: center; border-radius: calc(var(--u)*.7);
+  font-family: "Archivo Black", sans-serif; font-size: calc(var(--u)*2.8); color: var(--ink); background: var(--c); border: var(--line) solid var(--ink); }
+
+/* stat */
+.theme-bold .t-number { font-family: "Archivo Black", sans-serif; font-size: calc(var(--u)*20); line-height: 1; color: var(--c); font-variant-numeric: tabular-nums; white-space: nowrap;
+  text-shadow: calc(var(--u)*1) calc(var(--u)*1) 0 var(--ink); }
+.theme-bold .t-prefix, .theme-bold .t-suffix { font-size: .45em; color: var(--text); }
+.theme-bold .t-label { display: inline-block; font-weight: 700; font-size: calc(var(--u)*3.8); margin-top: calc(var(--u)*2.4); color: var(--ink); background: var(--surface);
+  padding: .25em .8em; border: var(--line) solid var(--ink); box-shadow: var(--pop); }
+
+/* compare: two sticker cards in the slot colours */
+.theme-bold .m-compare { flex-direction: row; align-items: center; gap: calc(var(--u)*4); }
+.theme-bold .t-side { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: calc(var(--u)*1.4); text-align: left;
+  background: var(--c); border: var(--line) solid var(--ink); box-shadow: calc(var(--u)*1.2) calc(var(--u)*1.2) 0 var(--ink); border-radius: calc(var(--u)*1.4); padding: calc(var(--u)*3.6); }
+.theme-bold .t-head { font-family: "Archivo Black", sans-serif; text-transform: uppercase; font-size: calc(var(--u)*5.6); color: var(--ink); margin-bottom: calc(var(--u)*.6); }
+.theme-bold .t-point { font-weight: 700; font-size: calc(var(--u)*3.6); color: var(--ink); }
+.theme-bold .t-point::before { content: "■ "; font-size: .7em; vertical-align: .15em; }
+.theme-bold .t-vs { align-self: center; font-family: "Archivo Black", sans-serif; font-size: calc(var(--u)*4); color: var(--ink); background: var(--surface);
+  width: calc(var(--u)*9); height: calc(var(--u)*9); border-radius: 50%; display: grid; place-items: center; border: var(--line) solid var(--ink); box-shadow: var(--pop); text-transform: uppercase; }
+
+/* quote */
+.theme-bold .t-quote { font-family: "Archivo Black", sans-serif; font-size: calc(var(--u)*5.4); line-height: 1.2; text-transform: uppercase; color: var(--text);
+  text-shadow: calc(var(--u)*.45) calc(var(--u)*.45) 0 var(--ink); }
+.theme-bold .t-quote .hl { color: var(--ink); background: var(--c); padding: 0 .15em; text-shadow: none; }
+.theme-bold .t-mark { display: block; font-size: 2.2em; line-height: .8; color: var(--accent); }
+.theme-bold .t-by { margin-top: calc(var(--u)*3); font-weight: 700; font-size: calc(var(--u)*3.4); color: var(--muted); }
+
+/* image: sticker frame */
+.theme-bold .t-figure { position: relative; height: 76%; display: flex; border: var(--line) solid var(--ink); box-shadow: calc(var(--u)*1.2) calc(var(--u)*1.2) 0 var(--ink);
+  border-radius: calc(var(--u)*1.4); overflow: hidden; background: var(--surface); }
+.theme-bold .t-img { display: block; height: 100%; width: auto; max-width: 100%; }
+.theme-bold .t-credit { position: absolute; right: .6em; bottom: .4em; font-size: calc(var(--u)*1.6); color: #fff; }
+.theme-bold .t-caption { margin-top: calc(var(--u)*2.6); font-weight: 700; font-size: calc(var(--u)*3.4); color: var(--ink); background: var(--c1); padding: .2em .7em;
+  border: var(--line) solid var(--ink); box-shadow: var(--pop); }
+
+/* chart: fat flat bars with ink outlines */
+.theme-bold .m-chart { align-items: stretch; }
+.theme-bold .m-chart .t-title { font-family: "Archivo Black", sans-serif; text-transform: uppercase; font-size: calc(var(--u)*5.4); color: var(--text);
+  text-shadow: calc(var(--u)*.5) calc(var(--u)*.5) 0 var(--ink); margin-bottom: calc(var(--u)*3.5); text-align: left; }
+.theme-bold .t-plot { width: 100%; display: flex; flex-direction: column; gap: calc(var(--u)*2); }
+.theme-bold .t-bar { display: grid; grid-template-columns: 19% 1fr 11%; align-items: center; gap: calc(var(--u)*2); }
+.theme-bold .t-blabel { text-align: right; font-weight: 700; font-size: calc(var(--u)*3.6); color: var(--text); }
+.theme-bold .t-track { height: calc(var(--u)*5); }
+.theme-bold .t-fill { display: block; height: 100%; background: var(--c); border: var(--line) solid var(--ink); box-shadow: var(--pop); border-radius: calc(var(--u)*.8); }
+.theme-bold .t-bvalue { font-family: "Archivo Black", sans-serif; font-size: calc(var(--u)*3.8); color: var(--text); text-shadow: calc(var(--u)*.35) calc(var(--u)*.35) 0 var(--ink); }
+.theme-bold .t-note { margin-top: calc(var(--u)*3); font-size: calc(var(--u)*2); color: var(--muted); text-align: left; }
+
+.theme-bold .fx-stroke { color: #fff !important; }

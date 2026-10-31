@@ -38,7 +38,7 @@ import { mkdir, writeFile, rm, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { startServer, ROOT } from "./core/server.mjs";
-import { recordRender } from "./core/review.mjs";
+import { recordRender, buildIndex } from "./core/review.mjs";
 
 // ---------- args ----------
 const argv = process.argv.slice(2);
@@ -188,6 +188,7 @@ try {
     process.stdout.write("\n");
     console.log(`done: ${file} (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
     if (dirs.root) await recordRender(dirs.root, file, { theme, scale, draft, duration: total / fps, scene: path.relative(ROOT, scenePath) });
+    else await buildIndex();                                         // theme demos are listed on out/index.html
 
     if (audio && !draft && !partial) {
       await mkdir(dirs.final, { recursive: true });

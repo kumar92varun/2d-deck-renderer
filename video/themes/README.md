@@ -5,6 +5,10 @@ effects it uses, the background and the post-processing. Scenes only say *what* 
 renders in any theme (`node render.mjs <scene> --theme <name>`). Each video picks its own default theme in
 `videos/<video>/video.json`.
 
+Themes so far (each has a STYLE.md; demos in `out/_themes/<name>/showcase.mp4`):
+`neon` (dark, glowing; Tokenmaxxing), `neon-violet` (neon on the older violet haze), `clean` (light, minimal),
+`paper` (hand-drawn on paper, Rough.js strokes), `bold` (flat, loud stickers on indigo).
+
 ```
 themes/<name>/
   theme.js     the theme (default export, below)

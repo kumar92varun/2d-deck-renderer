@@ -13,22 +13,22 @@ function pieces(el, mode) {
 }
 
 export default {
-  /* ENTER: targets fall from above, collide, bounce and settle where the layout puts them (stacking if they
-     are in a column). opts: lift (in screen heights, default 1), stagger, bounce, tilt (allow rotation, default true) */
+  /* ENTER: targets fall from above, bounce and settle exactly where the layout puts them.
+     opts: lift (in screen heights, default 1), stagger, bounce, tilt (allow rotation, default true), gravity */
   async "physics-drop"(api, t, at, o) {
     const items = els(t).flatMap((e) => pieces(e, o.split));
     if (!items.length) return 0;
     const ph = await api.physics({ gravity: o.gravity ?? 3200, from: at });
     const rects = items.map((e) => api.rectOf(e));
-    const floor = Math.max(...rects.map((r) => r.y + r.h));
-    ph.box({ x: api.W / 2, y: floor + 50, w: api.W * 3, h: 100, friction: 0.9, restitution: o.bounce ?? 0.35 });
-    // lowest items drop first so stacks build bottom-up
-    const order = items.map((e, i) => i).sort((a, b) => rects[b].y - rects[a].y);
-    order.forEach((i, k) => {
-      const r = rects[i], spawn = at + k * (o.stagger ?? 0.12);
-      const b = ph.body({ el: items[i], y: r.y + r.h / 2 - (o.lift ?? 1) * api.H, at: spawn, restitution: o.bounce ?? 0.35, friction: 0.8,
+    // each item lands on its own invisible shelf at its layout position (collision groups keep shelves private),
+    // so a spaced-out list ends up exactly where the design puts it; items in the same row share a floor
+    items.forEach((el, i) => {
+      const r = rects[i], bit = 1 << (i % 16), groups = (bit << 16) | bit;
+      ph.box({ x: r.x + r.w / 2, y: r.y + r.h + 50, w: r.w * 3, h: 100, friction: 0.9, restitution: o.bounce ?? 0.35, groups });
+      const spawn = at + i * (o.stagger ?? 0.12);
+      const b = ph.body({ el, y: r.y + r.h / 2 - (o.lift ?? 1) * api.H, at: spawn, restitution: o.bounce ?? 0.35, friction: 0.8, groups,
         spin: o.tilt === false ? 0 : (api.rng() - 0.5) * 2, angularDamping: o.tilt === false ? 50 : 2 });
-      api.tl.fromTo(items[i], { opacity: 0 }, { opacity: 1, duration: 0.01 }, spawn);
+      api.tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.01 }, spawn);
       if (o.tilt === false) b.rb.lockRotations(true, true);
     });
     return 1.2 + items.length * (o.stagger ?? 0.12);

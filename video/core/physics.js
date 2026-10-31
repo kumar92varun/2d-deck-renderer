@@ -25,8 +25,11 @@ export async function createPhysics(api, { gravity = 2400, hz = 240, from = 0, t
 
   const ph = {
     world, R,
-    box({ x, y, w, h, angle = 0, friction = 0.6, restitution = 0.2 }) {
-      world.createCollider(R.ColliderDesc.cuboid(w / 2, h / 2).setTranslation(x, y).setRotation(angle).setFriction(friction).setRestitution(restitution));
+    // groups: Rapier collision groups (membership << 16 | filter); colliders only touch matching groups
+    box({ x, y, w, h, angle = 0, friction = 0.6, restitution = 0.2, groups }) {
+      const d = R.ColliderDesc.cuboid(w / 2, h / 2).setTranslation(x, y).setRotation(angle).setFriction(friction).setRestitution(restitution);
+      if (groups != null) d.setCollisionGroups(groups);
+      world.createCollider(d);
     },
     floor(y = api.H, opts = {}) { ph.box({ x: api.W / 2, y: y + 50, w: api.W * 3, h: 100, ...opts }); },
     walls(opts = {}) { ph.floor(api.H, opts); ph.box({ x: -50, y: api.H / 2, w: 100, h: api.H * 4, ...opts }); ph.box({ x: api.W + 50, y: api.H / 2, w: 100, h: api.H * 4, ...opts }); },
@@ -41,6 +44,7 @@ export async function createPhysics(api, { gravity = 2400, hz = 240, from = 0, t
       const shape = o.shape === "ball" ? R.ColliderDesc.ball(Math.min(w, h) / 2)
         : o.shape === "capsule" ? R.ColliderDesc.capsule(Math.max(0, h / 2 - w / 2), w / 2)      // upright pill, w = diameter
         : R.ColliderDesc.cuboid(w / 2, h / 2);
+      if (o.groups != null) shape.setCollisionGroups(o.groups);
       world.createCollider(shape.setRestitution(o.restitution ?? 0.3).setFriction(o.friction ?? 0.6).setDensity(o.density ?? 1), rb);
       rb.setEnabled(false);
       const b = { rb, at, el: o.el, isDom, x0: x, y0: y, lx, ly, a0: o.angle ?? 0, i: bodies.length };
